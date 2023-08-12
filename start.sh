@@ -3,5 +3,5 @@
 # Run Composer install.
 composer install
 
-# Run the PHP application.
+# Run PHP Server Framework.
 php start.php
