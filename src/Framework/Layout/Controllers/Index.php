@@ -15,7 +15,8 @@ class Index implements RouteHandlerInterface {
         $this->viewManager = $viewManager;
     }
 
-    public function run(Request &$request, Response &$response, ?View &$content) {
+    public function run(Request &$request, Response &$response, ?View &$content): bool {
         $content = $this->viewManager->parseView($this->viewManager->getView('BasicPage'));
+        return true;
     }
 }

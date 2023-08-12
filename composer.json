@@ -1,5 +1,5 @@
 {
-    "name": "framework/framework",
+    "name": "werewolflabs/framework",
     "description": "Lightweight PHP framework based on Swoole.",
     "type": "project",
     "license": "MPL 2.0",

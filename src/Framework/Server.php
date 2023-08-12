@@ -35,7 +35,6 @@ class Server {
     private HttpServer $server;
     private EventManager $eventManager;
     private bool $maintenance = false;
-    private array $dbParams;
     private array $wsConnections = [];
 
     public function __construct() {
@@ -50,8 +49,7 @@ class Server {
             define('SERVER_IP', $this->configuration->getConfig('ip'));
             define('SERVER_PORT', $this->configuration->getConfig('port'));
             $databaseInfo = $this->configuration->getConfig('databases.main');
-            $this->dbParams = $this->classManager->prepareArguments(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
-            $this->classManager->getClassInstance(Database::class, $this->dbParams);
+            $this->classManager->getClassInstance(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
             $this->cronManager = $this->classManager->getClassInstance(CronManager::class);
             $this->moduleManager = $this->classManager->getClassInstance(ModuleManager::class);
             $this->eventManager = $this->classManager->getClassInstance(EventManager::class);
@@ -60,7 +58,13 @@ class Server {
             // Run internal onEnable().
             $this->classManager->getClassInstance(Enable::class)->onEnable();
 
-            $this->server = new HttpServer(SERVER_IP, SERVER_PORT, SWOOLE_PROCESS, SWOOLE_SOCK_TCP6 | SWOOLE_SSL);
+            if ($this->configuration->getConfig('cert.cert') && $this->configuration->getConfig('cert.key')) {
+                $swooleSock = SWOOLE_SOCK_TCP6 | SWOOLE_SSL;
+            } else {
+                $swooleSock = SWOOLE_SOCK_TCP6;
+            }
+
+            $this->server = $this->classManager->getClassInstance(HttpServer::class, [SERVER_IP, SERVER_PORT, SWOOLE_PROCESS, $swooleSock]);
 
             // Load modules.
             foreach ($this->moduleManager->getModulesList() as $module) {
@@ -86,7 +90,7 @@ class Server {
             'open_http2_protocol' => true
         ];
 
-        if ($this->configuration->getConfig('cert.cert') && $this->configuration->getConfig('cert.key')) {
+        if ($this->server->ssl) {
             $set['ssl_cert_file'] = $this->configuration->getConfig('cert.cert');
             $set['ssl_key_file'] = $this->configuration->getConfig('cert.key');
         }
@@ -208,9 +212,5 @@ class Server {
         $this->classManager->getClassInstance(Enable::class)->onDisable();
 
         $this->server->shutdown();
-    }
-
-    public function getServer(): HttpServer {
-        return $this->server;
     }
 }

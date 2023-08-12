@@ -1,5 +1,5 @@
-Modules/*
-!Modules/.gitkeep
+modules/*
+!modules/.gitkeep
 vendor/*
 !vendor/.gitkeep
 certs/*

@@ -14,12 +14,10 @@ class SessionManager {
     private Configuration $configuration;
     private array $sessions = [];
     private int $expiration;
-    private string $hostName;
 
     public function __construct(Configuration $configuration) {
         $this->configuration = $configuration;
         $this->expiration = $this->configuration->getConfig('sessionExpirationSeconds') ?? 86400;
-        $this->hostName = $this->configuration->getConfig('hostName') ?? '';
     }
 
     /**
