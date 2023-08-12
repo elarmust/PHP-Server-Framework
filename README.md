@@ -1,6 +1,9 @@
 # PHP Server Framework
 A lightweight PHP server framework powered by Swoole for creating HTTP/WebSocket servers.
 
+**Note: This project is currently under development, and some features may not work as expected.
+Feel free to explore and contribute, but be aware that the codebase is subject to changes.**
+
 # Main features
 + HTTP routing
 + MVC
