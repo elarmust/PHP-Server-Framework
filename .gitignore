@@ -1,2 +1,5 @@
-vendor
+Modules/*
+!Modules/.gitkeep
+vendor/*
+!vendor/.gitkeep
 var
