@@ -1,0 +1,25 @@
+{
+    "name": "framework/framework",
+    "description": "Lightweight PHP framework based on Swoole.",
+    "type": "project",
+    "license": "MPL 2.0",
+    "authors": [
+        {
+            "name": "WereWolf Labs OÜ"
+        }
+    ],
+    "require": {
+        "dragonmantank/cron-expression": "^3.3",
+        "swoole/ide-helper": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "": [
+              "src/",
+              "modules/",
+              "vendor/"
+            ]
+        }
+    },
+    "minimum-stability": "dev"
+}

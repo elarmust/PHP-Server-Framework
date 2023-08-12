@@ -1,0 +1,10 @@
+version: '1'
+
+services:
+    framework:
+        build: .
+        working_dir: /var/www/
+        restart: unless-stopped
+        stdin_open: true
+        volumes:
+            - "../:/var/www"
