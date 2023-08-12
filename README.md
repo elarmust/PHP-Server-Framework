@@ -30,7 +30,7 @@ cd docker
 docker-compose build framework
 docker-compose create framework
 ```
-Before the Docker container is started, please edit config.json with valid MySQL connection information.
+Before the Docker container is started, please rename config-example.json to config.json and edit config.json with valid MySQL connection information.
 You can start the framework server with
 
 ```
