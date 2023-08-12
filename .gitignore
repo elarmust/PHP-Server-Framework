@@ -5,3 +5,4 @@ vendor/*
 var
 config
 composer.lock
+config.json
