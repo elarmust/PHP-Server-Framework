@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Run Composer install
+# Run Composer install.
 composer install
 
-# Run the PHP application
+# Run the PHP application.
 php start.php
