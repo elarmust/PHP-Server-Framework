@@ -3,3 +3,5 @@ Modules/*
 vendor/*
 !vendor/.gitkeep
 var
+config
+composer.lock
