@@ -25,7 +25,8 @@ class BeforePageLoad implements EventListenerInterface {
     }
 
     public function run(Event &$event): void {
-        $cookieSessionId = $event->getData()['request']->cookie['PHPSESSID'] ?? null;
+        $data = $event->getData();
+        $cookieSessionId = $data['request']->cookie['PHPSESSID'] ?? null;
         $session = $this->sessionManager->getSession($cookieSessionId);
 
         // Send session cookie to user.
@@ -35,7 +36,7 @@ class BeforePageLoad implements EventListenerInterface {
                 $secure = true;
             }
 
-            $event->getData()['response']->cookie(
+            $data['response']->cookie(
                 name: 'PHPSESSID',
                 value: $session->getId(),
                 expires: time() + ($this->configuration->getConfig('sessionExpirationSeconds') ?? 259200),
@@ -43,6 +44,8 @@ class BeforePageLoad implements EventListenerInterface {
                 secure: $secure,
                 httponly: true
             );
+
+            $data['request']->cookie['PHPSESSID'] = $session->getId();
         }
     }
 }
