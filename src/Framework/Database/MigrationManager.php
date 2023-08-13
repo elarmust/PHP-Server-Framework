@@ -28,7 +28,7 @@ class MigrationManager {
     }
 
     public function loadMigrations() {
-        $modulesList = $this->moduleManager->getModulesList();
+        $modulesList = $this->moduleManager->getModules();
 
         foreach ($modulesList as $module) {
             $modulePath = $module->getPath();
@@ -42,7 +42,7 @@ class MigrationManager {
                 $migrationPath = $module->getClassPath() . '\\Setup\\Migrations\\' . $moduleMigration;
                 $name = str_replace('.php', '', $migrationPath);
 
-                $migration = $this->classContainer->getTransientClass($name);
+                $migration = $this->classContainer->get($name, cache: false);
                 $this->migrations[strtolower($module->getClassPath())][$migration->version()][str_replace('.php', '', $moduleMigration)] = $migration;
             }
         }
@@ -53,7 +53,7 @@ class MigrationManager {
             $internalMigration = str_replace('.php', '', $internalMigration);
             $migrationPath = 'Framework\\Database\\Setup\\Migrations\\' . $internalMigration;
 
-            $migration = $this->classContainer->getTransientClass($migrationPath);
+            $migration = $this->classContainer->get($migrationPath, cache: false);
             $this->migrations['framework'][$migration->version()][$internalMigration] = $migration;
         }
     }

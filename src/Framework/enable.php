@@ -75,11 +75,11 @@ class Enable implements ModuleEnableInterface {
         $this->register->registerRouteHandler('/', Index::class);
         $this->viewManager->registerView('EmptyView');
         $this->viewManager->registerView('BasicPage', BasicPage::class, System::readFile(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php'));
-        $this->cli->registerCommandHandler('stop', $this->classContainer->getTransientClass(Stop::class));
-        $this->cli->registerCommandHandler('maintenance', $this->classContainer->getTransientClass(Maintenance::class));
-        $this->cli->registerCommandHandler('cron', $this->classContainer->getTransientClass(Cron::class));
-        $this->cli->registerCommandHandler('migrate', $this->classContainer->getTransientClass(Migrate::class));
-        $this->cronManager->registerCronJob($this->classContainer->getTransientClass(SessionCleanup::class));
+        $this->cli->registerCommandHandler('stop', $this->classContainer->get(Stop::class, cache: false));
+        $this->cli->registerCommandHandler('maintenance', $this->classContainer->get(Maintenance::class, cache: false));
+        $this->cli->registerCommandHandler('cron', $this->classContainer->get(Cron::class, cache: false));
+        $this->cli->registerCommandHandler('migrate', $this->classContainer->get(Migrate::class, cache: false));
+        $this->cronManager->registerCronJob($this->classContainer->get(SessionCleanup::class, cache: false));
         $this->eventManager->registerEventListener('beforePageLoad', BeforePageLoad::class);
         $this->eventManager->registerEventListener('httpStart', HttpStart::class);
         $this->eventManager->registerEventListener('httpStart', CronStart::class);

@@ -23,7 +23,7 @@ class Enable implements ModuleEnableInterface {
     }
 
     public function onEnable() {
-        $command = $this->classContainer->getTransientClass(Migrate::class);
+        $command = $this->classContainer->get(Migrate::class, cache: false);
         $this->cli->registerCommandHandler('migrate', $command);
     }
 

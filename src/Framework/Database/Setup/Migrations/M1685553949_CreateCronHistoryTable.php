@@ -43,7 +43,7 @@ class M1685553949_CreateCronHistoryTable implements MigrationInterface {
 
     public function getDatabases(): array {
         $databaseInfo = $this->configuration->getConfig('databases.main');
-        $database = $this->classContainer->getTransientClass(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password']]);
+        $database = $this->classContainer->get(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password']], cache: false);
         return [$database];
     }
 }

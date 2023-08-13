@@ -68,7 +68,7 @@ class Server {
             $this->server = $this->classContainer->get(HttpServer::class, [SERVER_IP, SERVER_PORT, SWOOLE_PROCESS, $swooleSock], cache: true);
 
             // Load modules.
-            foreach ($this->moduleManager->getModulesList() as $module) {
+            foreach ($this->moduleManager->getModules() as $module) {
                 $this->logger->log(Logger::LOG_INFO, 'Loading module \'' . $module->getName() . '\'...', 'framework');
                 $this->moduleManager->loadModule($module);
             }
@@ -202,7 +202,7 @@ class Server {
             Coroutine::cancel($cid);
         }
 
-        foreach (array_reverse($this->moduleManager->getModulesList()) as $module) {
+        foreach (array_reverse($this->moduleManager->getModules()) as $module) {
             $this->logger->log(Logger::LOG_INFO, 'Unloading module \'' . $module->getName() . '\'...', 'framework');
             $this->moduleManager->unloadModule($module);
         }

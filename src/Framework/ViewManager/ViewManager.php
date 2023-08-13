@@ -98,14 +98,14 @@ class ViewManager {
      */
     public function parseView(View $view, array $data = []): View {
         $view = clone $view;
-        $controller = $this->classContainer->getTransientClass($view->getController(), [$data]);
+        $controller = $this->classContainer->get($view->getController(), [$data], cache: false);
 
         if ($view->getController()) {
             $eventResult = $this->eventManager->dispatchEvent('beforeViewController', ['view' => &$view, 'data' => &$data]);
             if ($eventResult->isCanceled() === false) {
                 // Replace controller, if needed.
                 if ($controller::class != $view->getController()) {
-                    $controller = $this->classContainer->getTransientClass($view->getController(), [$data]);
+                    $controller = $this->classContainer->get($view->getController(), [$data], cache: false);
                 }
             }
         }

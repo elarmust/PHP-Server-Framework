@@ -36,7 +36,7 @@ class ClassContainer implements ContainerInterface {
             throw new NotFoundException('Class ' . $className . ' could not be found!');
         }
 
-        $return = $this->getTransientClass($className, $args);
+        $return = new $className(...$this->prepareArguments($className, $args));
         if (!isset($this->objectInstances[$className][$alias]) && $cache) {
             $this->objectInstances[$className][$alias] = $return;
         }
@@ -99,18 +99,5 @@ class ClassContainer implements ContainerInterface {
         $objectParams = array_intersect_key($objectParams, array_flip($keysToKeep));
 
         return $objectParams;
-    }
-
-    /**
-     * A convenient wrapper for prepareArguments()
-     * Returns a transient class
-     *
-     * @param string $classPath // Class path.
-     * @param array $params // Parameters to pass to the object.
-     * @return Object
-     * @throws ReflectionException
-     */
-    public function getTransientClass(string $classPath, array $params = []): Object {
-        return new $classPath(...$this->prepareArguments($classPath, $params));
     }
 }

@@ -87,7 +87,7 @@ class HttpRouter {
 
         if ($highestMatch) {
             foreach ($this->routeRegister->getRouteHandlers($highestMatch) as $routeHandler) {
-                $controller = $this->classContainer->getTransientClass($routeHandler);
+                $controller = $this->classContainer->get($routeHandler, cache: false);
                 try {
                     if (!$controller->run($request, $response, $content)) {
                         break;

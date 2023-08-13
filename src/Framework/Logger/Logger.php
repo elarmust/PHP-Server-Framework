@@ -50,6 +50,6 @@ class Logger {
     }
 
     public function registerLogAdapter(string $name, string $className): void {
-        $this->loggerAdapters[$name] = $this->classContainer->getTransientClass($className);
+        $this->loggerAdapters[$name] = $this->classContainer->get($className, cache: false);
     }
 }

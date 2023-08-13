@@ -78,19 +78,15 @@ class ModuleManager {
         }
     }
 
-    public function getModulesList() {
-        return $this->modules;
-    }
-
     public function loadModule(Module $moduleName) {
         $enableClass = $moduleName->getClassPath() . '\\Enable';
-        $moduleEnable = $this->classContainer->getTransientClass($enableClass);
+        $moduleEnable = $this->classContainer->get($enableClass, cache: false);
         $moduleEnable->onEnable();
     }
 
     public function unloadModule(Module $moduleName) {
         $enableClass = $moduleName->getClassPath() . '\\Enable';
-        $moduleEnable = $this->classContainer->getTransientClass($enableClass);
+        $moduleEnable = $this->classContainer->get($enableClass, cache: false);
         $moduleEnable->onDisable();
     }
 

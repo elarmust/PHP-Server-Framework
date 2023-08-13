@@ -48,7 +48,7 @@ class EntityType implements EntityTypeInterface{
             }
 
             if ($attribute['get_class']) {
-                $class = $this->classContainer->getTransientClass($attribute['get_class'], [$this]);
+                $class = $this->classContainer->get($attribute['get_class'], [$this], cache: false);
                 $this->attributesMeta[$attribute['attribute_name']]['getClass'] = $class;
             } else {
                 $this->attributesMeta[$attribute['attribute_name']]['getClass'] = null;
@@ -59,7 +59,7 @@ class EntityType implements EntityTypeInterface{
             }
 
             if ($attribute['set_class']) {
-                $class = $this->classContainer->getTransientClass($attribute['set_class'], [$this]);
+                $class = $this->classContainer->get($attribute['set_class'], [$this], cache: false);
                 $this->attributesMeta[$attribute['attribute_name']]['setClass'] = $class;
             } else {
                 $this->attributesMeta[$attribute['attribute_name']]['setClass'] = null;
@@ -70,7 +70,7 @@ class EntityType implements EntityTypeInterface{
             }
 
             if ($attribute['input_list_class']) {
-                $class = $this->classContainer->getTransientClass($attribute['input_list_class'], [$this]);
+                $class = $this->classContainer->get($attribute['input_list_class'], [$this], cache: false);
                 $this->attributesMeta[$attribute['attribute_name']]['inputListClass'] = $class;
             } else {
                 $this->attributesMeta[$attribute['attribute_name']]['inputListClass'] = null;

@@ -34,7 +34,7 @@ class EventManager {
     public function dispatchEvent(string $eventName, array $data = []): Event {
         $event = new Event($data);
         foreach ($this->eventListeners[$eventName] ?? [] as $eventClass) {
-            $eventListener = $this->classContainer->getTransientClass($eventClass);
+            $eventListener = $this->classContainer->get($eventClass, cache: false);
             $eventListener->run($event);
         }
 
