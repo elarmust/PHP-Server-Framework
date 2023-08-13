@@ -8,22 +8,22 @@
 
 namespace Framework\Database;
 
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use Framework\Cli\Cli;
 use Framework\Core\Module\ModuleEnableInterface;
 use Framework\Database\Commands\Migrate;
 
 class Enable implements ModuleEnableInterface {
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
     private Cli $cli;
 
-    public function __construct(ClassManager $classManager, Cli $cli) {
-        $this->classManager = $classManager;
+    public function __construct(ClassContainer $classContainer, Cli $cli) {
+        $this->classContainer = $classContainer;
         $this->cli = $cli;
     }
 
     public function onEnable() {
-        $command = $this->classManager->getTransientClass(Migrate::class);
+        $command = $this->classContainer->getTransientClass(Migrate::class);
         $this->cli->registerCommandHandler('migrate', $command);
     }
 

@@ -10,7 +10,7 @@
 namespace Framework\Entity\Model;
 
 use Exception;
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use Framework\Database\Database;
 use Framework\Database\DataTypes\DataTypeInterface;
 use Framework\Entity\Exceptions\EntityAttributeAlreadyExistsException;
@@ -18,7 +18,7 @@ use Framework\Entity\Exceptions\EntityTypeAlreadyExistsException;
 use Framework\Entity\Exceptions\EntityTypeNotFoundException;
 
 class EntityType implements EntityTypeInterface{
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
     protected Database $database;
     protected string $type;
     protected int $typeId;
@@ -26,8 +26,8 @@ class EntityType implements EntityTypeInterface{
     protected array $attributes;
     protected array $attributesMeta;
 
-    function __construct(ClassManager $classManager, Database $database, string $typeName) {
-        $this->classManager = $classManager;
+    function __construct(ClassContainer $classContainer, Database $database, string $typeName) {
+        $this->classContainer = $classContainer;
         $this->database = $database;
         $this->type = $typeName;
     }
@@ -48,7 +48,7 @@ class EntityType implements EntityTypeInterface{
             }
 
             if ($attribute['get_class']) {
-                $class = $this->classManager->getTransientClass($attribute['get_class'], [$this]);
+                $class = $this->classContainer->getTransientClass($attribute['get_class'], [$this]);
                 $this->attributesMeta[$attribute['attribute_name']]['getClass'] = $class;
             } else {
                 $this->attributesMeta[$attribute['attribute_name']]['getClass'] = null;
@@ -59,7 +59,7 @@ class EntityType implements EntityTypeInterface{
             }
 
             if ($attribute['set_class']) {
-                $class = $this->classManager->getTransientClass($attribute['set_class'], [$this]);
+                $class = $this->classContainer->getTransientClass($attribute['set_class'], [$this]);
                 $this->attributesMeta[$attribute['attribute_name']]['setClass'] = $class;
             } else {
                 $this->attributesMeta[$attribute['attribute_name']]['setClass'] = null;
@@ -70,7 +70,7 @@ class EntityType implements EntityTypeInterface{
             }
 
             if ($attribute['input_list_class']) {
-                $class = $this->classManager->getTransientClass($attribute['input_list_class'], [$this]);
+                $class = $this->classContainer->getTransientClass($attribute['input_list_class'], [$this]);
                 $this->attributesMeta[$attribute['attribute_name']]['inputListClass'] = $class;
             } else {
                 $this->attributesMeta[$attribute['attribute_name']]['inputListClass'] = null;

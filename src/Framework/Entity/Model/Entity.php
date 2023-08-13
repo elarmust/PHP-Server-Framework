@@ -7,18 +7,18 @@
 
 namespace Framework\Entity\Model;
 
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use Framework\Entity\Exceptions\EntityNotFoundException;
 use Framework\Entity\Exceptions\EntityAttributeNotFoundException;
 
 class Entity extends EntityType implements EntityInterface {
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
     public array $attributes = [];
     private ?int $entityId = null;
 
-    function __construct(ClassManager $classManager, string $entityType) {
-        $this->classManager = $classManager;
-        parent::__construct(...$this->classManager->prepareArguments(EntityType::class, [$entityType]));
+    function __construct(ClassContainer $classContainer, string $entityType) {
+        $this->classContainer = $classContainer;
+        parent::__construct(...$this->classContainer->prepareArguments(EntityType::class, [$entityType]));
         $this->loadType();
     }
 

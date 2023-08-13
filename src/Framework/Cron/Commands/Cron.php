@@ -9,14 +9,14 @@ namespace Framework\Cron\Commands;
 
 use Framework\Cron\CronManager;
 use Framework\Cli\CommandInterface;
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 
 class Cron implements CommandInterface {
-    public ClassManager $classManager;
+    public ClassContainer $classContainer;
     public CronManager $cronManager;
 
-    public function __construct(ClassManager $classManager, CronManager $cronManager) {
-        $this->classManager = $classManager;
+    public function __construct(ClassContainer $classContainer, CronManager $cronManager) {
+        $this->classContainer = $classContainer;
         $this->cronManager = $cronManager;
     }
 

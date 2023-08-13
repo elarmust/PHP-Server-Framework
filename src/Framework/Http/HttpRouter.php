@@ -12,7 +12,7 @@ namespace Framework\Http;
 use Framework\Logger\Logger;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use Framework\Http\RouteRegister;
 use Framework\ViewManager\ViewManager;
 use Framework\EventManager\EventManager;
@@ -20,20 +20,20 @@ use Swoole\Coroutine;
 use Throwable;
 
 class HttpRouter {
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
     private EventManager $eventManager;
     private RouteRegister $routeRegister;
     private ViewManager $viewManager;
     private Logger $logger;
 
     public function __construct(
-        ClassManager $classManager,
+        ClassContainer $classContainer,
         EventManager $eventManager,
         RouteRegister $routeRegister,
         ViewManager $viewManager,
         Logger $logger
     ) {
-        $this->classManager = $classManager;
+        $this->classContainer = $classContainer;
         $this->eventManager = $eventManager;
         $this->routeRegister = $routeRegister;
         $this->viewManager = $viewManager;
@@ -87,7 +87,7 @@ class HttpRouter {
 
         if ($highestMatch) {
             foreach ($this->routeRegister->getRouteHandlers($highestMatch) as $routeHandler) {
-                $controller = $this->classManager->getTransientClass($routeHandler);
+                $controller = $this->classContainer->getTransientClass($routeHandler);
                 try {
                     if (!$controller->run($request, $response, $content)) {
                         break;

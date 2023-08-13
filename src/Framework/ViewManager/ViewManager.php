@@ -13,24 +13,24 @@ use DOMDocument;
 use ReflectionException;
 use Framework\Logger\Logger;
 use InvalidArgumentException;
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use Swoole\Coroutine\System;
 use Framework\EventManager\EventManager;
 
 class ViewManager {
     private EventManager $eventManager;
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
     private Logger $logger;
     private array $views = [];
 
     /**
      * @param EventManager $eventManager
-     * @param ClassManager $classManager
+     * @param ClassContainer $classContainer
      * @param Logger $logger
      */
-    public function __construct(EventManager $eventManager, ClassManager $classManager, Logger $logger) {
+    public function __construct(EventManager $eventManager, ClassContainer $classContainer, Logger $logger) {
         $this->eventManager = $eventManager;
-        $this->classManager = $classManager;
+        $this->classContainer = $classContainer;
         $this->logger = $logger;
     }
 
@@ -98,14 +98,14 @@ class ViewManager {
      */
     public function parseView(View $view, array $data = []): View {
         $view = clone $view;
-        $controller = $this->classManager->getTransientClass($view->getController(), [$data]);
+        $controller = $this->classContainer->getTransientClass($view->getController(), [$data]);
 
         if ($view->getController()) {
             $eventResult = $this->eventManager->dispatchEvent('beforeViewController', ['view' => &$view, 'data' => &$data]);
             if ($eventResult->isCanceled() === false) {
                 // Replace controller, if needed.
                 if ($controller::class != $view->getController()) {
-                    $controller = $this->classManager->getTransientClass($view->getController(), [$data]);
+                    $controller = $this->classContainer->getTransientClass($view->getController(), [$data]);
                 }
             }
         }

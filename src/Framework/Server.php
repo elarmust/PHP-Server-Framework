@@ -9,7 +9,7 @@
 
 namespace Framework;
 
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use Framework\EventManager\EventManager;
 use Framework\Database\Database;
 use Framework\Http\HttpRouter;
@@ -27,7 +27,7 @@ use Swoole\WebSocket\CloseFrame;
 
 class Server {
     private ModuleManager $moduleManager;
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
     private Configuration $configuration;
     private CronManager $cronManager;
     private HttpRouter $router;
@@ -40,23 +40,24 @@ class Server {
     public function __construct() {
         Coroutine\run(function () {
             define('SERVER_START_TIME', microtime(true));
-            $this->classManager = new ClassManager();
-            $this->classManager->setClassInstance($this);
-            $this->logger = $this->classManager->getClassInstance(Logger::class);
+            $this->classContainer = new ClassContainer();
+            $this->classContainer->set($this);
+            $this->classContainer->set($this->classContainer);
+            $this->logger = $this->classContainer->get(Logger::class);
             $this->logger->log(Logger::LOG_INFO, 'Starting Framework server...', 'framework');
-            $this->configuration = $this->classManager->getClassInstance(Configuration::class);
+            $this->configuration = $this->classContainer->get(Configuration::class);
             $this->configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
             define('SERVER_IP', $this->configuration->getConfig('ip'));
             define('SERVER_PORT', $this->configuration->getConfig('port'));
             $databaseInfo = $this->configuration->getConfig('databases.main');
-            $this->classManager->getClassInstance(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
-            $this->cronManager = $this->classManager->getClassInstance(CronManager::class);
-            $this->moduleManager = $this->classManager->getClassInstance(ModuleManager::class);
-            $this->eventManager = $this->classManager->getClassInstance(EventManager::class);
-            $this->router = $this->classManager->getClassInstance(HttpRouter::class);
+            $this->classContainer->get(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
+            $this->cronManager = $this->classContainer->get(CronManager::class);
+            $this->moduleManager = $this->classContainer->get(ModuleManager::class);
+            $this->eventManager = $this->classContainer->get(EventManager::class);
+            $this->router = $this->classContainer->get(HttpRouter::class);
 
             // Run internal onEnable().
-            $this->classManager->getClassInstance(Enable::class)->onEnable();
+            $this->classContainer->get(Enable::class)->onEnable();
 
             if ($this->configuration->getConfig('cert.cert') && $this->configuration->getConfig('cert.key')) {
                 $swooleSock = SWOOLE_SOCK_TCP6 | SWOOLE_SSL;
@@ -64,7 +65,7 @@ class Server {
                 $swooleSock = SWOOLE_SOCK_TCP6;
             }
 
-            $this->server = $this->classManager->getClassInstance(HttpServer::class, [SERVER_IP, SERVER_PORT, SWOOLE_PROCESS, $swooleSock]);
+            $this->server = $this->classContainer->get(HttpServer::class, [SERVER_IP, SERVER_PORT, SWOOLE_PROCESS, $swooleSock], cache: true);
 
             // Load modules.
             foreach ($this->moduleManager->getModulesList() as $module) {
@@ -207,7 +208,7 @@ class Server {
         }
 
         $this->logger->log(Logger::LOG_INFO, 'Server stopped!', 'framework');
-        $this->classManager->getClassInstance(Enable::class)->onDisable();
+        $this->classContainer->get(Enable::class)->onDisable();
 
         $this->server->shutdown();
     }

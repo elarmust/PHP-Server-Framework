@@ -10,35 +10,46 @@ namespace Framework\Core;
 use Exception;
 use ReflectionClass;
 use ReflectionException;
+use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use Framework\Core\Exception\NotFoundException;
 
-class ClassManager {
-    static array $objectInstances = [];
+class ClassContainer implements ContainerInterface {
+    protected array $objectInstances = [];
 
     /**
-     * Get and create class instances.
-     * Returns a singletonized class
+     * Get and instantiate classes
      *
-     * @param string $classPath // Class path.
-     * @param array $params // Parameters to pass to the class.
-     * @param string $name // Instance name. Useful for having multiple instances of the same class.
-     * @param bool $overWrite // Overwrite existing instance with same ID
+     * @param string $className // Class path.
+     * @param array $args // Parameters to pass to the class.
+     * @param string $alias // Instance alias.
+     * @param bool $cache // Use cache cache for results.
      * @return Object
-     * @throws Exception
+     * @throws NotFoundException
      */
-    public function getClassInstance(string $classPath, array $params = [], string $name = 'default', bool $overWrite = false): Object {
-        if (!class_exists($classPath)) {
-            throw new Exception('Class ' . $classPath . ' not found!');
+    public function get(string $className, array $args = [], string $alias = 'default', bool $cache = true): object {
+        if (isset($this->objectInstances[$className][$alias]) && $cache) {
+            return $this->objectInstances[$className][$alias];
         }
 
-        if (!isset(self::$objectInstances[$name][$classPath]) || $overWrite) {
-            self::$objectInstances[$name][$classPath] = $this->getTransientClass($classPath, $params);
+        if (!$this->has($className)) {
+            throw new NotFoundException('Class ' . $className . ' could not be found!');
         }
 
-        return self::$objectInstances[$name][$classPath];
+        $return = $this->getTransientClass($className, $args);
+        if (!isset($this->objectInstances[$className][$alias]) && $cache) {
+            $this->objectInstances[$className][$alias] = $return;
+        }
+
+        return $return;
     }
 
-    public function setClassInstance(Object $class, string $name = 'default') {
-        self::$objectInstances[$name][$class::class] = $class;
+    public function has(string $className): bool {
+        return class_exists($className);
+    }
+
+    public function set(object $class, $alias = 'default'): void {
+        $this->objectInstances[$class::class][$alias] = $class;
     }
 
     /**
@@ -52,11 +63,12 @@ class ClassManager {
     public function prepareArguments(string $classPath, array $params = []): array {
         $objectParams = $params;
         $reflection = new ReflectionClass($classPath);
-        if ($reflection->getConstructor() === null) {
+        $constructor = $reflection->getConstructor();
+        if ($constructor === null || !$constructor->isPublic()) {
             return [];
         }
 
-        $classParams = $reflection->getConstructor()->getParameters();
+        $classParams = $constructor->getParameters();
         $x = 0;
         $classParamTypeNames = [];
         $paramClasses = [];
@@ -73,8 +85,8 @@ class ClassManager {
 
         $finalParamCount = count($params);
         foreach ($classParamTypeNames as $classParam) {
-            if (class_exists($classParam) && !in_array($classParam, $paramClasses)) {
-                $objectParams[$x] = $this->getClassInstance($classParam);
+            if ($this->has($classParam) && !in_array($classParam, $paramClasses)) {
+                $objectParams[$x] = $this->get($classParam);
                 $finalParamCount++;
             } else {
                 $objectParams[$x] = array_shift($params);

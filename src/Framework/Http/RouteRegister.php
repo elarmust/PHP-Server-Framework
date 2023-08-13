@@ -9,15 +9,15 @@ namespace Framework\Http;
 
 use Framework\Logger\Logger;
 use InvalidArgumentException;
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 
 class RouteRegister {
-    public ClassManager $classManager;
+    public ClassContainer $classContainer;
     private array $routes;
     private Logger $logger;
 
-    public function __construct(ClassManager $classManager, Logger $logger) {
-        $this->classManager = $classManager;
+    public function __construct(ClassContainer $classContainer, Logger $logger) {
+        $this->classContainer = $classContainer;
         $this->logger = $logger;
     }
 

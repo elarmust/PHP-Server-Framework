@@ -2,13 +2,13 @@
 
 namespace Framework\Logger;
 
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use Framework\Logger\LogAdapters\GenericLogAdapter;
 use InvalidArgumentException;
 
 class Logger {
     protected array $loggerAdapters = [];
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
 
     /**
      * RFC 5424 log levels
@@ -33,8 +33,8 @@ class Logger {
         LOG_DEBUG => 'debug'
     ];
 
-    public function __construct(ClassManager $classManager) {
-        $this->classManager = $classManager;
+    public function __construct(ClassContainer $classContainer) {
+        $this->classContainer = $classContainer;
         // Load generic logger;
         $this->registerLogAdapter('genericLogger', GenericLogAdapter::class);
     }
@@ -50,6 +50,6 @@ class Logger {
     }
 
     public function registerLogAdapter(string $name, string $className): void {
-        $this->loggerAdapters[$name] = $this->classManager->getTransientClass($className);
+        $this->loggerAdapters[$name] = $this->classContainer->getTransientClass($className);
     }
 }

@@ -10,18 +10,18 @@ namespace Framework\Database;
 
 use InvalidArgumentException;
 use Framework\Logger\Logger;
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use Framework\Core\Module\ModuleManager;
 use Throwable;
 
 class MigrationManager {
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
     private ModuleManager $moduleManager;
     private Logger $logger;
     private array $migrations = [];
 
-    public function __construct(ClassManager $classManager, ModuleManager $moduleManager, Logger $logger) {
-        $this->classManager = $classManager;
+    public function __construct(ClassContainer $classContainer, ModuleManager $moduleManager, Logger $logger) {
+        $this->classContainer = $classContainer;
         $this->moduleManager = $moduleManager;
         $this->logger = $logger;
         $this->loadMigrations();
@@ -42,7 +42,7 @@ class MigrationManager {
                 $migrationPath = $module->getClassPath() . '\\Setup\\Migrations\\' . $moduleMigration;
                 $name = str_replace('.php', '', $migrationPath);
 
-                $migration = $this->classManager->getTransientClass($name);
+                $migration = $this->classContainer->getTransientClass($name);
                 $this->migrations[strtolower($module->getClassPath())][$migration->version()][str_replace('.php', '', $moduleMigration)] = $migration;
             }
         }
@@ -53,7 +53,7 @@ class MigrationManager {
             $internalMigration = str_replace('.php', '', $internalMigration);
             $migrationPath = 'Framework\\Database\\Setup\\Migrations\\' . $internalMigration;
 
-            $migration = $this->classManager->getTransientClass($migrationPath);
+            $migration = $this->classContainer->getTransientClass($migrationPath);
             $this->migrations['framework'][$migration->version()][$internalMigration] = $migration;
         }
     }

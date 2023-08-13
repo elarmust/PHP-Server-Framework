@@ -8,19 +8,19 @@
 namespace Framework\Core\Commands;
 
 use Framework\Server;
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use Framework\Cli\CommandInterface;
 
 class Maintenance implements CommandInterface {
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
 
-    public function __construct(ClassManager $classManager) {
-        $this->classManager = $classManager;
+    public function __construct(ClassContainer $classContainer) {
+        $this->classContainer = $classContainer;
     }
 
     public function run(array $commandArgs): null|string {
         $commandArgs[1] = strtolower($commandArgs[1] ?? '');
-        $server = $this->classManager->getClassInstance(Server::class);
+        $server = $this->classContainer->get(Server::class);
         if ($commandArgs[1] == 'enable') {
             $server->maintenance(true);
             return null;

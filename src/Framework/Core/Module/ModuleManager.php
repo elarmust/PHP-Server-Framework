@@ -10,15 +10,15 @@ namespace Framework\Core\Module;
 
 use Exception;
 use Framework\Logger\Logger;
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 
 class ModuleManager {
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
     private Logger $logger;
     private array $modules = [];
 
-    public function __construct(ClassManager $classManager, Logger $logger) {
-        $this->classManager = $classManager;
+    public function __construct(ClassContainer $classContainer, Logger $logger) {
+        $this->classContainer = $classContainer;
         $this->logger = $logger;
         $moduleConfigsUnordered = [];
 
@@ -84,13 +84,13 @@ class ModuleManager {
 
     public function loadModule(Module $moduleName) {
         $enableClass = $moduleName->getClassPath() . '\\Enable';
-        $moduleEnable = $this->classManager->getTransientClass($enableClass);
+        $moduleEnable = $this->classContainer->getTransientClass($enableClass);
         $moduleEnable->onEnable();
     }
 
     public function unloadModule(Module $moduleName) {
         $enableClass = $moduleName->getClassPath() . '\\Enable';
-        $moduleEnable = $this->classManager->getTransientClass($enableClass);
+        $moduleEnable = $this->classContainer->getTransientClass($enableClass);
         $moduleEnable->onDisable();
     }
 

@@ -10,16 +10,16 @@ namespace Framework\EventManager;
 
 use ReflectionException;
 use Framework\Logger\Logger;
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use InvalidArgumentException;
 
 class EventManager {
     private array $eventListeners = [];
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
     private Logger $logger;
 
-    public function __construct(ClassManager $classManager, Logger $logger) {
-        $this->classManager = $classManager;
+    public function __construct(ClassContainer $classContainer, Logger $logger) {
+        $this->classContainer = $classContainer;
         $this->logger = $logger;
     }
 
@@ -34,7 +34,7 @@ class EventManager {
     public function dispatchEvent(string $eventName, array $data = []): Event {
         $event = new Event($data);
         foreach ($this->eventListeners[$eventName] ?? [] as $eventClass) {
-            $eventListener = $this->classManager->getTransientClass($eventClass);
+            $eventListener = $this->classContainer->getTransientClass($eventClass);
             $eventListener->run($event);
         }
 

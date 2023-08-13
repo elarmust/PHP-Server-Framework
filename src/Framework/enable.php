@@ -26,7 +26,7 @@ use Framework\ViewManager\ViewManager;
 use Framework\Cli\Cli;
 use Framework\ClI\HttpStart;
 use Framework\Cron\HttpStart as CronStart;
-use Framework\Core\ClassManager;
+use Framework\Core\ClassContainer;
 use Framework\Database\Commands\Migrate;
 use Framework\Http\Session\Cron\SessionCleanup;
 
@@ -34,13 +34,13 @@ class Enable implements ModuleEnableInterface {
     public RouteRegister $register;
     public ViewManager $viewManager;
     public ModuleManager $moduleManager;
-    private ClassManager $classManager;
+    private ClassContainer $classContainer;
     private Cli $cli;
     private CronManager $cronManager;
     private EventManager $eventManager;
 
     /**
-     * @param ClassManager $classManager
+     * @param ClassContainer $classContainer
      * @param RouteRegister $register
      * @param ViewManager $viewManager
      * @param ModuleManager $moduleManager
@@ -49,7 +49,7 @@ class Enable implements ModuleEnableInterface {
      * @param Cli $cli
      */
     public function __construct(
-        ClassManager $classManager,
+        ClassContainer $classContainer,
         RouteRegister $register,
         ViewManager $viewManager,
         ModuleManager $moduleManager,
@@ -60,7 +60,7 @@ class Enable implements ModuleEnableInterface {
         $this->register = $register;
         $this->viewManager = $viewManager;
         $this->moduleManager = $moduleManager;
-        $this->classManager = $classManager;
+        $this->classContainer = $classContainer;
         $this->cli = $cli;
         $this->cronManager = $cronManager;
         $this->eventManager = $eventManager;
@@ -75,11 +75,11 @@ class Enable implements ModuleEnableInterface {
         $this->register->registerRouteHandler('/', Index::class);
         $this->viewManager->registerView('EmptyView');
         $this->viewManager->registerView('BasicPage', BasicPage::class, System::readFile(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php'));
-        $this->cli->registerCommandHandler('stop', $this->classManager->getTransientClass(Stop::class));
-        $this->cli->registerCommandHandler('maintenance', $this->classManager->getTransientClass(Maintenance::class));
-        $this->cli->registerCommandHandler('cron', $this->classManager->getTransientClass(Cron::class));
-        $this->cli->registerCommandHandler('migrate', $this->classManager->getTransientClass(Migrate::class));
-        $this->cronManager->registerCronJob($this->classManager->getTransientClass(SessionCleanup::class));
+        $this->cli->registerCommandHandler('stop', $this->classContainer->getTransientClass(Stop::class));
+        $this->cli->registerCommandHandler('maintenance', $this->classContainer->getTransientClass(Maintenance::class));
+        $this->cli->registerCommandHandler('cron', $this->classContainer->getTransientClass(Cron::class));
+        $this->cli->registerCommandHandler('migrate', $this->classContainer->getTransientClass(Migrate::class));
+        $this->cronManager->registerCronJob($this->classContainer->getTransientClass(SessionCleanup::class));
         $this->eventManager->registerEventListener('beforePageLoad', BeforePageLoad::class);
         $this->eventManager->registerEventListener('httpStart', HttpStart::class);
         $this->eventManager->registerEventListener('httpStart', CronStart::class);
