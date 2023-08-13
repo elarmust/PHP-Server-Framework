@@ -98,21 +98,19 @@ class Server {
         $this->server->set($set);
 
         $this->server->handle('/', function (Request $request, Response $response) {
-            go(function () use (&$response, &$request) {
-                $request->server['request_uri'] = explode('/', $request->server['request_uri']);
-                $result = $this->router->parseRequest($request, $response);
-                // Check if the response is still available. It may have been closed previously!
-                if ($response->isWritable()) {
-                    $response->end($result);
-                }
-            });
+            $request->server['request_uri'] = explode('/', $request->server['request_uri']);
+            $result = $this->router->parseRequest($request, $response);
+            // Check if the response is still available. It may have been closed previously!
+            if ($response->isWritable()) {
+                $response->end($result);
+            }
         });
 
         if (($this->configuration->getConfig('websocket.enabled') ?? false) == true) {
             $this->logger->log(Logger::LOG_INFO, 'Websocket enabled.', 'framework');
             $this->server->handle('/' . ($this->configuration->getConfig('websocket.websocketURLPath') ?? 'ws'), function (Request $request, Response $response) {
                 $response->upgrade();
-                $event = $this->eventManager->dispatchEvent('websocketOpen', [&$this, &$response]);
+                $event = $this->eventManager->dispatchEvent('websocketOpen', [$this, &$response]);
                 if ($event->isCanceled()) {
                     $response->close();
                     return;
@@ -124,30 +122,30 @@ class Server {
                 while (true) {
                     $frame = $response->recv($this->configuration->getConfig('websocket.timeoutSeconds') ?? 600);
                     if ($frame === '') {
-                        $this->eventManager->dispatchEvent('websocketClose', [&$this, &$response]);
+                        $this->eventManager->dispatchEvent('websocketClose', [$this, &$response]);
                         unset($this->wsConnections[$objectId]);
                         $response->close();
                         break;
                     } else if ($frame === false) {
-                        $this->eventManager->dispatchEvent('websocketClose', [&$this, &$response]);
+                        $this->eventManager->dispatchEvent('websocketClose', [$this, &$response]);
                         unset($this->wsConnections[$objectId]);
                         $response->close();
                         break;
                     } else {
                         if ($frame->data == 'close' || get_class($frame) === CloseFrame::class) {
-                            $this->eventManager->dispatchEvent('websocketClose', [&$this, &$response]);
+                            $this->eventManager->dispatchEvent('websocketClose', [$this, &$response]);
                             unset($this->wsConnections[$objectId]);
                             $response->close();
                             break;
                         }
 
-                        $this->eventManager->dispatchEvent('websocketMessage', [&$this, &$frame]);
+                        $this->eventManager->dispatchEvent('websocketMessage', [$this, &$frame]);
                     }
                 }
             });
         }
 
-        $this->eventManager->dispatchEvent('httpStart', [&$this]);
+        $this->eventManager->dispatchEvent('httpStart', [$this]);
         $this->logger->log(Logger::LOG_INFO, 'Framework server is ready. Listening on: ' . SERVER_IP . ' ' . SERVER_PORT . ', Load time: ' . round(microtime(true) - SERVER_START_TIME, 2) . 's', 'framework');
         $this->server->start();
     }
