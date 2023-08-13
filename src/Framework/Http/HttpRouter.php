@@ -16,6 +16,7 @@ use Framework\Core\ClassManager;
 use Framework\Http\RouteRegister;
 use Framework\ViewManager\ViewManager;
 use Framework\EventManager\EventManager;
+use Swoole\Coroutine;
 use Throwable;
 
 class HttpRouter {

@@ -28,7 +28,7 @@ class BeforePageLoad implements EventListenerInterface {
         $cookieSessionId = $event->getData()['request']->cookie['PHPSESSID'] ?? null;
         $session = $this->sessionManager->getSession($cookieSessionId);
 
-        // Update session id, if it has changed. This will also send the cookie, if it doesn't exist.
+        // Send session cookie to user.
         if ($cookieSessionId !== $session->getId()) {
             $secure = false;
             if ($this->server->ssl) {

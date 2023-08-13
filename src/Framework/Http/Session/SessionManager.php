@@ -58,14 +58,6 @@ class SessionManager {
             return $this->sessions[$newId];
         }
 
-        // 10% chance to regenerate session id to prevent session fixation attacks.
-        if (random_int(1, 10) === 1) {
-            $this->deleteSession($sessionId);
-            $newId = $this->generateSessionId();
-            $this->sessions[$newId] = new Session($newId, $session->getData());
-            return $this->sessions[$newId];
-        }
-
         // Update session timestamp
         $session = $this->sessions[$sessionId];
         $session->updateTimestamp();
