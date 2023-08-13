@@ -111,7 +111,7 @@ class EntityType implements EntityTypeInterface{
                 `set_class` VARCHAR(256) DEFAULT NULL,
                 `input_list_class` VARCHAR(256) DEFAULT NULL,
                 `default` TEXT DEFAULT NULL,
-                 CONSTRAINT entity_' . $this->getType() . '_attribute_type_entity_type
+                 CONSTRAINT entity_' . $this->getType() . '_attributes
                     FOREIGN KEY (entity_type)
                     REFERENCES entity_types(id)
                         ON DELETE CASCADE

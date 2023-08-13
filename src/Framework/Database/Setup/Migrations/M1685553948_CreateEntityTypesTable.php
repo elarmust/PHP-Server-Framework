@@ -32,6 +32,12 @@ class M1685553948_CreateEntityTypesTable implements MigrationInterface {
     }
 
     public function down(Database $database) {
+        $entities = $database->select('entity_types');
+        foreach ($entities as $entity) {
+            $database->query('DROP TABLE entity_' . $entity['entity_type'] . '_attributes');
+            $database->query('DROP TABLE entities_' . $entity['entity_type']);
+        }
+
         $database->query('DROP TABLE entity_types');
     }
 
