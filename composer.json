@@ -10,7 +10,8 @@
     ],
     "require": {
         "dragonmantank/cron-expression": "^3.3",
-        "swoole/ide-helper": "dev-master"
+        "swoole/ide-helper": "dev-master",
+        "psr/container": "^2.0"
     },
     "autoload": {
         "psr-4": {
