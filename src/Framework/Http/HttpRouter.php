@@ -93,8 +93,8 @@ class HttpRouter {
                         break;
                     };
                 } catch (Throwable $e) {
-                    $this->logger->log(Logger::LOG_ERR, $e->getMessage(), 'framework');
-                    $this->logger->log(Logger::LOG_ERR, $e->getTraceAsString(), 'framework');
+                    $this->logger->log(Logger::NOTICE, $e->getMessage(), identifier: 'framework');
+                    $this->logger->log(Logger::NOTICE, $e->getTraceAsString(), identifier: 'framework');
                 }
             }
         }

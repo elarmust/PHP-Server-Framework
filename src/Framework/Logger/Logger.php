@@ -4,52 +4,50 @@ namespace Framework\Logger;
 
 use Framework\Core\ClassContainer;
 use Framework\Logger\LogAdapters\GenericLogAdapter;
-use InvalidArgumentException;
+use Psr\Log\LogLevel;
+use Psr\Log\LoggerTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\InvalidArgumentException;
 
-class Logger {
+class Logger extends LogLevel implements LoggerInterface {
+    use LoggerTrait;
+
     protected array $loggerAdapters = [];
     private ClassContainer $classContainer;
-
-    /**
-     * RFC 5424 log levels
-     */
-    const LOG_EMERG = LOG_EMERG;
-    const LOG_ALERT = LOG_ALERT;
-    const LOG_CRIT = LOG_CRIT;
-    const LOG_ERR = LOG_ERR;
-    const LOG_WARNING = LOG_WARNING;
-    const LOG_NOTICE = LOG_NOTICE;
-    const LOG_INFO = LOG_INFO;
-    const LOG_DEBUG = LOG_DEBUG;
-
-    protected static array $logLevelList = [
-        LOG_EMERG => 'emergency',
-        LOG_ALERT => 'alert',
-        LOG_CRIT => 'critical',
-        LOG_ERR => 'error',
-        LOG_WARNING => 'warning',
-        LOG_NOTICE => 'notice',
-        LOG_INFO => 'info',
-        LOG_DEBUG => 'debug'
-    ];
 
     public function __construct(ClassContainer $classContainer) {
         $this->classContainer = $classContainer;
         // Load generic logger;
-        $this->registerLogAdapter('genericLogger', GenericLogAdapter::class);
+        $this->registerLogAdapter(GenericLogAdapter::class, 'genericLogger');
     }
 
-    public function log(int $level, string $logMessage, string $context, string $type = 'genericLogger') {
-        if (!isset($level, $this::$logLevelList)) {
+    public function log($level, string|\Stringable $message, array $context = [], string $identifier = ''): void {
+        if (!defined(LogLevel::class . '::' . strtoupper($level))) {
             throw new InvalidArgumentException('Invalid log level \'' . $level . '\'');
         }
 
-        if (isset($this->loggerAdapters[$type])) {
-            $this->loggerAdapters[$type]->log($this::$logLevelList[$level], $logMessage, $context);
+        if (isset($this->loggerAdapters['genericLogger'])) {
+            $this->loggerAdapters['genericLogger']->log(LogLevel::class . '::' . strtoupper($level), $message, $context);
         }
     }
 
-    public function registerLogAdapter(string $name, string $className): void {
-        $this->loggerAdapters[$name] = $this->classContainer->get($className, cache: false);
+    public function getLogger(string $loggerName = null) {
+        return new $this->loggerAdapters[$loggerName ?? 'genericLogger'];
+    }
+
+    public function getLogAdapterList(): array {
+        return array_keys($this->loggerAdapters);
+    }
+
+    public function unregisterLogAdapter(string $name): void {
+        unset($this->loggerAdapters[$name]);
+    }
+
+    public function registerLogAdapter(string $loggerClassName, string $name): void {
+        if (!isset(class_implements($loggerClassName)[LoggerInterface::class])) {
+            throw new InvalidArgumentException('Logger \'' . $loggerClassName . '\' must implement \'' . LoggerInterface::class . '\'!');
+        }
+
+        $this->loggerAdapters[$name] = $this->classContainer->get($loggerClassName, cache: false);
     }
 }

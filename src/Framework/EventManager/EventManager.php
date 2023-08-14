@@ -64,7 +64,7 @@ class EventManager {
 
         $key = array_search($eventListener, $this->eventListeners[$eventName]);
         if ($key === false) {
-            $this->logger->log(Logger::LOG_NOTICE, 'Attempting to unregister event handler: \'' . $eventListener . '\' for event \'' . $eventName . '\'', 'framework');
+            $this->logger->log(Logger::NOTICE, 'Attempting to unregister event handler: \'' . $eventListener . '\' for event \'' . $eventName . '\'');
             return;
         }
 

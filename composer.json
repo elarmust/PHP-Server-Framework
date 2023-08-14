@@ -11,7 +11,8 @@
     "require": {
         "dragonmantank/cron-expression": "^3.3",
         "swoole/ide-helper": "dev-master",
-        "psr/container": "^2.0"
+        "psr/container": "^2.0",
+        "psr/log": "^3.0@dev"
     },
     "autoload": {
         "psr-4": {

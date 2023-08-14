@@ -36,7 +36,7 @@ class RouteRegister {
 
         $key = array_search($class, $this->routes[$path]);
         if ($key === false) {
-            $this->logger->log(Logger::LOG_NOTICE, 'Attempting to unregister route handler: \'' . $class . '\' for route \'' . $path . '\'.', 'framework');
+            $this->logger->log(Logger::NOTICE, 'Attempting to unregister route handler: \'' . $class . '\' for route \'' . $path . '\'.', identifier: 'framework');
             return;
         }
 
@@ -45,7 +45,7 @@ class RouteRegister {
 
     public function unregisterRoute(string $path): void {
         if (!isset($this->routes[$path])) {
-            $this->logger->log(Logger::LOG_NOTICE, 'Attempting to unregister route \'' . $path . '\'.', 'framework');
+            $this->logger->log(Logger::NOTICE, 'Attempting to unregister route \'' . $path . '\'.', identifier: 'framework');
             return;
         }
 

@@ -119,7 +119,7 @@ class Cli implements ApplicationInterface {
     public function unregisterCommandHandler(string $command, CommandInterface $commandClass): void {
         $key = array_search($commandClass, $this->commands[$command]);
         if ($key === false) {
-            $this->logger->log(Logger::LOG_NOTICE, 'Unregistering nonexistent command handler: \'' .  $commandClass::class . '\' from command \'' . $command . '\'', 'framework');
+            $this->logger->log(Logger::NOTICE, 'Unregistering nonexistent command handler: \'' .  $commandClass::class . '\' from command \'' . $command . '\'', identifier: 'framework');
             return;
         }
 
@@ -132,7 +132,7 @@ class Cli implements ApplicationInterface {
 
     public function unregisterCommand(string $command): void {
         if (!isset($this->commands[$command])) {
-            $this->logger->log(Logger::LOG_NOTICE, 'Unregistering nonexistent command: \'' . $command . '\'', 'framework');
+            $this->logger->log(Logger::NOTICE, 'Unregistering nonexistent command: \'' . $command . '\'', identifier: 'framework');
             return;
         }
 
@@ -140,6 +140,6 @@ class Cli implements ApplicationInterface {
     }
 
     public function sendToOutput(string $text) {
-        $this->logger->log(Logger::LOG_INFO, $text, 'framework');
+        $this->logger->log(Logger::INFO, $text, identifier: 'framework');
     }
 }

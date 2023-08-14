@@ -179,8 +179,8 @@ class Database {
         try {
             $return = $sql->execute($params);
         } catch (Throwable $e) {
-            $this->logger->log(Logger::LOG_ERR, $e->getMessage(), 'framework');
-            $this->logger->log(Logger::LOG_ERR, $e->getTraceAsString(), 'framework');
+            $this->logger->log(Logger::ERROR, $e->getMessage(), identifier: 'framework');
+            $this->logger->log(Logger::ERROR, $e->getTraceAsString(), identifier: 'framework');
         }
 
         if ($sql->columnCount()) {

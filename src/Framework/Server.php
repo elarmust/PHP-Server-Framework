@@ -44,7 +44,7 @@ class Server {
             $this->classContainer->set($this);
             $this->classContainer->set($this->classContainer);
             $this->logger = $this->classContainer->get(Logger::class);
-            $this->logger->log(Logger::LOG_INFO, 'Starting Framework server...', 'framework');
+            $this->logger->log(Logger::INFO, 'Starting Framework server...', identifier: 'framework');
             $this->configuration = $this->classContainer->get(Configuration::class);
             $this->configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
             define('SERVER_IP', $this->configuration->getConfig('ip'));
@@ -69,7 +69,7 @@ class Server {
 
             // Load modules.
             foreach ($this->moduleManager->getModules() as $module) {
-                $this->logger->log(Logger::LOG_INFO, 'Loading module \'' . $module->getName() . '\'...', 'framework');
+                $this->logger->log(Logger::INFO, 'Loading module \'' . $module->getName() . '\'...', identifier: 'framework');
                 $this->moduleManager->loadModule($module);
             }
 
@@ -108,7 +108,7 @@ class Server {
         });
 
         if (($this->configuration->getConfig('websocket.enabled') ?? false) == true) {
-            $this->logger->log(Logger::LOG_INFO, 'Websocket enabled.', 'framework');
+            $this->logger->log(Logger::INFO, 'Websocket enabled.', identifier: 'framework');
             $this->server->handle('/' . ($this->configuration->getConfig('websocket.websocketURLPath') ?? 'ws'), function (Request $request, Response $response) {
                 $response->upgrade();
                 $event = $this->eventManager->dispatchEvent('websocketOpen', [$this, &$response]);
@@ -147,7 +147,7 @@ class Server {
         }
 
         $this->eventManager->dispatchEvent('httpStart', [$this]);
-        $this->logger->log(Logger::LOG_INFO, 'Framework server is ready. Listening on: ' . SERVER_IP . ' ' . SERVER_PORT . ', Load time: ' . round(microtime(true) - SERVER_START_TIME, 2) . 's', 'framework');
+        $this->logger->log(Logger::INFO, 'Framework server is ready. Listening on: ' . SERVER_IP . ' ' . SERVER_PORT . ', Load time: ' . round(microtime(true) - SERVER_START_TIME, 2) . 's', identifier: 'framework');
         $this->server->start();
     }
 
@@ -164,9 +164,9 @@ class Server {
      */
     public function maintenance(bool $state): void {
         if ($state) {
-            $this->logger->log(Logger::LOG_INFO, 'Pausing server activities...', 'framework');
+            $this->logger->log(Logger::INFO, 'Pausing server activities...', identifier: 'framework');
         } else {
-            $this->logger->log(Logger::LOG_INFO, 'Resuming server activity...', 'framework');
+            $this->logger->log(Logger::INFO, 'Resuming server activity...', identifier: 'framework');
         }
 
         $this->maintenance = $state;
@@ -187,7 +187,7 @@ class Server {
      * @return void
      */
     public function stop(): void {
-        $this->logger->log(Logger::LOG_INFO, 'Stopping server...', 'framework');
+        $this->logger->log(Logger::INFO, 'Stopping server...', identifier: 'framework');
 
         foreach (Timer::list() as $timer) {
             Timer::clear($timer);
@@ -203,11 +203,11 @@ class Server {
         }
 
         foreach (array_reverse($this->moduleManager->getModules()) as $module) {
-            $this->logger->log(Logger::LOG_INFO, 'Unloading module \'' . $module->getName() . '\'...', 'framework');
+            $this->logger->log(Logger::INFO, 'Unloading module \'' . $module->getName() . '\'...', identifier: 'framework');
             $this->moduleManager->unloadModule($module);
         }
 
-        $this->logger->log(Logger::LOG_INFO, 'Server stopped!', 'framework');
+        $this->logger->log(Logger::INFO, 'Server stopped!', identifier: 'framework');
         $this->classContainer->get(Enable::class)->onDisable();
 
         $this->server->shutdown();

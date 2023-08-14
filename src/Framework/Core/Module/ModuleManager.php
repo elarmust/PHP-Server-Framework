@@ -114,7 +114,7 @@ class ModuleManager {
                     $inDegree[$adjVertex]++;
                 } else {
                     unset($graph[$vertex][array_search($adjVertex, $graph[$vertex])]);
-                    $this->logger->log(Logger::LOG_WARNING, 'Module \'' . $vertex . '\' has invalid dependency \'' . $adjVertex . '\'', 'framework');
+                    $this->logger->log(Logger::WARNING, 'Module \'' . $vertex . '\' has invalid dependency \'' . $adjVertex . '\'', identifier: 'framework');
                 }
             }
         }
@@ -141,7 +141,7 @@ class ModuleManager {
         if (count($sorted) != count($graph)) {
             foreach ($graph as $node => $vertexes) {
                 if (!in_array($node, $sorted)) {
-                    $this->logger->log(Logger::LOG_WARNING, 'Module \'' . $node . '\' has circular dependency!', 'framework');
+                    $this->logger->log(Logger::WARNING, 'Module \'' . $node . '\' has circular dependency!', identifier: 'framework');
                 }
             }
         }

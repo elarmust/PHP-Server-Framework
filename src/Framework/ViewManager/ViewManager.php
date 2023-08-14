@@ -58,7 +58,7 @@ class ViewManager {
      */
     public function unregisterView(string $viewName): void {
         if (!isset($this->views[$viewName])) {
-            $this->logger->log(Logger::LOG_NOTICE, 'Unregistering nonexistent view: \'' . $viewName . '\'', 'framework');
+            $this->logger->log(Logger::NOTICE, 'Unregistering nonexistent view: \'' . $viewName . '\'', identifier: 'framework');
             return;
         }
 
