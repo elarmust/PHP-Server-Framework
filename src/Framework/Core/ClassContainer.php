@@ -7,11 +7,9 @@
 
 namespace Framework\Core;
 
-use Exception;
 use ReflectionClass;
 use ReflectionException;
 use Psr\Container\ContainerInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use Framework\Core\Exception\NotFoundException;
 
 class ClassContainer implements ContainerInterface {
