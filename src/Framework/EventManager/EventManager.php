@@ -8,10 +8,11 @@
 
 namespace Framework\EventManager;
 
+use Psr\Log\LogLevel;
 use ReflectionException;
 use Framework\Logger\Logger;
-use Framework\Core\ClassContainer;
 use InvalidArgumentException;
+use Framework\Core\ClassContainer;
 
 class EventManager {
     private array $eventListeners = [];
@@ -64,7 +65,7 @@ class EventManager {
 
         $key = array_search($eventListener, $this->eventListeners[$eventName]);
         if ($key === false) {
-            $this->logger->log(Logger::NOTICE, 'Attempting to unregister event handler: \'' . $eventListener . '\' for event \'' . $eventName . '\'');
+            $this->logger->log(LogLevel::NOTICE, 'Attempting to unregister event handler: \'' . $eventListener . '\' for event \'' . $eventName . '\'');
             return;
         }
 

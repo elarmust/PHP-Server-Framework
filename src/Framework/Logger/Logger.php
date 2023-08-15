@@ -2,24 +2,16 @@
 
 namespace Framework\Logger;
 
-use Framework\Core\ClassContainer;
-use Framework\Logger\LogAdapters\GenericLogAdapter;
+use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
-use Psr\Log\LoggerTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\InvalidArgumentException;
 
-class Logger extends LogLevel implements LoggerInterface {
-    use LoggerTrait;
-
+class Logger extends AbstractLogger {
     protected array $loggerAdapters = [];
-    protected array $loggerAdaptersByIdentifier = [];
-    private ClassContainer $classContainer;
 
-    public function __construct(ClassContainer $classContainer) {
-        $this->classContainer = $classContainer;
-        // Load generic logger;
-        $this->registerLogAdapter(GenericLogAdapter::class, 'default');
+    public function __construct(LoggerInterface $defaultLogger) {
+        $this->registerLogAdapter($defaultLogger, 'default');
     }
 
     /**
@@ -70,7 +62,7 @@ class Logger extends LogLevel implements LoggerInterface {
         $this->log(LogLevel::EMERGENCY, $message, $context, $identifier);
     }
 
-    public function getLogger(?string $loggerName = null) {
+    public function getLogger(?string $loggerName = null): LoggerInterface {
         return $this->loggerAdapters[$loggerName] ?? $this->loggerAdapters['default'];
     }
 
@@ -86,11 +78,11 @@ class Logger extends LogLevel implements LoggerInterface {
         unset($this->loggerAdapters[$loggerName]);
     }
 
-    public function registerLogAdapter(string $loggerClassName, string $name): void {
-        if (!isset(class_implements($loggerClassName)[LoggerInterface::class])) {
-            throw new InvalidArgumentException('Logger \'' . $loggerClassName . '\' must implement \'' . LoggerInterface::class . '\'!');
+    public function registerLogAdapter(LoggerInterface $loggerClass, string $name): void {
+        if (!$loggerClass instanceof LoggerInterface) {
+            throw new InvalidArgumentException('Logger \'' . $loggerClass::class . '\' must implement \'' . LoggerInterface::class . '\'!');
         }
 
-        $this->loggerAdapters[$name] = $this->classContainer->get($loggerClassName, cache: false);
+        $this->loggerAdapters[$name] = $loggerClass;
     }
 }

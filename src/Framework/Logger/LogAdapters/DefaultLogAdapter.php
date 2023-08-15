@@ -3,11 +3,10 @@
 namespace Framework\Logger\LogAdapters;
 
 use Psr\Log\AbstractLogger;
-use Psr\Log\LoggerInterface;
 use Framework\Logger\LogAdapterSettings;
 use Framework\Logger\LogFormats\DefaultLogFormat;
 
-class GenericLogAdapter extends AbstractLogger implements LoggerInterface {
+class DefaultLogAdapter extends AbstractLogger {
     use LogAdapterSettings;
 
     public function __construct(DefaultLogFormat $defaultLogFormat) {

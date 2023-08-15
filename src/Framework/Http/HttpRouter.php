@@ -9,15 +9,16 @@
 
 namespace Framework\Http;
 
-use Framework\Logger\Logger;
+use Throwable;
+use Psr\Log\LogLevel;
+use Swoole\Coroutine;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
-use Framework\Core\ClassContainer;
+use Framework\Logger\Logger;
 use Framework\Http\RouteRegister;
+use Framework\Core\ClassContainer;
 use Framework\ViewManager\ViewManager;
 use Framework\EventManager\EventManager;
-use Swoole\Coroutine;
-use Throwable;
 
 class HttpRouter {
     private ClassContainer $classContainer;
@@ -93,8 +94,8 @@ class HttpRouter {
                         break;
                     };
                 } catch (Throwable $e) {
-                    $this->logger->log(Logger::NOTICE, $e->getMessage(), identifier: 'framework');
-                    $this->logger->log(Logger::NOTICE, $e->getTraceAsString(), identifier: 'framework');
+                    $this->logger->log(LogLevel::NOTICE, $e->getMessage(), identifier: 'framework');
+                    $this->logger->log(LogLevel::NOTICE, $e->getTraceAsString(), identifier: 'framework');
                 }
             }
         }

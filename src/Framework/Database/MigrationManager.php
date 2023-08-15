@@ -8,11 +8,12 @@
 
 namespace Framework\Database;
 
-use InvalidArgumentException;
+use Throwable;
+use Psr\Log\LogLevel;
 use Framework\Logger\Logger;
+use InvalidArgumentException;
 use Framework\Core\ClassContainer;
 use Framework\Core\Module\ModuleManager;
-use Throwable;
 
 class MigrationManager {
     private ClassContainer $classContainer;
@@ -123,8 +124,8 @@ class MigrationManager {
                 try {
                     $migration->up($database);
                 } catch (Throwable $e) {
-                    $this->logger->log(Logger::ERROR, $e->getMessage(), identifier: 'framework');
-                    $this->logger->log(Logger::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                    $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
+                    $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
                 }
 
                 $database->insert('migrations', ['migration' => $migration::class, 'version' => $migration->version()]);
@@ -138,8 +139,8 @@ class MigrationManager {
             try {
                 $migration->down($database);
             } catch (Throwable $e) {
-                $this->logger->log(Logger::ERROR, $e->getMessage(), identifier: 'framework');
-                $this->logger->log(Logger::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
+                $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
             }
 
             $database->delete('migrations', ['migration' => $migration::class, 'version' => $migration->version()]);

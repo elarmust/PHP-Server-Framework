@@ -8,9 +8,10 @@
 
 namespace Framework\Cli;
 
+use Psr\Log\LogLevel;
+use Framework\Logger\Logger;
 use Framework\CLI\CommandInterface;
 use Framework\Core\ApplicationInterface;
-use Framework\Logger\Logger;
 
 class Cli implements ApplicationInterface {
     private Logger $logger;
@@ -119,7 +120,7 @@ class Cli implements ApplicationInterface {
     public function unregisterCommandHandler(string $command, CommandInterface $commandClass): void {
         $key = array_search($commandClass, $this->commands[$command]);
         if ($key === false) {
-            $this->logger->log(Logger::NOTICE, 'Unregistering nonexistent command handler: \'' .  $commandClass::class . '\' from command \'' . $command . '\'', identifier: 'framework');
+            $this->logger->log(LogLevel::NOTICE, 'Unregistering nonexistent command handler: \'' .  $commandClass::class . '\' from command \'' . $command . '\'', identifier: 'framework');
             return;
         }
 
@@ -132,7 +133,7 @@ class Cli implements ApplicationInterface {
 
     public function unregisterCommand(string $command): void {
         if (!isset($this->commands[$command])) {
-            $this->logger->log(Logger::NOTICE, 'Unregistering nonexistent command: \'' . $command . '\'', identifier: 'framework');
+            $this->logger->log(LogLevel::NOTICE, 'Unregistering nonexistent command: \'' . $command . '\'', identifier: 'framework');
             return;
         }
 
@@ -140,6 +141,6 @@ class Cli implements ApplicationInterface {
     }
 
     public function sendToOutput(string $text) {
-        $this->logger->log(Logger::INFO, $text, identifier: 'framework');
+        $this->logger->log(LogLevel::INFO, $text, identifier: 'framework');
     }
 }
