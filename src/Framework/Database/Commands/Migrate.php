@@ -191,7 +191,7 @@ class Migrate implements CommandInterface {
 
         $string = 'Possible arguments:' . PHP_EOL;
         $string .= '    [run] [up/down] [migration name / all] <version> - Run up or down migrations.' . PHP_EOL;
-        $string .= '    [info] [up/down] [migration name] <version> - Show migration information.' . PHP_EOL;
+        $string .= '    [info] [migration name] <version> - Show migration information.' . PHP_EOL;
         $string .= '    [list] - List all migrations.';
         return $string;
     }

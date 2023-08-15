@@ -10,11 +10,12 @@
 namespace Framework\Cron;
 
 use DateTime;
+use Throwable;
+use Psr\Log\LogLevel;
 use Cron\CronExpression;
 use Framework\Logger\Logger;
 use Framework\Database\Database;
 use Framework\Cron\CronInterface;
-use Throwable;
 
 class CronManager {
     private Database $database;
@@ -50,8 +51,8 @@ class CronManager {
             try {
                 $cronJob->run();
             } catch (Throwable $e) {
-                $this->logger->log(Logger::LOG_ERR, $e->getMessage(), 'framework');
-                $this->logger->log(Logger::LOG_ERR, $e->getTraceAsString(), 'framework');
+                $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
+                $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
             }
 
             if ($insertId) {
@@ -111,7 +112,7 @@ class CronManager {
      */
     public function unregisterCronJob(string $jobName): void {
         if (!isset($this->cronJobs[$jobName])) {
-            $this->logger->log(Logger::LOG_NOTICE, 'Unregistering nonexistent cron job: \'' . $jobName . '\'', 'framework');
+            $this->logger->log(LogLevel::NOTICE, 'Unregistering nonexistent cron job: \'' . $jobName . '\'', identifier: 'framework');
             return;
         }
 

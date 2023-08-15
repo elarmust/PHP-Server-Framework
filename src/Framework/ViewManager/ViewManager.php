@@ -10,11 +10,12 @@ namespace Framework\ViewManager;
 
 use DOMXPath;
 use DOMDocument;
+use Psr\Log\LogLevel;
 use ReflectionException;
 use Framework\Logger\Logger;
+use Swoole\Coroutine\System;
 use InvalidArgumentException;
 use Framework\Core\ClassContainer;
-use Swoole\Coroutine\System;
 use Framework\EventManager\EventManager;
 
 class ViewManager {
@@ -58,7 +59,7 @@ class ViewManager {
      */
     public function unregisterView(string $viewName): void {
         if (!isset($this->views[$viewName])) {
-            $this->logger->log(Logger::LOG_NOTICE, 'Unregistering nonexistent view: \'' . $viewName . '\'', 'framework');
+            $this->logger->log(LogLevel::NOTICE, 'Unregistering nonexistent view: \'' . $viewName . '\'', identifier: 'framework');
             return;
         }
 

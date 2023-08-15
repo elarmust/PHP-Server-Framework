@@ -8,10 +8,11 @@
 namespace Framework\Database;
 
 use PDO;
+use Throwable;
+use Psr\Log\LogLevel;
 use Framework\Logger\Logger;
 use Swoole\Database\PDOPool;
 use Swoole\Database\PDOConfig;
-use Throwable;
 
 class Database {
     private string $username;
@@ -179,8 +180,8 @@ class Database {
         try {
             $return = $sql->execute($params);
         } catch (Throwable $e) {
-            $this->logger->log(Logger::LOG_ERR, $e->getMessage(), 'framework');
-            $this->logger->log(Logger::LOG_ERR, $e->getTraceAsString(), 'framework');
+            $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
+            $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
         }
 
         if ($sql->columnCount()) {
