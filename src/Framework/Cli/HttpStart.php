@@ -10,7 +10,7 @@ namespace Framework\CLI;
 use Framework\Cli\Cli;
 use Framework\EventManager\Event;
 use Framework\EventManager\EventListenerInterface;
-use Swoole\Event as SwooleEvent;
+use OpenSwoole\Event as SwooleEvent;
 
 class HttpStart implements EventListenerInterface {
     private Cli $cli;

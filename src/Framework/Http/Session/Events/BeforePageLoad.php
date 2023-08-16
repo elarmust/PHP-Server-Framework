@@ -7,18 +7,18 @@
 
 namespace Framework\Http\Session\Events;
 
+use Framework\FrameworkServer;
 use Framework\EventManager\Event;
 use Framework\Configuration\Configuration;
 use Framework\Http\Session\SessionManager;
 use Framework\EventManager\EventListenerInterface;
-use Swoole\Coroutine\Http\Server;
 
 class BeforePageLoad implements EventListenerInterface {
     private SessionManager $sessionManager;
     private Configuration $configuration;
-    private Server $server;
+    private FrameworkServer $server;
 
-    public function __construct(SessionManager $sessionManager, Configuration $configuration, Server $server) {
+    public function __construct(SessionManager $sessionManager, Configuration $configuration, FrameworkServer $server) {
         $this->sessionManager = $sessionManager;
         $this->configuration = $configuration;
         $this->server = $server;
@@ -32,17 +32,18 @@ class BeforePageLoad implements EventListenerInterface {
         // Send session cookie to user.
         if ($cookieSessionId !== $session->getId()) {
             $secure = false;
-            if ($this->server->ssl) {
+            if ($this->server->sslEnabled()) {
                 $secure = true;
             }
 
             $data['response']->cookie(
-                name: 'PHPSESSID',
-                value: $session->getId(),
-                expires: time() + ($this->configuration->getConfig('sessionExpirationSeconds') ?? 259200),
-                domain: $this->configuration->getConfig('hostName') ?? '',
-                secure: $secure,
-                httponly: true
+                'PHPSESSID',
+                $session->getId(),
+                time() + ($this->configuration->getConfig('sessionExpirationSeconds') ?? 259200),
+                '/',
+                $this->configuration->getConfig('hostName') ?? '',
+                $secure,
+                true
             );
 
             $data['request']->cookie['PHPSESSID'] = $session->getId();

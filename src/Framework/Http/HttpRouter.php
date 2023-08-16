@@ -11,10 +11,9 @@ namespace Framework\Http;
 
 use Throwable;
 use Psr\Log\LogLevel;
-use Swoole\Coroutine;
-use Swoole\Http\Request;
-use Swoole\Http\Response;
 use Framework\Logger\Logger;
+use OpenSwoole\Http\Request;
+use OpenSwoole\Http\Response;
 use Framework\Http\RouteRegister;
 use Framework\Core\ClassContainer;
 use Framework\ViewManager\ViewManager;

@@ -30,5 +30,5 @@ spl_autoload_register(function($class) {
 
 require_once BASE_PATH . '/vendor/autoload.php';
 
-use Framework\Server;
-$server = new Server();
+use Framework\FrameworkServer;
+$server = new FrameworkServer();

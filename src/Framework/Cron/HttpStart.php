@@ -7,8 +7,8 @@
 
 namespace Framework\Cron;
 
-use Swoole\Timer;
-use Swoole\Coroutine;
+use OpenSwoole\Timer;
+use OpenSwoole\Coroutine;
 use Framework\Cron\CronManager;
 use Framework\EventManager\Event;
 use Framework\EventManager\EventListenerInterface;

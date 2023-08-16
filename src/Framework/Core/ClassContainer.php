@@ -50,6 +50,10 @@ class ClassContainer implements ContainerInterface {
         $this->objectInstances[$class::class][$alias] = $class;
     }
 
+    public function isInitialized(string $className, $alias = 'default'): bool {
+        return isset($this->objectInstances[$className][$alias]);
+    }
+
     /**
      * Get prepared class arguments
      *
