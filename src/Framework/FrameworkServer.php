@@ -23,18 +23,18 @@ use Swoole\Timer;
 use Swoole\Coroutine;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
-use Swoole\Coroutine\Http\Server as HttpServer;
+use Swoole\Coroutine\Http\Server as Server;
 use Swoole\WebSocket\CloseFrame;
 use Psr\Log\LogLevel;
 
-class Server {
+class FrameworkServer {
     private ModuleManager $moduleManager;
     private ClassContainer $classContainer;
     private Configuration $configuration;
     private CronManager $cronManager;
     private HttpRouter $router;
     private Logger $logger;
-    private HttpServer $server;
+    private Server $server;
     private EventManager $eventManager;
     private bool $maintenance = false;
     private array $wsConnections = [];
@@ -67,7 +67,7 @@ class Server {
                 $swooleSock = SWOOLE_SOCK_TCP6;
             }
 
-            $this->server = $this->classContainer->get(HttpServer::class, [SERVER_IP, SERVER_PORT, SWOOLE_PROCESS, $swooleSock], cache: true);
+            $this->server = $this->classContainer->get(Server::class, [SERVER_IP, SERVER_PORT, SWOOLE_PROCESS, $swooleSock], cache: true);
 
             // Load modules.
             foreach ($this->moduleManager->getModules() as $module) {
@@ -191,15 +191,12 @@ class Server {
     public function stop(): void {
         $this->logger->log(LogLevel::INFO, 'Stopping server...', identifier: 'framework');
 
+        // Cancel all timers
         foreach (Timer::list() as $timer) {
             Timer::clear($timer);
         }
 
-        // Disable cron jobs. This will let cron jobs know to finish what ever they are doing and exit.
-        foreach ($this->cronManager->getCronJobs() as $cronJob) {
-            $cronJob->disable();
-        }
-
+        // Cancel all coroutines.
         foreach (Coroutine::list() as $cid) {
             Coroutine::cancel($cid);
         }
@@ -213,5 +210,9 @@ class Server {
         $this->classContainer->get(Enable::class)->onDisable();
 
         $this->server->shutdown();
+    }
+
+    public function getServer(): Server {
+        return $this->server;
     }
 }
