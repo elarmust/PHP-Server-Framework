@@ -10,7 +10,6 @@ namespace Framework;
 
 use Framework\Core\Module\ModuleEnableInterface;
 use Swoole\Event;
-
 use Swoole\Coroutine\System;
 use Framework\EventManager\EventManager;
 use Framework\Http\Session\Events\BeforePageLoad;
