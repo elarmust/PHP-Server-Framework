@@ -20,7 +20,7 @@ class Stop implements CommandInterface {
 
     public function run(array $commandArgs): string {
         $server = $this->classContainer->get(Server::class);
-        $server->stop();
+        $server->stopServer();
         return '';
     }
 

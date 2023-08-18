@@ -13,7 +13,7 @@ use DOMDocument;
 use Psr\Log\LogLevel;
 use ReflectionException;
 use Framework\Logger\Logger;
-use Swoole\Coroutine\System;
+use OpenSwoole\Coroutine\System;
 use InvalidArgumentException;
 use Framework\Core\ClassContainer;
 use Framework\EventManager\EventManager;

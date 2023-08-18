@@ -4,8 +4,8 @@
     <head>
         <title>Framework</title>
         <meta charset="UTF-8">
-        <meta name="description" content="Lightweight PHP server framework powered by Swoole.">
-        <meta name="keywords" content="PHP, Server, Framework, Swoole">
+        <meta name="description" content="Lightweight PHP server framework powered by OpenSwoole.">
+        <meta name="keywords" content="PHP, Server, Framework, OpenSwoole">
         <meta name="author" content="WereWolf Labs OÜ">
     </head>
     <body>

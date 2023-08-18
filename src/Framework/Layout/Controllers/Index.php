@@ -5,8 +5,8 @@ namespace Framework\Layout\Controllers;
 use Framework\Http\RouteHandlerInterface;
 use Framework\ViewManager\View;
 use Framework\ViewManager\ViewManager;
-use Swoole\Http\Request;
-use Swoole\Http\Response;
+use OpenSwoole\Http\Request;
+use OpenSwoole\Http\Response;
 
 class Index implements RouteHandlerInterface {
     private ViewManager $viewManager;

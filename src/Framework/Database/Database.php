@@ -11,8 +11,9 @@ use PDO;
 use Throwable;
 use Psr\Log\LogLevel;
 use Framework\Logger\Logger;
-use Swoole\Database\PDOPool;
-use Swoole\Database\PDOConfig;
+use OpenSwoole\Core\Coroutine\Pool\ClientPool;
+use OpenSwoole\Core\Coroutine\Client\PDOConfig;
+use OpenSwoole\Core\Coroutine\Client\PDOClientFactory;
 
 class Database {
     private string $username;
@@ -21,7 +22,7 @@ class Database {
     private string $host;
     private string $charset;
     private int $port;
-    private PDOPool $pool;
+    private ClientPool $pool;
     private Logger $logger;
 
     public function __construct(Logger $logger, string $host, int $port, string $database, string $username, string $password, string $charset = 'utf8mb4', int $maxPoolSize = 50) {
@@ -33,9 +34,14 @@ class Database {
         $this->password = $password;
         $this->charset = $charset;
 
-        $pdoConfig = new PDOConfig();
-        $pdoConfig->withHost($this->host)->withPort($this->port)->withDbname($this->database)->withUsername($this->username)->withPassword($this->password)->withCharset($this->charset);
-        $this->pool = new PDOPool($pdoConfig, $maxPoolSize);
+        $mysqlConfig = new PDOConfig();
+        $mysqlConfig->withHost($this->host);
+        $mysqlConfig->withPort($this->port);
+        $mysqlConfig->withUsername($this->username);
+        $mysqlConfig->withPassword($this->password);
+        $mysqlConfig->withDbname($this->database);
+        $mysqlConfig->withCharset('utf8mb4');
+        $this->pool = new ClientPool(PDOClientFactory::class, $mysqlConfig, $maxPoolSize);
     }
 
     public function getHost() {

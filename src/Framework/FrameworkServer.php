@@ -10,6 +10,8 @@
 namespace Framework;
 
 use Framework\Core\ClassContainer;
+use OpenSwoole\WebSocket\Frame;
+use OpenSwoole\Util;
 use Framework\EventManager\EventManager;
 use Framework\Database\Database;
 use Framework\Http\HttpRouter;
@@ -19,12 +21,11 @@ use Framework\Cron\CronManager;
 use Framework\Logger\Logger;
 use Framework\Enable;
 use Framework\Logger\LogAdapters\DefaultLogAdapter;
-use Swoole\Timer;
-use Swoole\Coroutine;
-use Swoole\Http\Request;
-use Swoole\Http\Response;
-use Swoole\Coroutine\Http\Server as Server;
-use Swoole\WebSocket\CloseFrame;
+use OpenSwoole\Timer;
+use OpenSwoole\Coroutine;
+use OpenSwoole\Http\Response;
+use OpenSwoole\WebSocket\Server;
+use OpenSwoole\Core\Psr\Request;
 use Psr\Log\LogLevel;
 
 class FrameworkServer {
@@ -38,45 +39,48 @@ class FrameworkServer {
     private EventManager $eventManager;
     private bool $maintenance = false;
     private array $wsConnections = [];
+    private bool $ssl = false;
+    private Database $database;
 
     public function __construct() {
-        Coroutine\run(function () {
-            define('SERVER_START_TIME', microtime(true));
-            $this->classContainer = new ClassContainer();
-            $this->classContainer->set($this);
-            $this->classContainer->set($this->classContainer);
-            $this->logger = $this->classContainer->get(Logger::class, [$this->classContainer->get(DefaultLogAdapter::class)]);
-            $this->logger->log(LogLevel::INFO, 'Starting Framework server...', identifier: 'framework');
-            $this->configuration = $this->classContainer->get(Configuration::class);
-            $this->configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
-            define('SERVER_IP', $this->configuration->getConfig('ip'));
-            define('SERVER_PORT', $this->configuration->getConfig('port'));
-            $databaseInfo = $this->configuration->getConfig('databases.main');
-            $this->classContainer->get(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
-            $this->cronManager = $this->classContainer->get(CronManager::class);
-            $this->moduleManager = $this->classContainer->get(ModuleManager::class);
-            $this->eventManager = $this->classContainer->get(EventManager::class);
-            $this->router = $this->classContainer->get(HttpRouter::class);
+        $this->classContainer = new ClassContainer();
+        $this->classContainer->set($this);
+        $this->classContainer->set($this->classContainer);
+        define('SERVER_START_TIME', microtime(true));
+        $this->logger = $this->classContainer->get(Logger::class, [$this->classContainer->get(DefaultLogAdapter::class)]);
+        $this->logger->log(LogLevel::INFO, 'Starting Framework server...', identifier: 'framework');
+        $this->configuration = $this->classContainer->get(Configuration::class);
+        $this->configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
+        define('SERVER_IP', $this->configuration->getConfig('ip'));
+        define('SERVER_PORT', $this->configuration->getConfig('port'));
+        $databaseInfo = $this->configuration->getConfig('databases.main');
+        $databaseParams = $this->classContainer->prepareArguments(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
+        $this->database = $this->classContainer->get(Database::class, $databaseParams);
+        $this->cronManager = $this->classContainer->get(CronManager::class);
+        $this->moduleManager = $this->classContainer->get(ModuleManager::class);
+        $this->eventManager = $this->classContainer->get(EventManager::class);
+        $this->router = $this->classContainer->get(HttpRouter::class);
 
-            // Run internal onEnable().
+        if ($this->configuration->getConfig('cert.cert') && $this->configuration->getConfig('cert.key')) {
+            $swooleSock = SWOOLE_SOCK_TCP6 | SWOOLE_SSL;
+            $this->ssl = true;
+        } else {
+            $swooleSock = SWOOLE_SOCK_TCP6;
+        }
+
+        Coroutine::run(function () {
             $this->classContainer->get(Enable::class)->onEnable();
-
-            if ($this->configuration->getConfig('cert.cert') && $this->configuration->getConfig('cert.key')) {
-                $swooleSock = SWOOLE_SOCK_TCP6 | SWOOLE_SSL;
-            } else {
-                $swooleSock = SWOOLE_SOCK_TCP6;
-            }
-
-            $this->server = $this->classContainer->get(Server::class, [SERVER_IP, SERVER_PORT, SWOOLE_PROCESS, $swooleSock], cache: true);
-
+    
             // Load modules.
             foreach ($this->moduleManager->getModules() as $module) {
                 $this->logger->log(LogLevel::INFO, 'Loading module \'' . $module->getName() . '\'...', identifier: 'framework');
                 $this->moduleManager->loadModule($module);
             }
-
-            $this->run();
         });
+
+        $this->database = $this->classContainer->get(Database::class, $databaseParams, cache: false);
+        $this->server = $this->classContainer->get(Server::class, [SERVER_IP, SERVER_PORT, SWOOLE_PROCESS, $swooleSock]);
+        $this->run();
     }
 
     /**
@@ -88,28 +92,43 @@ class FrameworkServer {
         $set = [
             'enable_coroutine' => true,
             'pid_file' => BASE_PATH . '/var/server.pid',
-            'worker_num' => 2 * swoole_cpu_num(),
+            'worker_num' => 2 * Util::getCPUNum(),
             'max_coroutine' => 3000,
             'open_http2_protocol' => true
         ];
 
-        if ($this->server->ssl) {
+        if ($this->ssl) {
             $set['ssl_cert_file'] = $this->configuration->getConfig('cert.cert');
             $set['ssl_key_file'] = $this->configuration->getConfig('cert.key');
         }
 
         $this->server->set($set);
 
-        $this->server->handle('/', function (Request $request, Response $response) {
+        $this->server->on('request', function (Request $request, Response $response) {
+
+            $result = '';
+            for ($x = 0; $x < 5000; $x++) {
+                $result .= $this->database->query('SELECT \'' . $request->fd . '\' AS con')[0]['con'];
+            }
+
+            $response->end($result);
+            /*
+            $testValue = $this->test;
+            $response->end($testValue);
+            return;
             $request->server['request_uri'] = explode('/', $request->server['request_uri']);
             $result = $this->router->parseRequest($request, $response);
             // Check if the response is still available. It may have been closed previously!
             if ($response->isWritable()) {
                 $response->end($result);
-            }
+            }*/
         });
 
-        if (($this->configuration->getConfig('websocket.enabled') ?? false) == true) {
+        $this->server->on('message', function (Server $server, Frame $frame) {
+            $this->eventManager->dispatchEvent('websocketMessage', [$this, $frame]);
+        });
+
+        if (($this->configuration->getConfig('websocket.enabled') ?? false) == true && false) {
             $this->logger->log(LogLevel::INFO, 'Websocket enabled.', identifier: 'framework');
             $this->server->handle('/' . ($this->configuration->getConfig('websocket.websocketURLPath') ?? 'ws'), function (Request $request, Response $response) {
                 $response->upgrade();
@@ -148,8 +167,11 @@ class FrameworkServer {
             });
         }
 
-        $this->eventManager->dispatchEvent('httpStart', [$this]);
-        $this->logger->log(LogLevel::INFO, 'Framework server is ready. Listening on: ' . SERVER_IP . ' ' . SERVER_PORT . ', Load time: ' . round(microtime(true) - SERVER_START_TIME, 2) . 's', identifier: 'framework');
+        $this->server->on('Start', function () {
+            $this->eventManager->dispatchEvent('httpStart', [$this]);
+            $this->logger->log(LogLevel::INFO, 'Framework server is ready. Listening on: ' . SERVER_IP . ' ' . SERVER_PORT . ', Load time: ' . round(microtime(true) - SERVER_START_TIME, 2) . 's', identifier: 'framework');
+        });
+
         $this->server->start();
     }
 
@@ -188,7 +210,7 @@ class FrameworkServer {
      *
      * @return void
      */
-    public function stop(): void {
+    public function stopServer(): void {
         $this->logger->log(LogLevel::INFO, 'Stopping server...', identifier: 'framework');
 
         // Cancel all timers
@@ -212,7 +234,7 @@ class FrameworkServer {
         $this->server->shutdown();
     }
 
-    public function getServer(): Server {
-        return $this->server;
+    public function sslEnabled(): bool {
+        return $this->ssl;
     }
 }
