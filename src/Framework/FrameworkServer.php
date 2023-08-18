@@ -10,6 +10,8 @@
 namespace Framework;
 
 use Framework\Core\ClassContainer;
+use OpenSwoole\Constant;
+
 use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\Util;
 use Framework\EventManager\EventManager;
@@ -23,16 +25,15 @@ use Framework\Enable;
 use Framework\Logger\LogAdapters\DefaultLogAdapter;
 use OpenSwoole\Timer;
 use OpenSwoole\Coroutine;
-use OpenSwoole\Http\Response;
 use OpenSwoole\WebSocket\Server;
 use OpenSwoole\Core\Psr\Request;
+use OpenSwoole\Core\Psr\Response;
 use Psr\Log\LogLevel;
 
 class FrameworkServer {
     private ModuleManager $moduleManager;
     private ClassContainer $classContainer;
     private Configuration $configuration;
-    private CronManager $cronManager;
     private HttpRouter $router;
     private Logger $logger;
     private Server $server;
@@ -56,16 +57,16 @@ class FrameworkServer {
         $databaseInfo = $this->configuration->getConfig('databases.main');
         $databaseParams = $this->classContainer->prepareArguments(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
         $this->database = $this->classContainer->get(Database::class, $databaseParams);
-        $this->cronManager = $this->classContainer->get(CronManager::class);
+        $this->classContainer->get(CronManager::class);
         $this->moduleManager = $this->classContainer->get(ModuleManager::class);
         $this->eventManager = $this->classContainer->get(EventManager::class);
         $this->router = $this->classContainer->get(HttpRouter::class);
 
         if ($this->configuration->getConfig('cert.cert') && $this->configuration->getConfig('cert.key')) {
-            $swooleSock = SWOOLE_SOCK_TCP6 | SWOOLE_SSL;
+            $swooleSock = Constant::SOCK_TCP | Constant::SSL;
             $this->ssl = true;
         } else {
-            $swooleSock = SWOOLE_SOCK_TCP6;
+            $swooleSock = Constant::SOCK_TCP;
         }
 
         Coroutine::run(function () {
@@ -79,7 +80,7 @@ class FrameworkServer {
         });
 
         $this->database = $this->classContainer->get(Database::class, $databaseParams, cache: false);
-        $this->server = $this->classContainer->get(Server::class, [SERVER_IP, SERVER_PORT, SWOOLE_PROCESS, $swooleSock]);
+        $this->server = $this->classContainer->get(Server::class, [SERVER_IP, SERVER_PORT, Server::POOL_MODE, $swooleSock]);
         $this->run();
     }
 
@@ -104,14 +105,15 @@ class FrameworkServer {
 
         $this->server->set($set);
 
-        $this->server->on('request', function (Request $request, Response $response) {
-
+        $this->server->on('request', function ($request, $response) {
+            $request = new Request($request);
+            $response = new Response($response);
             $result = '';
             for ($x = 0; $x < 5000; $x++) {
-                $result .= $this->database->query('SELECT \'' . $request->fd . '\' AS con')[0]['con'];
+                $result .= $this->database->query('SELECT \'' . $request->getUri()->fd . '\' AS con')[0]['con'];
             }
 
-            $response->end($result);
+            $response->getBody()->write($result);
             /*
             $testValue = $this->test;
             $response->end($testValue);
