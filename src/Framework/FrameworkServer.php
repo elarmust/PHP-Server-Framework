@@ -10,8 +10,8 @@
 namespace Framework;
 
 use Framework\Core\ClassContainer;
+use OpenSwoole\Core\Psr\ServerRequest;
 use OpenSwoole\Constant;
-
 use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\Util;
 use Framework\EventManager\EventManager;
@@ -105,26 +105,7 @@ class FrameworkServer {
 
         $this->server->set($set);
 
-        $this->server->on('request', function ($request, $response) {
-            $request = new Request($request);
-            $response = new Response($response);
-            $result = '';
-            for ($x = 0; $x < 5000; $x++) {
-                $result .= $this->database->query('SELECT \'' . $request->getUri()->fd . '\' AS con')[0]['con'];
-            }
-
-            $response->getBody()->write($result);
-            /*
-            $testValue = $this->test;
-            $response->end($testValue);
-            return;
-            $request->server['request_uri'] = explode('/', $request->server['request_uri']);
-            $result = $this->router->parseRequest($request, $response);
-            // Check if the response is still available. It may have been closed previously!
-            if ($response->isWritable()) {
-                $response->end($result);
-            }*/
-        });
+        $this->server->setHandler($this->router);
 
         $this->server->on('message', function (Server $server, Frame $frame) {
             $this->eventManager->dispatchEvent('websocketMessage', [$this, $frame]);

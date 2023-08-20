@@ -9,6 +9,8 @@
 namespace Framework;
 
 use Framework\Core\Module\ModuleEnableInterface;
+use Framework\Http\RequestHandler;
+use Framework\Http\RequestHandlerRegistry;
 use OpenSwoole\Event;
 use OpenSwoole\Coroutine\System;
 use Framework\EventManager\EventManager;
@@ -37,6 +39,7 @@ class Enable implements ModuleEnableInterface {
     private Cli $cli;
     private CronManager $cronManager;
     private EventManager $eventManager;
+    private RequestHandlerRegistry $requestHandlerRegistry;
 
     /**
      * @param ClassContainer $classContainer
@@ -50,6 +53,7 @@ class Enable implements ModuleEnableInterface {
     public function __construct(
         ClassContainer $classContainer,
         RouteRegister $register,
+        RequestHandlerRegistry $requestHandlerRegistry,
         ViewManager $viewManager,
         ModuleManager $moduleManager,
         Cli $cli,
@@ -57,6 +61,7 @@ class Enable implements ModuleEnableInterface {
         EventManager $eventManager
     ) {
         $this->register = $register;
+        $this->requestHandlerRegistry = $requestHandlerRegistry;
         $this->viewManager = $viewManager;
         $this->moduleManager = $moduleManager;
         $this->classContainer = $classContainer;
@@ -71,7 +76,8 @@ class Enable implements ModuleEnableInterface {
      * @return void
      */
     public function onEnable() {
-        $this->register->registerRouteHandler('/', Index::class);
+        //$this->register->registerRouteHandler('/', Index::class);
+        $this->requestHandlerRegistry->registerHandler('/', $this->classContainer->get(RequestHandler::class, [[]], cache: false));
         $this->viewManager->registerView('EmptyView');
         $this->viewManager->registerView('BasicPage', BasicPage::class, System::readFile(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php'));
         $this->cli->registerCommandHandler('stop', $this->classContainer->get(Stop::class, cache: false));

@@ -12,47 +12,76 @@ namespace Framework\Http;
 use Throwable;
 use Psr\Log\LogLevel;
 use Framework\Logger\Logger;
-use OpenSwoole\Http\Request;
-use OpenSwoole\Http\Response;
-use Framework\Http\RouteRegister;
+use OpenSwoole\Core\Psr\Response;
 use Framework\Core\ClassContainer;
 use Framework\ViewManager\ViewManager;
+use Psr\Http\Message\ResponseInterface;
 use Framework\EventManager\EventManager;
+use Psr\Http\Server\MiddlewareInterface;
+use Framework\Http\RequestHandlerRegistry;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-class HttpRouter {
+class HttpRouter implements RequestHandlerInterface {
     private ClassContainer $classContainer;
     private EventManager $eventManager;
-    private RouteRegister $routeRegister;
+    private RequestHandlerRegistry $requestHandlerRegistry;
     private ViewManager $viewManager;
     private Logger $logger;
 
     public function __construct(
         ClassContainer $classContainer,
         EventManager $eventManager,
-        RouteRegister $routeRegister,
+        RequestHandlerRegistry $requestHandlerRegistry,
         ViewManager $viewManager,
         Logger $logger
     ) {
         $this->classContainer = $classContainer;
         $this->eventManager = $eventManager;
-        $this->routeRegister = $routeRegister;
+        $this->requestHandlerRegistry = $requestHandlerRegistry;
         $this->viewManager = $viewManager;
         $this->logger = $logger;
     }
 
-    public function parseRequest(Request $request, Response $response): string {
-        $content = $this->viewManager->getView('EmptyView');
-        $this->eventManager->dispatchEvent('beforePageLoad', ['request' => &$request, 'response' => &$response, 'content' => &$content]);
+    public function handle(ServerRequestInterface $request): ResponseInterface {
+        //$this->eventManager->dispatchEvent('beforePageLoad', ['request' => &$request]);
+        $response = new Response('Not found', 200);
 
-        $urlPath = $request->server['request_uri'];
+        $content = $this->viewManager->getView('EmptyView');
+
+        $highestMatch = $this->findRouteNearestMatch($request->getServerParams()['path_info'], $this->requestHandlerRegistry->listHandledPaths());
+
+        if ($highestMatch) {
+            //foreach ($this->requestHandlerRegistry->registerHandler($highestMatch) as $routeHandler) {
+            //}
+
+            //$controller = $this->classContainer->get($routeHandler, cache: false);
+            try {
+                $response = $this->requestHandlerRegistry->getHandler($highestMatch)->handle($request);
+                //if (!$controller->run($request, $response, $content)) {
+                //    break;
+                //};
+            } catch (Throwable $e) {
+                $this->logger->log(LogLevel::NOTICE, $e->getMessage(), identifier: 'framework');
+                $this->logger->log(LogLevel::NOTICE, $e->getTraceAsString(), identifier: 'framework');
+            }
+        }
+
+        //$this->eventManager->dispatchEvent('afterPageLoad', ['request' => &$request, 'response' => &$response]);
+        return $response;
+    }
+
+    private function findRouteNearestMatch(string $requestedRoute, array $availableRoutes): string {
+        $requestedRoute = explode('/', $requestedRoute);
+
         $routePartsMatched = [];
-        foreach ($this->routeRegister->getRoutes() as $route) {
+        foreach ($availableRoutes as $route) {
             $routeParts = explode('/', $route);
             $argsToSkip = [];
 
             $routePartsMatched[$route] = 0;
             foreach ($routeParts as $index => $routePart) {
-                foreach ($urlPath as $index2 => $urlParam) {
+                foreach ($requestedRoute as $index2 => $urlParam) {
                     if (in_array($index2, $argsToSkip)) {
                         continue;
                     }
@@ -85,21 +114,6 @@ class HttpRouter {
             $highestMatch = array_keys($urlParams, min($urlParams))[0];
         }
 
-        if ($highestMatch) {
-            foreach ($this->routeRegister->getRouteHandlers($highestMatch) as $routeHandler) {
-                $controller = $this->classContainer->get($routeHandler, cache: false);
-                try {
-                    if (!$controller->run($request, $response, $content)) {
-                        break;
-                    };
-                } catch (Throwable $e) {
-                    $this->logger->log(LogLevel::NOTICE, $e->getMessage(), identifier: 'framework');
-                    $this->logger->log(LogLevel::NOTICE, $e->getTraceAsString(), identifier: 'framework');
-                }
-            }
-        }
-
-        $this->eventManager->dispatchEvent('afterPageLoad', ['request' => &$request, 'response' => &$response, 'content' => &$content]);
-        return $content->getView();
+        return $highestMatch;
     }
 }

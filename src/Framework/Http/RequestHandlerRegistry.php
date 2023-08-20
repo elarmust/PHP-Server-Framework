@@ -10,8 +10,8 @@ namespace Framework\Http;
 
 use Psr\Http\Server\RequestHandlerInterface;
 
-class HttpHandlerRegistry {
-    private array $handlers;
+class RequestHandlerRegistry {
+    private array $handlers = [];
 
     /**
      * Register a RequestHandlerInterface handler for a request path.
