@@ -41,7 +41,6 @@ class FrameworkServer {
     private bool $maintenance = false;
     private array $wsConnections = [];
     private bool $ssl = false;
-    private Database $database;
 
     public function __construct() {
         $this->classContainer = new ClassContainer();
@@ -56,7 +55,7 @@ class FrameworkServer {
         define('SERVER_PORT', $this->configuration->getConfig('port'));
         $databaseInfo = $this->configuration->getConfig('databases.main');
         $databaseParams = $this->classContainer->prepareArguments(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
-        $this->database = $this->classContainer->get(Database::class, $databaseParams);
+        $this->classContainer->get(Database::class, $databaseParams);
         $this->classContainer->get(CronManager::class);
         $this->moduleManager = $this->classContainer->get(ModuleManager::class);
         $this->eventManager = $this->classContainer->get(EventManager::class);
@@ -79,7 +78,7 @@ class FrameworkServer {
             }
         });
 
-        $this->database = $this->classContainer->get(Database::class, $databaseParams, cache: false);
+        $this->classContainer->set($this->classContainer->get(Database::class, $databaseParams, cache: false));
         $this->server = $this->classContainer->get(Server::class, [SERVER_IP, SERVER_PORT, Server::POOL_MODE, $swooleSock]);
         $this->run();
     }

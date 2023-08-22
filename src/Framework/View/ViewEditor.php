@@ -6,125 +6,14 @@
  * copyright @ WereWolf Labs OÜ.
  */
 
-namespace Framework\ViewManager;
+namespace Framework\View;
 
 use DOMXPath;
 use DOMDocument;
-use Psr\Log\LogLevel;
-use ReflectionException;
-use Framework\Logger\Logger;
-use OpenSwoole\Coroutine\System;
-use InvalidArgumentException;
-use Framework\Core\ClassContainer;
-use Framework\EventManager\EventManager;
+use Framework\View\View;
 
-class ViewManager {
-    private EventManager $eventManager;
-    private ClassContainer $classContainer;
-    private Logger $logger;
-    private array $views = [];
-
-    /**
-     * @param EventManager $eventManager
-     * @param ClassContainer $classContainer
-     * @param Logger $logger
-     */
-    public function __construct(EventManager $eventManager, ClassContainer $classContainer, Logger $logger) {
-        $this->eventManager = $eventManager;
-        $this->classContainer = $classContainer;
-        $this->logger = $logger;
-    }
-
-    /**
-     * Register a new view
-     * 
-     * @param string $viewName
-     * @param null|string $controllerClass
-     * @param string $viewSourceFile
-     * @return void
-     */
-    public function registerView(string $viewName, ?string $controllerClass = null, string $viewString = ''): void {
-        if ($controllerClass && !is_subclass_of($controllerClass, AbstractViewController::class)) {
-            throw new InvalidArgumentException('View controller \'' . $controllerClass . '\' must extend ' . AbstractViewController::class . '!');
-        }
-
-        $this->views[$viewName] = new View($viewName, $viewString, $controllerClass);
-    }
-
-    /**
-     * Unregister a view
-     *
-     * @param string $viewName
-     * @return void
-     */
-    public function unregisterView(string $viewName): void {
-        if (!isset($this->views[$viewName])) {
-            $this->logger->log(LogLevel::NOTICE, 'Unregistering nonexistent view: \'' . $viewName . '\'', identifier: 'framework');
-            return;
-        }
-
-        unset($this->views[$viewName]);
-    }
-
-    /**
-     * List existing views.
-     *
-     * @return array
-     */
-    public function listViews(): array {
-        return array_keys($this->views);
-    }
-
-    /**
-     * Get base view by name
-     * @param string $viewName
-     * @throws InvalidArgumentException
-     * @return View
-     */
-    public function getView(string $viewName): View {
-        if (!isset($this->views[$viewName])) {
-            throw new InvalidArgumentException('View \'' . $viewName . '\' does not exist!');
-        }
-
-        return $this->views[$viewName];
-    }
-
-    /**
-     * Returns a parsed view.
-     *
-     * @param View $view View to use
-     * @param array $data Parameters to pass to the view controller.
-     * @return View Returns the parsed View.
-     * @throws ReflectionException
-     */
-    public function parseView(View $view, array $data = []): View {
-        $view = clone $view;
-        $controller = $this->classContainer->get($view->getController(), [$data], cache: false);
-
-        if ($view->getController()) {
-            $eventResult = $this->eventManager->dispatchEvent('beforeViewController', ['view' => &$view, 'data' => &$data]);
-            if ($eventResult->isCanceled() === false) {
-                // Replace controller, if needed.
-                if ($controller::class != $view->getController()) {
-                    $controller = $this->classContainer->get($view->getController(), [$data], cache: false);
-                }
-            }
-        }
-
-        // Run View controller.
-        $controller->run($data);
-        $eventResult = $this->eventManager->dispatchEvent('beforeView', ['view' => &$view, 'data' => &$data]);
-        // Load view contents if event has not been canceled
-        if ($eventResult->isCanceled() === false) {
-            $view->setView($controller->evalView($view));
-        }
-
-        $eventResult = $this->eventManager->dispatchEvent('afterView', ['view' => &$view, 'data' => &$data]);
-        if ($eventResult->isCanceled() === false) {
-            return $eventResult->getData()['view'];
-        }
-
-        return $view;
+class ViewEditor {
+    public function __construct() {
     }
 
     /**

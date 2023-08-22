@@ -9,10 +9,9 @@
 namespace Framework;
 
 use Framework\Core\Module\ModuleEnableInterface;
+use Framework\Layout\Controllers\BasicPage;
 use Framework\Http\RequestHandler;
-use Framework\Http\RequestHandlerRegistry;
-use OpenSwoole\Event;
-use OpenSwoole\Coroutine\System;
+use Framework\Http\RouteRegistry;
 use Framework\EventManager\EventManager;
 use Framework\Http\Session\Events\BeforePageLoad;
 use Framework\Cron\CronManager;
@@ -21,30 +20,31 @@ use Framework\Core\Commands\Stop;
 use Framework\Cron\Commands\Cron;
 use Framework\Core\Module\ModuleManager;
 use Framework\Http\RouteRegister;
-use Framework\Layout\Controllers\BasicPage;
-use Framework\Layout\Controllers\Index;
-use Framework\ViewManager\ViewManager;
+use Framework\View\ViewRegistry;
 use Framework\Cli\Cli;
 use Framework\ClI\HttpStart;
 use Framework\Cron\HttpStart as CronStart;
 use Framework\Core\ClassContainer;
 use Framework\Database\Commands\Migrate;
 use Framework\Http\Session\Cron\SessionCleanup;
+use Framework\Http\Session\SessionMiddleware;
+use Framework\View\View;
+use OpenSwoole\Event;
+use OpenSwoole\Coroutine\System;
 
 class Enable implements ModuleEnableInterface {
-    public RouteRegister $register;
-    public ViewManager $viewManager;
+    public RouteRegistry $routeRegistry;
+    public ViewRegistry $viewRegistry;
     public ModuleManager $moduleManager;
     private ClassContainer $classContainer;
     private Cli $cli;
     private CronManager $cronManager;
     private EventManager $eventManager;
-    private RequestHandlerRegistry $requestHandlerRegistry;
 
     /**
      * @param ClassContainer $classContainer
      * @param RouteRegister $register
-     * @param ViewManager $viewManager
+     * @param ViewRegistry $viewRegistry
      * @param ModuleManager $moduleManager
      * @param CronManager $cronManager
      * @param EventManager $eventManager
@@ -52,17 +52,15 @@ class Enable implements ModuleEnableInterface {
      */
     public function __construct(
         ClassContainer $classContainer,
-        RouteRegister $register,
-        RequestHandlerRegistry $requestHandlerRegistry,
-        ViewManager $viewManager,
+        RouteRegistry $routeRegistry,
+        ViewRegistry $viewRegistry,
         ModuleManager $moduleManager,
         Cli $cli,
         CronManager $cronManager,
         EventManager $eventManager
     ) {
-        $this->register = $register;
-        $this->requestHandlerRegistry = $requestHandlerRegistry;
-        $this->viewManager = $viewManager;
+        $this->routeRegistry = $routeRegistry;
+        $this->viewRegistry = $viewRegistry;
         $this->moduleManager = $moduleManager;
         $this->classContainer = $classContainer;
         $this->cli = $cli;
@@ -76,16 +74,15 @@ class Enable implements ModuleEnableInterface {
      * @return void
      */
     public function onEnable() {
-        //$this->register->registerRouteHandler('/', Index::class);
-        $this->requestHandlerRegistry->registerHandler('/', $this->classContainer->get(RequestHandler::class, [[]], cache: false));
-        $this->viewManager->registerView('EmptyView');
-        $this->viewManager->registerView('BasicPage', BasicPage::class, System::readFile(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php'));
+        $route = $this->routeRegistry->registerRoute('/', RequestHandler::class);
+        $route->addControllers([$this->classContainer->get(BasicPage::class, cache: false)]);
+        $route->addMiddlewares([$this->classContainer->get(SessionMiddleware::class, cache: false)]);
+        $this->viewRegistry->registerView(new View('BasicPage', System::readFile(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php')));
         $this->cli->registerCommandHandler('stop', $this->classContainer->get(Stop::class, cache: false));
         $this->cli->registerCommandHandler('maintenance', $this->classContainer->get(Maintenance::class, cache: false));
         $this->cli->registerCommandHandler('cron', $this->classContainer->get(Cron::class, cache: false));
         $this->cli->registerCommandHandler('migrate', $this->classContainer->get(Migrate::class, cache: false));
         $this->cronManager->registerCronJob($this->classContainer->get(SessionCleanup::class, cache: false));
-        $this->eventManager->registerEventListener('beforePageLoad', BeforePageLoad::class);
         $this->eventManager->registerEventListener('httpStart', HttpStart::class);
         $this->eventManager->registerEventListener('httpStart', CronStart::class);
     }
@@ -96,9 +93,8 @@ class Enable implements ModuleEnableInterface {
      * @return void
      */
     public function onDisable() {
-        $this->register->unregisterRoute('/');
-        $this->viewManager->unregisterView('EmptyView');
-        $this->viewManager->unregisterView('BasicPage');
+        $this->routeRegistry->unregisterRoute('/');
+        $this->viewRegistry->unregisterView('BasicPage');
         $this->cli->unregisterCommand('stop');
         $this->cli->unregisterCommand('cron');
         $this->cli->unregisterCommand('migrate');

@@ -8,12 +8,12 @@ use Psr\Http\Server\RequestHandlerInterface;
 use OpenSwoole\Core\Psr\Response;
 
 class RequestHandler implements RequestHandlerInterface {
-    private array $middlewareStack;
+    private array $middlewareStack = [];
     private Response $response;
 
     public function __construct(array $middlewareStack) {
         $this->middlewareStack = $middlewareStack;
-        // Initialize response with empty response.
+        // Initialize class with empty response.
         $this->response = new Response('');
     }
 
@@ -25,10 +25,6 @@ class RequestHandler implements RequestHandlerInterface {
 
         // Process the middleware
         $this->response = array_shift($this->middlewareStack)->process($request, $this);
-        return $this->response;
-    }
-
-    public function getCurrentResponse(): Response {
         return $this->response;
     }
 }
