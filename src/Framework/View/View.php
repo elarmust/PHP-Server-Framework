@@ -1,35 +1,24 @@
 <?php
 
 /**
- * Object for view data
  *
  * copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\View;
 
-class View {
-    private string $name;
-    private string $viewBase;
-    private string $view;
+use Framework\View\ViewInterface;
+
+class View implements ViewInterface {
+    protected string $name;
+    protected mixed $view = '';
 
     /**
      * @param string $viewName
-     * @param string $viewBase
      */
-    public function __construct(string $viewName, string $viewBase = '') {
+    public function __construct(string $viewName) {
         $this->name = $viewName;
-        $this->viewBase = $viewBase;
-        $this->view = $this->viewBase;
-    }
-
-    /**
-     * Get view base.
-     * 
-     * @return string
-     */
-    public function getViewBase(): string {
-        return $this->viewBase;
+        return $this;
     }
 
     /**
@@ -42,21 +31,25 @@ class View {
     }
 
     /**
-     * Set view contents
+     * Set view contents.
      * 
-     * @param string $view
+     * @param mixed $view
      * @return void
      */
-    public function setView(string $view): void {
+    public function setView(mixed $view): void {
         $this->view = $view;
     }
 
     /**
      * Returns view string.
      * 
-     * @return string
+     * @return mixed
      */
-    public function getView(): string {
+    public function getView(): mixed {
+        return $this->view;
+    }
+
+    public function render(): string {
         return $this->view;
     }
 }

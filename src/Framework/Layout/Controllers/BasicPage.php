@@ -15,7 +15,8 @@ class BasicPage extends AbstractRouteController {
     }
 
     public function execute(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        $response->getBody()->write($this->viewRegistry->getView('BasicPage')->getView());
+        $view = $this->viewRegistry->getView('BasicPage');
+        $response->getBody()->write($view->render($view->getView()));
         return $response;
     }
 }

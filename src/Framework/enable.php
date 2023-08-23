@@ -28,7 +28,7 @@ use Framework\Core\ClassContainer;
 use Framework\Database\Commands\Migrate;
 use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Http\Session\SessionMiddleware;
-use Framework\View\View;
+use Framework\View\HtmlView;
 use OpenSwoole\Event;
 use OpenSwoole\Coroutine\System;
 
@@ -77,7 +77,9 @@ class Enable implements ModuleEnableInterface {
         $route = $this->routeRegistry->registerRoute('/', RequestHandler::class);
         $route->addControllers([$this->classContainer->get(BasicPage::class, cache: false)]);
         $route->addMiddlewares([$this->classContainer->get(SessionMiddleware::class, cache: false)]);
-        $this->viewRegistry->registerView(new View('BasicPage', System::readFile(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php')));
+        $view = new HtmlView('BasicPage');
+        $view->setView(System::readFile(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php'));
+        $this->viewRegistry->registerView($view);
         $this->cli->registerCommandHandler('stop', $this->classContainer->get(Stop::class, cache: false));
         $this->cli->registerCommandHandler('maintenance', $this->classContainer->get(Maintenance::class, cache: false));
         $this->cli->registerCommandHandler('cron', $this->classContainer->get(Cron::class, cache: false));
