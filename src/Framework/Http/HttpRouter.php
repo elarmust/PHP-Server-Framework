@@ -43,6 +43,7 @@ class HttpRouter implements RequestHandlerInterface {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface {
+        $this->eventManager->dispatchEvent('beforePageLoad', ['request' => &$request]);
         $response = new Response('', 200);
         $highestMatch = RouteUtils::findNearestMatch($request->getServerParams()['path_info'], $this->routeRegistry->listRoutes(), '/');
 
@@ -50,7 +51,7 @@ class HttpRouter implements RequestHandlerInterface {
             try {
                 $route = clone $this->routeRegistry->getRoute($highestMatch);
                 $route->addMiddlewares([$this->controllerMiddleware]);
-                $this->eventManager->dispatchEvent('beforePageLoad', ['request' => &$request, 'response' => &$response, 'route' => &$route]);
+                $this->eventManager->dispatchEvent('beforeControllers', ['request' => &$request, 'response' => &$response, 'route' => &$route]);
                 $requestHandler = $this->classContainer->get($route->getRequestHandler(), [$route->getMiddlewareStack()], cache: false);
                 $response = $requestHandler->handle($request);
             } catch (Throwable $e) {
@@ -59,7 +60,7 @@ class HttpRouter implements RequestHandlerInterface {
             }
         }
 
-        $this->eventManager->dispatchEvent('afterPageLoad', ['request' => &$request, 'response' => &$response]);
-        return $response;
+        $event = $this->eventManager->dispatchEvent('afterPageLoad', ['request' => &$request, 'response' => &$response]);
+        return $event->getData()['response'];
     }
 }

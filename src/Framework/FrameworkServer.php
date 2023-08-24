@@ -10,7 +10,6 @@
 namespace Framework;
 
 use Framework\Core\ClassContainer;
-use OpenSwoole\Core\Psr\ServerRequest;
 use OpenSwoole\Constant;
 use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\Util;
@@ -110,42 +109,28 @@ class FrameworkServer {
             $this->eventManager->dispatchEvent('websocketMessage', [$this, $frame]);
         });
 
-        if (($this->configuration->getConfig('websocket.enabled') ?? false) == true && false) {
+        if (($this->configuration->getConfig('websocket.enabled') ?? false) == true) {
             $this->logger->log(LogLevel::INFO, 'Websocket enabled.', identifier: 'framework');
-            $this->server->handle('/' . ($this->configuration->getConfig('websocket.websocketURLPath') ?? 'ws'), function (Request $request, Response $response) {
-                $response->upgrade();
-                $event = $this->eventManager->dispatchEvent('websocketOpen', [$this, &$response]);
+            $this->server->on('open', function (Server $server, Request $request) {
+                $event = $this->eventManager->dispatchEvent('websocketOpen', [$server, &$request]);
                 if ($event->isCanceled()) {
-                    $response->close();
+                    $server->close($request->fd);
                     return;
                 }
 
-                $objectId = spl_object_id($response);
-                $this->wsConnections[$objectId] = $response;
+                echo "WebSocket connection opened: {$request->fd}\n";
+            });
 
-                while (true) {
-                    $frame = $response->recv($this->configuration->getConfig('websocket.timeoutSeconds') ?? 600);
-                    if ($frame === '') {
-                        $this->eventManager->dispatchEvent('websocketClose', [$this, &$response]);
-                        unset($this->wsConnections[$objectId]);
-                        $response->close();
-                        break;
-                    } else if ($frame === false) {
-                        $this->eventManager->dispatchEvent('websocketClose', [$this, &$response]);
-                        unset($this->wsConnections[$objectId]);
-                        $response->close();
-                        break;
-                    } else {
-                        if ($frame->data == 'close' || get_class($frame) === CloseFrame::class) {
-                            $this->eventManager->dispatchEvent('websocketClose', [$this, &$response]);
-                            unset($this->wsConnections[$objectId]);
-                            $response->close();
-                            break;
-                        }
+            $this->server->on('message', function (Server $server, Request $frame) {
+                echo "Received message: {$frame->data}\n";
 
-                        $this->eventManager->dispatchEvent('websocketMessage', [$this, &$frame]);
-                    }
-                }
+                $this->eventManager->dispatchEvent('websocketMessage', [$server, &$frame]);
+                // Send a response message back to the client
+                $server->push($frame->fd, "Server received: {$frame->data}");
+            });
+
+            $this->server->on('close', function (Server $server, int $fd) {
+                $this->eventManager->dispatchEvent('websocketClose', [$this, $fd]);
             });
         }
 

@@ -13,7 +13,6 @@
     "ip": "::",
     "websocket": {
         "enabled": true,
-        "websocketURLPath": "ws",
         "timeoutSeconds": 600
     },
     "cert": {
