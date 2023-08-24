@@ -8,14 +8,46 @@
 
 namespace Framework\View;
 
-use Framework\View\View;
+use Framework\View\ViewInterface;
 
-class JsonView extends View {
+class JsonView implements ViewInterface {
+    protected string $name;
+    protected array $view = [];
+
     /**
      * @param string $viewName
      */
     public function __construct(string $viewName) {
-        return parent::__construct($viewName);
+        $this->name = $viewName;
+        return $this;
+    }
+
+    /**
+     * Get view name.
+     * 
+     * @return string
+     */
+    public function getName(): string {
+        return $this->name;
+    }
+
+    /**
+     * Set view contents.
+     * 
+     * @param mixed $view
+     * @return void
+     */
+    public function setView(mixed $view): void {
+        $this->view = $view;
+    }
+
+    /**
+     * Returns view string.
+     * 
+     * @return mixed
+     */
+    public function getView(): mixed {
+        return $this->view;
     }
 
     /**

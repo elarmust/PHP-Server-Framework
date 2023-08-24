@@ -49,7 +49,20 @@ class View implements ViewInterface {
         return $this->view;
     }
 
-    public function render(): string {
-        return $this->view;
+    /**
+     * Render the view.
+     * 
+     * @param array $variables = []
+     * @return string
+     */
+    public function render(array $variables = []): string {
+        if (!$this->view) {
+            return '';
+        }
+
+        ob_start();
+        extract($variables);
+        eval('?>' . $this->view . '<?php');
+        return ob_get_clean();
     }
 }

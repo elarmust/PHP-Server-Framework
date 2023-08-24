@@ -8,7 +8,6 @@
 namespace Framework\View;
 
 interface ViewInterface {
-
     /**
      * Get view name.
      * 

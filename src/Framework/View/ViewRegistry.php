@@ -47,13 +47,13 @@ class ViewRegistry {
      * 
      * @param string $viewName
      * @throws InvalidArgumentException
-     * @return ViewInterface
+     * @return ViewInterface Cloned view
      */
     public function getView(string $viewName): ViewInterface {
         if (!isset($this->views[$viewName])) {
             throw new InvalidArgumentException('View \'' . $viewName . '\' does not exist!');
         }
 
-        return $this->views[$viewName];
+        return clone $this->views[$viewName];
     }
 }
