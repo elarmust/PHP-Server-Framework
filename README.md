@@ -42,3 +42,8 @@ If you'd like to contribute, you can do the following:
 
 + Create a fork and submit a pull request or
 + [Submit an issue or feature request](https://github.com/elarike12/PHP_Framework/issues)
+
+# TO DO list
++ PSR 15 standard implementation - in progress
++ PSR 14 standard implementation
++ XML and YML configuration support
