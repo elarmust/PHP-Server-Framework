@@ -3,23 +3,31 @@
 /**
  * Registry for RequestHandlers, Controllers, Middlewares and their associated routes.
  * 
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Http;
 
+use Framework\Http\Route;
+use Framework\Core\ClassContainer;
+
 class RouteRegistry {
+    private ClassContainer $classContainer;
     private array $routes = [];
+
+    public function __construct(ClassContainer $classContainer) {
+        $this->classContainer = $classContainer;
+    }
 
     /**
      * Register a new Route.
      * 
      * @param string $path
      * @param string $requestHandler
-     * @return void
+     * @return Route
      */
     public function registerRoute(string $path, string $requestHandler): Route {
-        $newRoute = new Route($path, $requestHandler);
+        $newRoute = $this->classContainer->get(Route::class, [$path, $requestHandler], cache: false);
         $this->routes[$path] = $newRoute;
         return $newRoute;
     }

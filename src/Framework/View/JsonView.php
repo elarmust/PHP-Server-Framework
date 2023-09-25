@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Json Views.
+ * Represents a basic view for displaying JSON encoded data.
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\View;
@@ -11,51 +11,25 @@ namespace Framework\View;
 use Framework\View\ViewInterface;
 
 class JsonView implements ViewInterface {
-    protected string $name;
     protected array $view = [];
-
-    /**
-     * @param string $viewName
-     */
-    public function __construct(string $viewName) {
-        $this->name = $viewName;
-        return $this;
-    }
-
-    /**
-     * Get view name.
-     * 
-     * @return string
-     */
-    public function getName(): string {
-        return $this->name;
-    }
 
     /**
      * Set view contents.
      * 
-     * @param mixed $view
-     * @return void
+     * @param array $view
+     * @return ViewInterface
      */
-    public function setView(mixed $view): void {
-        $this->view = $view;
+    public function setView(array $viewArray): ViewInterface {
+        $this->view = $viewArray;
+        return $this;
     }
 
     /**
-     * Returns view string.
-     * 
-     * @return mixed
-     */
-    public function getView(): mixed {
-        return $this->view;
-    }
-
-    /**
-     * Render the view.
+     * Return json encoded view.
      * 
      * @return string
      */
-    public function render(): string {
+    public function getView(): string {
         return json_encode($this->view);
     }
 }

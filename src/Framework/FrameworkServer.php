@@ -4,7 +4,7 @@
  * Server class that initializes all modules and starts
  * necessary processes for http server, cli and scheduler.
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework;
@@ -25,8 +25,10 @@ use Framework\Logger\LogAdapters\DefaultLogAdapter;
 use OpenSwoole\Timer;
 use OpenSwoole\Coroutine;
 use OpenSwoole\WebSocket\Server;
-use OpenSwoole\Core\Psr\Request;
-use OpenSwoole\Core\Psr\Response;
+use OpenSwoole\Core\Psr\ServerRequest;
+use OpenSwoole\Core\Psr\Response as ServerResponse;
+use OpenSwoole\Http\Request;
+use OpenSwoole\Http\Response;
 use Psr\Log\LogLevel;
 
 class FrameworkServer {
@@ -103,7 +105,9 @@ class FrameworkServer {
 
         $this->server->set($set);
 
-        $this->server->setHandler($this->router);
+        $this->server->on('request', function (Request $request, Response $response) {
+            \OpenSwoole\Core\Psr\Response::emit($response, $this->router->process(ServerRequest::from($request)));
+        });
 
         $this->server->on('message', function (Server $server, Frame $frame) {
             $this->eventManager->dispatchEvent('websocketMessage', [$this, $frame]);
@@ -121,7 +125,8 @@ class FrameworkServer {
                 echo "WebSocket connection opened: {$request->fd}\n";
             });
 
-            $this->server->on('message', function (Server $server, Request $frame) {
+            $this->server->on('message', function (Server $server, Frame $frame) {
+                print_r($frame);
                 echo "Received message: {$frame->data}\n";
 
                 $this->eventManager->dispatchEvent('websocketMessage', [$server, &$frame]);

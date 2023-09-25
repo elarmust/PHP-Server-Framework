@@ -4,7 +4,7 @@
  * Entity type class.
  * Creates and manages entity type data.
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Entity\Model;

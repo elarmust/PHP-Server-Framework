@@ -1,9 +1,9 @@
 <?php
 
 /**
- * HTML view manager.
- *
- * copyright @ WereWolf Labs OÜ.
+ * The ViewRegistry class provides a central repository for managing reusable views.
+ * 
+ * Copyright © WereWolf Labs OÜ.
  */
 
 namespace Framework\View;
@@ -19,8 +19,8 @@ class ViewRegistry {
      * @param ViewInterface $view
      * @return void
      */
-    public function registerView(ViewInterface $view): void {
-        $this->views[$view->getName()] = $view;
+    public function registerView(string $name, ViewInterface $view): void {
+        $this->views[$name] = $view;
     }
 
     /**

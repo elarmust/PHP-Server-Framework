@@ -3,7 +3,7 @@
 /**
  * Data migrations manager
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Database;

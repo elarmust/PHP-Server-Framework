@@ -3,7 +3,7 @@
 /**
  * Task Scheduler handles task scheduling and execution.
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Task;

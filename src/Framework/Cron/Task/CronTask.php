@@ -1,8 +1,7 @@
 <?php
 
 /**
- * 
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Cron\Task;
@@ -24,7 +23,6 @@ class CronTask implements TaskInterface {
     public function execute() {
         // Attempt to run all cron jobs.
         foreach ($this->cron->getCronJobs() as $cronJob) {
-            error_log($cronJob->getName());
             $this->cron->runCronJob($cronJob);
         }
     }

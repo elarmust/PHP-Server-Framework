@@ -3,12 +3,13 @@
 /**
  * This class contains enable and disable methods.
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework;
 
 use Framework\Core\Module\ModuleEnableInterface;
+use Framework\Http\ControllerStack;
 use Framework\Layout\Controllers\BasicPage;
 use Framework\Http\RequestHandler;
 use Framework\Http\RouteRegistry;
@@ -28,7 +29,7 @@ use Framework\Core\ClassContainer;
 use Framework\Database\Commands\Migrate;
 use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Http\Session\SessionMiddleware;
-use Framework\View\HtmlView;
+use Framework\View\View;
 use OpenSwoole\Event;
 use OpenSwoole\Coroutine\System;
 
@@ -74,17 +75,28 @@ class Enable implements ModuleEnableInterface {
      * @return void
      */
     public function onEnable() {
+        // Register / root path.
         $route = $this->routeRegistry->registerRoute('/', RequestHandler::class);
-        $route->addControllers([$this->classContainer->get(BasicPage::class, cache: false)]);
-        $route->addMiddlewares([$this->classContainer->get(SessionMiddleware::class, cache: false)]);
-        $view = new HtmlView('BasicPage');
+        // Add the BasicPage controller.
+        $route->setControllerStack([BasicPage::class]);
+        // Include session middleware.
+        $route->addMiddlewares([SessionMiddleware::class]);
+
+        // Create a new default page view.
+        $view = new View();
         $view->setView(System::readFile(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php'));
-        $this->viewRegistry->registerView($view);
+        $this->viewRegistry->registerView('basicPage', $view);
+
+        // Register built in commands.
         $this->cli->registerCommandHandler('stop', $this->classContainer->get(Stop::class, cache: false));
         $this->cli->registerCommandHandler('maintenance', $this->classContainer->get(Maintenance::class, cache: false));
         $this->cli->registerCommandHandler('cron', $this->classContainer->get(Cron::class, cache: false));
         $this->cli->registerCommandHandler('migrate', $this->classContainer->get(Migrate::class, cache: false));
+
+        // Register built in cron job.
         $this->cronManager->registerCronJob($this->classContainer->get(SessionCleanup::class, cache: false));
+
+        // Register built in event listeners.
         $this->eventManager->registerEventListener('httpStart', HttpStart::class);
         $this->eventManager->registerEventListener('httpStart', CronStart::class);
     }
@@ -96,7 +108,7 @@ class Enable implements ModuleEnableInterface {
      */
     public function onDisable() {
         $this->routeRegistry->unregisterRoute('/');
-        $this->viewRegistry->unregisterView('BasicPage');
+        $this->viewRegistry->unregisterView('basicPage');
         $this->cli->unregisterCommand('stop');
         $this->cli->unregisterCommand('cron');
         $this->cli->unregisterCommand('migrate');

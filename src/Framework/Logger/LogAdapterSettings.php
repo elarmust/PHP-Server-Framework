@@ -3,7 +3,7 @@
 /**
  * Trait for managing log adapter settings.
  * 
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Logger;

@@ -3,7 +3,7 @@
 /**
  * Middleware for initializing a session and sending a session cookie.
  * 
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Http\Session;

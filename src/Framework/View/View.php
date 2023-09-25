@@ -1,8 +1,9 @@
 <?php
 
 /**
+ * Represents a basic view for rendering static and dynamic content.
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\View;
@@ -10,59 +11,33 @@ namespace Framework\View;
 use Framework\View\ViewInterface;
 
 class View implements ViewInterface {
-    protected string $name;
-    protected mixed $view = '';
-
-    /**
-     * @param string $viewName
-     */
-    public function __construct(string $viewName) {
-        $this->name = $viewName;
-        return $this;
-    }
-
-    /**
-     * Get view name.
-     * 
-     * @return string
-     */
-    public function getName(): string {
-        return $this->name;
-    }
+    protected mixed $content = '';
 
     /**
      * Set view contents.
      * 
-     * @param mixed $view
-     * @return void
+     * @param string $view
+     * @return ViewInterface
      */
-    public function setView(mixed $view): void {
-        $this->view = $view;
+    public function setView(string $view): ViewInterface {
+        $this->content = $view;
+        return $this;
     }
 
     /**
-     * Returns view string.
-     * 
-     * @return mixed
-     */
-    public function getView(): mixed {
-        return $this->view;
-    }
-
-    /**
-     * Render the view.
+     * Return a rendered view string.
      * 
      * @param array $variables = []
      * @return string
      */
-    public function render(array $variables = []): string {
-        if (!$this->view) {
+    public function getView(array $variables = []): string {
+        if (!$this->content) {
             return '';
         }
 
         ob_start();
         extract($variables);
-        eval('?>' . $this->view . '<?php');
+        eval('?>' . $this->content . '<?php');
         return ob_get_clean();
     }
 }

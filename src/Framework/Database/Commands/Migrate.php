@@ -3,7 +3,7 @@
 /**
  * Migration command
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Database\Commands;

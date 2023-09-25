@@ -3,7 +3,7 @@
 /**
  * a Class to hold event data
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\EventManager;

@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Copyright @ WereWolf Labs OÜ.
+ */
+
 namespace Framework\Core\Exception;
 
 use Psr\Container\NotFoundExceptionInterface;

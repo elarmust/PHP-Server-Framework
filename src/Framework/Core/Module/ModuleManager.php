@@ -3,7 +3,7 @@
 /**
  * Class for managing modules.
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Core\Module;

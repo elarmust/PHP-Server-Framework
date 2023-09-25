@@ -1,7 +1,7 @@
 <?php
 
 /**
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 declare(strict_types = 1);
