@@ -48,4 +48,5 @@ If you'd like to contribute, you can do the following:
 + PSR 14 standard implementation
 + Unit tests
 + Module system refactoring
++ Better CLI
 + XML and YML configuration support
