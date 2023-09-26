@@ -1,8 +1,6 @@
 <?php
 
 /**
- * Manages a stack of WebSocket controllers, enabling easy addition, removal, and execution of WebSocket controllers.
- * 
  * Copyright © WereWolf Labs OÜ.
  */
 
@@ -12,27 +10,17 @@ use InvalidArgumentException;
 use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\WebSocket\Server;
 use Framework\Http\WebSocketControllerInterface;
-use Framework\WebSocket\WebSocketControllerStackInterface;
 
-class WebSocketControllerStack implements WebSocketControllerStackInterface {
+class WebSocketControllerStack {
     private array $controllerStack = [];
 
     /**
-     * Initialize a controller stack with an array of WebSocketControllerInterface compatible controllers.
+     * Add WebSocketControllerInterface compatible controllers to the WebSocket controller stack.
      * 
-     * @param array $controllerStack An array of WebSocketControllerInterface compatible controllers.
+     * @param array $controllers An array of WebSocketControllerInterface compatible controllers.
+     * @return WebSocketControllerStack
      */
-    public function __construct(array $controllerStack) {
-        $this->controllerStack = $controllerStack;
-    }
-
-    /**
-     * Add WebSocketControllerStackInterface compatible controllers to the WebSocket controller stack.
-     * 
-     * @param array $controllers An array of WebSocketControllerStackInterface compatible controllers.
-     * @return WebSocketControllerStackInterface
-     */
-    public function addControllers(array $controllers): WebSocketControllerStackInterface {
+    public function addControllers(array $controllers): WebSocketControllerStack {
         foreach ($controllers as $controller) {
             if (!is_object($controller)) {
                 throw new InvalidArgumentException($controller . ' must be an Object, which implements ' . WebSocketControllerInterface::class .  '!');
@@ -52,9 +40,9 @@ class WebSocketControllerStack implements WebSocketControllerStackInterface {
      * Remove a controller from WebSocket controller stack.
      * 
      * @param array $controllerClassNames An array of controller class names to to remove.
-     * @return WebSocketControllerStackInterface
+     * @return WebSocketControllerStack
      */
-    public function removeControllers(array $controllerClassNames): WebSocketControllerStackInterface {
+    public function removeControllers(array $controllerClassNames): WebSocketControllerStack {
         foreach ($controllerClassNames as $controller) {
             unset($this->controllerStack[$controller]);
         }
@@ -65,10 +53,10 @@ class WebSocketControllerStack implements WebSocketControllerStackInterface {
     /**
      * Replace the WebSocket controller stack controllers.
      * 
-     * @param array $controllers An array of WebSocketControllerStackInterface compatible controllers.
-     * @return WebSocketControllerStackInterface
+     * @param array $controllers An array of WebSocketControllerInterface compatible controllers.
+     * @return WebSocketControllerStack
      */
-    public function setControllers(array $controllers): WebSocketControllerStackInterface {
+    public function setControllers(array $controllers): WebSocketControllerStack {
         $this->controllerStack = [];
         return $this->addControllers($controllers);
     }

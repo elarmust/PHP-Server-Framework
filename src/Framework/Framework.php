@@ -10,6 +10,7 @@
 namespace Framework;
 
 use Framework\Core\ClassContainer;
+use Framework\WebSocket\WebSocketControllerStack;
 use OpenSwoole\Constant;
 use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\Util;
@@ -26,12 +27,11 @@ use OpenSwoole\Timer;
 use OpenSwoole\Coroutine;
 use OpenSwoole\WebSocket\Server;
 use OpenSwoole\Core\Psr\ServerRequest;
-use OpenSwoole\Core\Psr\Response as ServerResponse;
 use OpenSwoole\Http\Request;
 use OpenSwoole\Http\Response;
 use Psr\Log\LogLevel;
 
-class FrameworkServer {
+class Framework {
     private ModuleManager $moduleManager;
     private ClassContainer $classContainer;
     private Configuration $configuration;
@@ -39,8 +39,8 @@ class FrameworkServer {
     private Logger $logger;
     private Server $server;
     private EventManager $eventManager;
+    private WebSocketControllerStack $webSocketRegistry;
     private bool $maintenance = false;
-    private array $wsConnections = [];
     private bool $ssl = false;
 
     public function __construct() {
@@ -61,6 +61,7 @@ class FrameworkServer {
         $this->moduleManager = $this->classContainer->get(ModuleManager::class);
         $this->eventManager = $this->classContainer->get(EventManager::class);
         $this->router = $this->classContainer->get(HttpRouter::class);
+        $this->webSocketRegistry = $this->classContainer->get(WebSocketControllerStack::class);
 
         if ($this->configuration->getConfig('cert.cert') && $this->configuration->getConfig('cert.key')) {
             $swooleSock = Constant::SOCK_TCP | Constant::SSL;
@@ -109,10 +110,6 @@ class FrameworkServer {
             \OpenSwoole\Core\Psr\Response::emit($response, $this->router->process(ServerRequest::from($request)));
         });
 
-        $this->server->on('message', function (Server $server, Frame $frame) {
-            $this->eventManager->dispatchEvent('websocketMessage', [$this, $frame]);
-        });
-
         if (($this->configuration->getConfig('websocket.enabled') ?? false) == true) {
             $this->logger->log(LogLevel::INFO, 'Websocket enabled.', identifier: 'framework');
             $this->server->on('open', function (Server $server, Request $request) {
@@ -121,17 +118,11 @@ class FrameworkServer {
                     $server->close($request->fd);
                     return;
                 }
-
-                echo "WebSocket connection opened: {$request->fd}\n";
             });
 
             $this->server->on('message', function (Server $server, Frame $frame) {
-                print_r($frame);
-                echo "Received message: {$frame->data}\n";
-
-                $this->eventManager->dispatchEvent('websocketMessage', [$server, &$frame]);
-                // Send a response message back to the client
-                $server->push($frame->fd, "Server received: {$frame->data}");
+                $frame = $this->webSocketRegistry->execute($server, $frame);
+                $server->push($frame->fd, $frame->data, $frame->opcode);
             });
 
             $this->server->on('close', function (Server $server, int $fd) {
@@ -145,10 +136,6 @@ class FrameworkServer {
         });
 
         $this->server->start();
-    }
-
-    public function getWebsocketConnections(): array {
-        return $this->wsConnections;
     }
 
     /**
@@ -204,6 +191,10 @@ class FrameworkServer {
         $this->classContainer->get(Enable::class)->onDisable();
 
         $this->server->shutdown();
+    }
+
+    public function getServer(): Server {
+        return $this->server;
     }
 
     public function sslEnabled(): bool {

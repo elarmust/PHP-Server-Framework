@@ -2,6 +2,8 @@
 
 namespace Framework\Entity\Exceptions;
 
+use Throwable;
+
 class EntityAlreadyExistsException extends \Exception {
     private mixed $entityId;
 

@@ -2,6 +2,8 @@
 
 namespace Framework\Entity\Exceptions;
 
+use Throwable;
+
 class EntityAttributeAlreadyExistsException extends \Exception {
     private mixed $attributeName;
 

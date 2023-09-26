@@ -8,7 +8,7 @@
 
 namespace Framework\Http\Session;
 
-use Framework\FrameworkServer;
+use Framework\Framework;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Framework\Configuration\Configuration;
@@ -19,9 +19,9 @@ use Psr\Http\Server\RequestHandlerInterface;
 class SessionMiddleware implements MiddlewareInterface {
     private SessionManager $sessionManager;
     private Configuration $configuration;
-    private FrameworkServer $server;
+    private Framework $server;
 
-    public function __construct(SessionManager $sessionManager, Configuration $configuration, FrameworkServer $server) {
+    public function __construct(SessionManager $sessionManager, Configuration $configuration, Framework $server) {
         $this->sessionManager = $sessionManager;
         $this->configuration = $configuration;
         $this->server = $server;

@@ -6,7 +6,7 @@
 
 namespace Framework\Core\Commands;
 
-use Framework\FrameworkServer;
+use Framework\Framework;
 use Framework\Core\ClassContainer;
 use Framework\Cli\CommandInterface;
 
@@ -18,7 +18,7 @@ class Stop implements CommandInterface {
     }
 
     public function run(array $commandArgs): string {
-        $server = $this->classContainer->get(FrameworkServer::class);
+        $server = $this->classContainer->get(Framework::class);
         $server->stopServer();
         return '';
     }
