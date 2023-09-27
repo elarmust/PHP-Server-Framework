@@ -3,7 +3,7 @@
 /**
  * Class representing module data
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Core\Module;

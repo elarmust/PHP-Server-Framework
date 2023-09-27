@@ -1,8 +1,7 @@
 <?php
 
 /**
- * 
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Core;
@@ -48,6 +47,10 @@ class ClassContainer implements ContainerInterface {
 
     public function set(object $class, $alias = 'default'): void {
         $this->objectInstances[$class::class][$alias] = $class;
+    }
+
+    public function isInitialized(string $className, $alias = 'default'): bool {
+        return isset($this->objectInstances[$className][$alias]);
     }
 
     /**

@@ -3,7 +3,7 @@
 /**
  * Varchar attribute data type
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Database\DataTypes;

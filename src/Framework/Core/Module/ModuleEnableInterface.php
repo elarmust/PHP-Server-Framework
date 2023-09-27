@@ -3,7 +3,7 @@
 /**
  * This class will be called when module is enabled
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Core\Module;

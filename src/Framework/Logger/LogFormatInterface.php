@@ -2,7 +2,7 @@
 
 /**
  * 
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Logger;

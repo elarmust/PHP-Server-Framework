@@ -1,13 +1,12 @@
 <?php
 
 /**
- * 
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\Core\Commands;
 
-use Framework\Server;
+use Framework\Framework;
 use Framework\Core\ClassContainer;
 use Framework\Cli\CommandInterface;
 
@@ -19,8 +18,8 @@ class Stop implements CommandInterface {
     }
 
     public function run(array $commandArgs): string {
-        $server = $this->classContainer->get(Server::class);
-        $server->stop();
+        $server = $this->classContainer->get(Framework::class);
+        $server->stopServer();
         return '';
     }
 

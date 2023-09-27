@@ -8,3 +8,7 @@ services:
         stdin_open: true
         volumes:
             - "../:/var/www"
+        networks:
+            - backend
+networks:
+    backend:

@@ -3,7 +3,7 @@
 /**
  * Event system
  *
- * copyright @ WereWolf Labs OÜ.
+ * Copyright @ WereWolf Labs OÜ.
  */
 
 namespace Framework\EventManager;
@@ -35,7 +35,7 @@ class EventManager {
     public function dispatchEvent(string $eventName, array $data = []): Event {
         $event = new Event($data);
         foreach ($this->eventListeners[$eventName] ?? [] as $eventClass) {
-            $eventListener = $this->classContainer->get($eventClass, cache: false);
+            $eventListener = $this->classContainer->get($eventClass);
             $eventListener->run($event);
         }
 
