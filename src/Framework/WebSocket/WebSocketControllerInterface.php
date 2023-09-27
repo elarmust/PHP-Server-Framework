@@ -1,14 +1,15 @@
 <?php
 
 /**
- * This interface defines the contract for WebSocket controllers, providing fundamental functionality.
+ * This interface defines the fundamental function of a WebSocket controller.
  * 
  * Copyright @ WereWolf Labs OÜ.
  */
 
-namespace Framework\Http;
+namespace Framework\WebSocket;
 
 use OpenSwoole\WebSocket\Frame;
+use Framework\WebSocket\WebSocketMessageHandlerInterface;
 use OpenSwoole\WebSocket\Server;
 
 interface WebSocketControllerInterface {
@@ -17,9 +18,9 @@ interface WebSocketControllerInterface {
      * 
      * @param Server $server Current WebSocket server instance.
      * @param Frame $frame Frame returned by previous controller in the stack.
-     * @param WebSocketControllerInterface $controllerStack WebSocket controller stack instance.
+     * @param WebSocketMessageHandlerInterface $messageHandler WebSocket message handler instance.
      *
      * @return Frame
      */
-    public function execute(Server $server, Frame $frame, WebSocketControllerInterface $controllerStack): Frame;
+    public function execute(Server $server, Frame $frame, WebSocketMessageHandlerInterface $messageHandler): Frame;
 }
