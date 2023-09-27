@@ -10,7 +10,7 @@
 namespace Framework;
 
 use Framework\Core\ClassContainer;
-use Framework\WebSocket\WebSocketControllerStack;
+use Framework\WebSocket\WebSocketRegistry;
 use OpenSwoole\Constant;
 use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\Util;
@@ -39,7 +39,7 @@ class Framework {
     private Logger $logger;
     private Server $server;
     private EventManager $eventManager;
-    private WebSocketControllerStack $webSocketRegistry;
+    private WebSocketRegistry $webSocketRegistry;
     private bool $maintenance = false;
     private bool $ssl = false;
 
@@ -61,7 +61,7 @@ class Framework {
         $this->moduleManager = $this->classContainer->get(ModuleManager::class);
         $this->eventManager = $this->classContainer->get(EventManager::class);
         $this->router = $this->classContainer->get(HttpRouter::class);
-        $this->webSocketRegistry = $this->classContainer->get(WebSocketControllerStack::class);
+        $this->webSocketRegistry = $this->classContainer->get(WebSocketRegistry::class);
 
         if ($this->configuration->getConfig('cert.cert') && $this->configuration->getConfig('cert.key')) {
             $swooleSock = Constant::SOCK_TCP | Constant::SSL;
@@ -121,7 +121,7 @@ class Framework {
             });
 
             $this->server->on('message', function (Server $server, Frame $frame) {
-                $frame = $this->webSocketRegistry->execute($server, $frame);
+                $frame = $this->webSocketRegistry->getMessageHandler()->handle($server, $frame);
                 $server->push($frame->fd, $frame->data, $frame->opcode);
             });
 

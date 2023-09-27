@@ -13,7 +13,7 @@ use Framework\Core\ClassContainer;
 use Framework\WebSocket\WebSocketMessageHandler;
 use Framework\WebSocket\WebSocketControllerInterface;
 
-class WebSocketControllerStack {
+class WebSocketRegistry {
     private ClassContainer $classContainer;
     private array $controllerStack = [];
     private string $messageHandler;
@@ -26,9 +26,9 @@ class WebSocketControllerStack {
      * Add WebSocketControllerInterface compatible controllers to the WebSocket controller stack.
      * 
      * @param array $controllers An array of WebSocketControllerInterface compatible controllers.
-     * @return WebSocketControllerStack
+     * @return WebSocketRegistry
      */
-    public function addControllers(array $controllers): WebSocketControllerStack {
+    public function addControllers(array $controllers): WebSocketRegistry {
         foreach ($controllers as $controller) {
             if (!class_exists($controller) || !in_array(WebSocketControllerInterface::class, class_implements($controller))) {
                 throw new InvalidArgumentException($controller . ' must implement ' . WebSocketControllerInterface::class . '!');
@@ -44,9 +44,9 @@ class WebSocketControllerStack {
      * Remove a controller from WebSocket controller stack.
      * 
      * @param array $controllerClassNames An array of controller class names to to remove.
-     * @return WebSocketControllerStack
+     * @return WebSocketRegistry
      */
-    public function removeControllers(array $controllerClassNames): WebSocketControllerStack {
+    public function removeControllers(array $controllerClassNames): WebSocketRegistry {
         foreach ($controllerClassNames as $id => $controller) {
             unset($this->controllerStack[$id]);
         }
@@ -58,9 +58,9 @@ class WebSocketControllerStack {
      * Replace the WebSocket controller stack controllers.
      * 
      * @param array $controllers An array of WebSocketControllerInterface compatible controllers.
-     * @return WebSocketControllerStack
+     * @return WebSocketRegistry
      */
-    public function setControllers(array $controllers): WebSocketControllerStack {
+    public function setControllers(array $controllers): WebSocketRegistry {
         $this->controllerStack = [];
         return $this->addControllers($controllers);
     }
@@ -69,9 +69,9 @@ class WebSocketControllerStack {
      * Set WebSocket message handler.
      * 
      * @param string $handler A WebSocketMessageHandlerInterface compatible handler.
-     * @return WebSocketControllerStack
+     * @return WebSocketRegistry
      */
-    public function setHandler(string $handler): WebSocketControllerStack {
+    public function setHandler(string $handler): WebSocketRegistry {
         if (!class_exists($handler) || !in_array(WebSocketMessageHandlerInterface::class, class_implements($handler))) {
             throw new InvalidArgumentException($handler . ' must implement ' . WebSocketMessageHandlerInterface::class . '!');
         }

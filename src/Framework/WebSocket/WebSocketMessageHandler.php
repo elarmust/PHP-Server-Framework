@@ -15,7 +15,7 @@ use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\WebSocket\Server;
 use Framework\Core\ClassContainer;
 
-class WebSocketMessageHandler {
+class WebSocketMessageHandler implements WebSocketMessageHandlerInterface {
     private ClassContainer $classContainer;
     private array $controllerStack = [];
 
