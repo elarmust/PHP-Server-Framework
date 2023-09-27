@@ -5,13 +5,13 @@ A lightweight PHP server framework powered by Swoole for creating HTTP/WebSocket
 Feel free to explore and contribute, but be aware that the codebase is subject to changes.**
 
 # Main features
-+ HTTP routing
++ HTTP router
 + MVC
 + WebSocket
 + Database migrations
 + Event system
-+ Cron like scheduling
-+ CLI commands
++ Task scheduling
++ CLI
 + Logging
 + Configuration system
 
@@ -44,8 +44,7 @@ If you'd like to contribute, you can do the following:
 + [Submit an issue or feature request](https://github.com/elarike12/PHP_Framework/issues)
 
 # TO DO list
-+ PSR 15 standard implementation - in progress
-+ PSR 14 standard implementation
++ PSR 14 standard implementation - in progress
 + Unit tests
 + Module system refactoring
 + Better CLI
