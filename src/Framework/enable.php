@@ -9,7 +9,6 @@
 namespace Framework;
 
 use Framework\Core\Module\ModuleEnableInterface;
-use Framework\Http\ControllerStack;
 use Framework\Layout\Controllers\BasicPage;
 use Framework\Http\RequestHandler;
 use Framework\Http\RouteRegistry;

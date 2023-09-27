@@ -10,22 +10,22 @@
 namespace Framework;
 
 use Framework\Core\ClassContainer;
+use Framework\Core\Module\ModuleManager;
 use Framework\WebSocket\WebSocketRegistry;
-use OpenSwoole\Constant;
-use OpenSwoole\WebSocket\Frame;
-use OpenSwoole\Util;
 use Framework\EventManager\EventManager;
 use Framework\Database\Database;
 use Framework\Http\HttpRouter;
-use Framework\Core\Module\ModuleManager;
 use Framework\Configuration\Configuration;
 use Framework\Cron\CronManager;
 use Framework\Logger\Logger;
 use Framework\Enable;
 use Framework\Logger\LogAdapters\DefaultLogAdapter;
+use OpenSwoole\Constant;
+use OpenSwoole\Util;
 use OpenSwoole\Timer;
 use OpenSwoole\Coroutine;
 use OpenSwoole\WebSocket\Server;
+use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\Core\Psr\ServerRequest;
 use OpenSwoole\Http\Request;
 use OpenSwoole\Http\Response;
@@ -90,7 +90,7 @@ class Framework {
      *
      * @return void
      */
-    public function run(): void {
+    private function run(): void {
         $set = [
             'enable_coroutine' => true,
             'pid_file' => BASE_PATH . '/var/server.pid',
