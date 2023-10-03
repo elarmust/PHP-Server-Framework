@@ -44,8 +44,7 @@ If you'd like to contribute, you can do the following:
 + [Submit an issue or feature request](https://github.com/elarike12/PHP_Framework/issues)
 
 # TO DO list
-+ PSR 14 standard implementation - in progress
-+ Unit tests
 + Module system refactoring
++ Unit tests
 + Better CLI
 + XML and YML configuration support
