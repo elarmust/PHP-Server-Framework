@@ -11,23 +11,22 @@ namespace Framework\Http;
 use Framework\Http\Route;
 use Framework\Core\ClassContainer;
 use Psr\Http\Message\ResponseInterface;
-use Framework\EventManager\EventManager;
 use Framework\Http\ControllerStackInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 class ControllerMiddleware implements ControllerStackInterface {
+    private ClassContainer $classContainer;
     private Route $route;
     private array $controllerStack = [];
-    private ClassContainer $classContainer;
 
     /**
-     * @param RouteRegistry $routeRegistry
-     * @param EventManager $eventManager
+     * @param ClassContainer $classContainer
+     * @param Route $route
      */
     public function __construct(ClassContainer $classContainer, Route $route) {
-        $this->route = $route;
         $this->classContainer = $classContainer;
+        $this->route = $route;
         $this->controllerStack = $this->route->getControllerStack();
     }
 

@@ -1,7 +1,9 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * This class represents a user session and provides methods to access and manage session data.
+ *
+ * @copyright WereWolf Labs OÜ.
  */
 
 namespace Framework\Http\Session;

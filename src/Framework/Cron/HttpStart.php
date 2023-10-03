@@ -8,10 +8,9 @@ namespace Framework\Cron;
 
 use DateTime;
 use Framework\Utils\TimeUtils;
-use Framework\EventManager\Event;
 use Framework\Task\TaskScheduler;
 use Framework\Cron\Task\CronTaskDelay;
-use Framework\EventManager\EventListenerInterface;
+use Framework\Event\EventListenerInterface;
 
 class HttpStart implements EventListenerInterface {
     private CronTaskDelay $cronTaskDelay;
@@ -22,7 +21,7 @@ class HttpStart implements EventListenerInterface {
         $this->taskScheduler = $taskScheduler;
     }
 
-    public function run(Event &$event): void {
+    public function __invoke(object $event): void {
         $nextMinute = new DateTime();
         $nextMinute->modify('+1 minute');
         $nextMinute->setTime($nextMinute->format('H'), $nextMinute->format('i'), 0);
