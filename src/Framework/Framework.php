@@ -9,26 +9,30 @@
 
 namespace Framework;
 
-use Framework\Core\ClassContainer;
 use Framework\Core\Module\ModuleManager;
+use Framework\Core\ClassContainer;
+use Framework\Event\Events\WebSocketCloseEvent;
+use Framework\Event\Events\WebSocketOpenEvent;
+use Framework\Event\Events\HttpStartEvent;
+use Framework\Event\EventListenerProvider;
+use Framework\Event\EventDispatcher;
 use Framework\WebSocket\WebSocketRegistry;
-use Framework\EventManager\EventManager;
 use Framework\Database\Database;
 use Framework\Http\HttpRouter;
+use Framework\Logger\LogAdapters\DefaultLogAdapter;
 use Framework\Configuration\Configuration;
 use Framework\Cron\CronManager;
 use Framework\Logger\Logger;
 use Framework\Enable;
-use Framework\Logger\LogAdapters\DefaultLogAdapter;
-use OpenSwoole\Constant;
-use OpenSwoole\Util;
-use OpenSwoole\Timer;
-use OpenSwoole\Coroutine;
+use OpenSwoole\Core\Psr\ServerRequest;
 use OpenSwoole\WebSocket\Server;
 use OpenSwoole\WebSocket\Frame;
-use OpenSwoole\Core\Psr\ServerRequest;
-use OpenSwoole\Http\Request;
 use OpenSwoole\Http\Response;
+use OpenSwoole\Http\Request;
+use OpenSwoole\Coroutine;
+use OpenSwoole\Constant;
+use OpenSwoole\Timer;
+use OpenSwoole\Util;
 use Psr\Log\LogLevel;
 
 class Framework {
@@ -38,7 +42,7 @@ class Framework {
     private HttpRouter $router;
     private Logger $logger;
     private Server $server;
-    private EventManager $eventManager;
+    private EventDispatcher $EventDispatcher;
     private WebSocketRegistry $webSocketRegistry;
     private bool $maintenance = false;
     private bool $ssl = false;
@@ -59,7 +63,7 @@ class Framework {
         $this->classContainer->get(Database::class, $databaseParams);
         $this->classContainer->get(CronManager::class);
         $this->moduleManager = $this->classContainer->get(ModuleManager::class);
-        $this->eventManager = $this->classContainer->get(EventManager::class);
+        $this->EventDispatcher = $this->classContainer->get(EventDispatcher::class, [$this->classContainer->get(EventListenerProvider::class)]);
         $this->router = $this->classContainer->get(HttpRouter::class);
         $this->webSocketRegistry = $this->classContainer->get(WebSocketRegistry::class);
 
@@ -113,8 +117,8 @@ class Framework {
         if (($this->configuration->getConfig('websocket.enabled') ?? false) == true) {
             $this->logger->log(LogLevel::INFO, 'Websocket enabled.', identifier: 'framework');
             $this->server->on('open', function (Server $server, Request $request) {
-                $event = $this->eventManager->dispatchEvent('websocketOpen', [$server, &$request]);
-                if ($event->isCanceled()) {
+                $event = $this->EventDispatcher->dispatch(new WebSocketOpenEvent($server, $request));
+                if ($event->isPropagationStopped()) {
                     $server->close($request->fd);
                     return;
                 }
@@ -126,12 +130,12 @@ class Framework {
             });
 
             $this->server->on('close', function (Server $server, int $fd) {
-                $this->eventManager->dispatchEvent('websocketClose', [$this, $fd]);
+                $this->EventDispatcher->dispatch(new WebSocketCloseEvent($server, $fd));
             });
         }
 
         $this->server->on('Start', function () {
-            $this->eventManager->dispatchEvent('httpStart', [$this]);
+            $this->EventDispatcher->dispatch(new HttpStartEvent($this));
             $this->logger->log(LogLevel::INFO, 'Framework server is ready. Listening on: ' . SERVER_IP . ' ' . SERVER_PORT . ', Load time: ' . round(microtime(true) - SERVER_START_TIME, 2) . 's', identifier: 'framework');
         });
 

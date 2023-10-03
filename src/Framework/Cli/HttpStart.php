@@ -7,8 +7,7 @@
 namespace Framework\CLI;
 
 use Framework\Cli\Cli;
-use Framework\EventManager\Event;
-use Framework\EventManager\EventListenerInterface;
+use Framework\Event\EventListenerInterface;
 use OpenSwoole\Event as SwooleEvent;
 
 class HttpStart implements EventListenerInterface {
@@ -18,7 +17,7 @@ class HttpStart implements EventListenerInterface {
         $this->cli = $cli;
     }
 
-    public function run(Event &$event): void {
+    public function __invoke(object $event): void {
         $this->cli->stdin = fopen('php://stdin', 'r');
         stream_set_blocking($this->cli->stdin, 0);
         SwooleEvent::add($this->cli->stdin, function () {

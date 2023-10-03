@@ -12,7 +12,7 @@ use Framework\Core\Module\ModuleEnableInterface;
 use Framework\Layout\Controllers\BasicPage;
 use Framework\Http\RequestHandler;
 use Framework\Http\RouteRegistry;
-use Framework\EventManager\EventManager;
+use Framework\Event\EventListenerProvider;
 use Framework\Http\Session\Events\BeforePageLoad;
 use Framework\Cron\CronManager;
 use Framework\Core\Commands\Maintenance;
@@ -26,6 +26,8 @@ use Framework\ClI\HttpStart;
 use Framework\Cron\HttpStart as CronStart;
 use Framework\Core\ClassContainer;
 use Framework\Database\Commands\Migrate;
+use Framework\Event\Events\BeforePageLoadEvent;
+use Framework\Event\Events\HttpStartEvent;
 use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Http\Session\SessionMiddleware;
 use Framework\View\View;
@@ -39,16 +41,16 @@ class Enable implements ModuleEnableInterface {
     private ClassContainer $classContainer;
     private Cli $cli;
     private CronManager $cronManager;
-    private EventManager $eventManager;
+    private EventListenerProvider $eventListenerProvider;
 
     /**
      * @param ClassContainer $classContainer
      * @param RouteRegister $register
      * @param ViewRegistry $viewRegistry
      * @param ModuleManager $moduleManager
-     * @param CronManager $cronManager
-     * @param EventManager $eventManager
      * @param Cli $cli
+     * @param CronManager $cronManager
+     * @param EventListenerProvider $eventListenerProvider
      */
     public function __construct(
         ClassContainer $classContainer,
@@ -57,7 +59,7 @@ class Enable implements ModuleEnableInterface {
         ModuleManager $moduleManager,
         Cli $cli,
         CronManager $cronManager,
-        EventManager $eventManager
+        EventListenerProvider $eventListenerProvider
     ) {
         $this->routeRegistry = $routeRegistry;
         $this->viewRegistry = $viewRegistry;
@@ -65,11 +67,11 @@ class Enable implements ModuleEnableInterface {
         $this->classContainer = $classContainer;
         $this->cli = $cli;
         $this->cronManager = $cronManager;
-        $this->eventManager = $eventManager;
+        $this->eventListenerProvider = $eventListenerProvider;
     }
 
     /**
-     * This will register necessary core features.
+     * Register necessary core features.
      *
      * @return void
      */
@@ -96,12 +98,12 @@ class Enable implements ModuleEnableInterface {
         $this->cronManager->registerCronJob($this->classContainer->get(SessionCleanup::class, cache: false));
 
         // Register built in event listeners.
-        $this->eventManager->registerEventListener('httpStart', HttpStart::class);
-        $this->eventManager->registerEventListener('httpStart', CronStart::class);
+        $this->eventListenerProvider->registerEventListener(HttpStartEvent::class, $this->classContainer->get(HttpStart::class, cache: false));
+        $this->eventListenerProvider->registerEventListener(HttpStartEvent::class, $this->classContainer->get(CronStart::class, cache: false));
     }
 
     /**
-     * This will unregister previously registered core features.
+     * Unregister previously registered core features.
      *
      * @return void
      */
@@ -112,7 +114,8 @@ class Enable implements ModuleEnableInterface {
         $this->cli->unregisterCommand('cron');
         $this->cli->unregisterCommand('migrate');
         $this->cronManager->unregisterCronJob('session_cleanup');
-        $this->eventManager->unregisterEventListener('beforePageLoad', BeforePageLoad::class);
+        $this->eventListenerProvider->unregisterEventListener(HttpStartEvent::class, HttpStart::class);
+        $this->eventListenerProvider->unregisterEventListener(HttpStartEvent::class, CronStart::class);
         Event::del($this->cli->stdin);
     }
  }

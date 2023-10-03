@@ -16,7 +16,8 @@
         "openswoole/core": "dev-master",
         "psr/http-message": "^1.0",
         "psr/http-server-handler": "^1.0@dev",
-        "psr/http-server-middleware": "^1.0@dev"
+        "psr/http-server-middleware": "^1.0@dev",
+        "psr/event-dispatcher": "^1.0@dev"
     },
     "autoload": {
         "psr-4": {

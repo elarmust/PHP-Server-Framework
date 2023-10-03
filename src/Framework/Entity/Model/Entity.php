@@ -1,7 +1,9 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Represents an entity object that interacts with the database.
+ *
+ * @copyright WereWolf Labs OÜ.
  */
 
 namespace Framework\Entity\Model;
@@ -15,12 +17,24 @@ class Entity extends EntityType implements EntityInterface {
     public array $attributes = [];
     private ?int $entityId = null;
 
+    /**
+     * @param ClassContainer $classContainer
+     * @param string $entityType
+     */
     function __construct(ClassContainer $classContainer, string $entityType) {
         $this->classContainer = $classContainer;
         parent::__construct(...$this->classContainer->prepareArguments(EntityType::class, [$entityType]));
         $this->loadType();
     }
 
+    /**
+     * Load the entity data from database.
+     *
+     * @param int $entityId The ID of the entity to load.
+     * 
+     * @throws EntityNotFoundException If the entity is not found.
+     * @return void
+     */
     public function load(int $entityId): void {
         $attributeDataQuery = $this->database->select('entities_' . $this->getType(), where: ['id' => $entityId]);
         if (!$attributeDataQuery) {
@@ -38,6 +52,11 @@ class Entity extends EntityType implements EntityInterface {
         }
     }
 
+    /**
+     * Save the entity data to the database.
+     * 
+     * @return void
+     */
     public function save(): void {
         $data = $this->getAttributes();
         if (!$this->getId()) {
@@ -48,10 +67,23 @@ class Entity extends EntityType implements EntityInterface {
         }
     }
 
+    /**
+     * Delete the entity from the database.
+     * 
+     * @return void
+     */
     public function delete(): void {
         $this->database->delete('entities_' . $this->getType(), ['id' => $this->getId()]);
     }
 
+    /**
+     * Set data for entity attributes.
+     *
+     * @param array $attributesValue An associative array of attribute names and their values.
+     * 
+     * @throws EntityAttributeNotFoundException If an attribute specified in $attributesValue is not found.
+     * @return void
+     */
     public function setData(array $attributesValue): void {
         foreach ($attributesValue as $attribute => $value) {
             if (array_key_exists($attribute, $this->attributes)) {
@@ -67,10 +99,23 @@ class Entity extends EntityType implements EntityInterface {
         }
     }
 
+    /**
+     * Get the ID of the entity.
+     *
+     * @return int|null The ID of the entity, or null if it hasn't been assigned an ID yet.
+     */
     public function getId(): ?int {
         return $this->entityId;
     }
 
+    /**
+     * Get data for specific entity fields.
+     *
+     * @param array $fields An array of field names to retrieve data for.
+     * 
+     * @throws EntityAttributeNotFoundException If a specified field is not found.
+     * @return array
+     */
     public function getData(array $fields = []): array{
         if (!$fields) {
             $fields = $this->getFields();
@@ -94,6 +139,11 @@ class Entity extends EntityType implements EntityInterface {
         return $return;
     }
 
+    /**
+     * Get an array of all available entity fields.
+     *
+     * @return array An array of entity field names.
+     */
     public function getFields(): array {
         return array_keys($this->attributes);
     }

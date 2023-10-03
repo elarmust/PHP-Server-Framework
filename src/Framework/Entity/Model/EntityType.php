@@ -2,20 +2,21 @@
 
 /**
  * Entity type class.
- * Creates and manages entity type data.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * This class handles the creation, management, and deletion of entity types and their attributes.
+ *
+ * @copyright WereWolf Labs OÜ.
  */
 
 namespace Framework\Entity\Model;
 
-use Exception;
 use Framework\Core\ClassContainer;
-use Framework\Database\Database;
-use Framework\Database\DataTypes\DataTypeInterface;
 use Framework\Entity\Exceptions\EntityAttributeAlreadyExistsException;
 use Framework\Entity\Exceptions\EntityTypeAlreadyExistsException;
 use Framework\Entity\Exceptions\EntityTypeNotFoundException;
+use Framework\Database\DataTypes\DataTypeInterface;
+use Framework\Database\Database;
+use Exception;
 
 class EntityType implements EntityTypeInterface{
     private ClassContainer $classContainer;
@@ -26,12 +27,23 @@ class EntityType implements EntityTypeInterface{
     protected array $attributes;
     protected array $attributesMeta;
 
+    /**
+     * @param ClassContainer $classContainer
+     * @param Database $database
+     * @param string $typeName The name of the entity type.
+     */
     function __construct(ClassContainer $classContainer, Database $database, string $typeName) {
         $this->classContainer = $classContainer;
         $this->database = $database;
         $this->type = $typeName;
     }
 
+    /**
+     * Load entity type from the database.
+     *
+     * @throws EntityTypeNotFoundException If the entity type does not exist.
+     * @return void
+     */
     public function loadType(): void {
         $entityTypeData = $this->database->select('entity_types', null, ['entity_type' => $this->getType()]);
         if (!$entityTypeData) {
@@ -81,6 +93,12 @@ class EntityType implements EntityTypeInterface{
         }
     }
 
+    /**
+     * Create a new entity type.
+     *
+     * @throws EntityTypeAlreadyExistsException If the entity type already exists.
+     * @return void
+     */
     public function createType(): void {
         $existing = $this->database->select('entity_types', null, ['entity_type' => $this->getType()]);
         if ($existing) {
@@ -120,12 +138,30 @@ class EntityType implements EntityTypeInterface{
         ');
     }
 
+    /**
+     * Delete the entity type and its attributes from the database.
+     *
+     * @return void
+     */
     public function deleteType(): void {
         $this->database->delete('entity_types', ['entity_type' => $this->getType()]);
         $this->database->query('DROP TABLE entity_' . $this->getType() . '_attributes');
         $this->database->query('DROP TABLE entities_' . $this->getType());
     }
 
+    /**
+     * Add an attribute to the entity type.
+     *
+     * @param string $attributeName The name of the attribute to add.
+     * @param DataTypeInterface $dataType The data type of the attribute.
+     * @param string|null $getClass The class used for preprocessing the retrieved value.
+     * @param string|null $setClass The class used for postprocessing the value before saving.
+     * @param string|null $inputListClass The class used for retrieving a list of accepted values.
+     * 
+     * @throws EntityAttributeAlreadyExistsException If the attribute already exists.
+     * @throws Exception If the provided class for getting, setting, or input list does not exist.
+     * @return void
+     */
     public function addAttribute(string $attributeName, DataTypeInterface $dataType, string $getClass = null, string $setClass = null, string $inputListClass = null): void {
         if (isset($this->attributes[$attributeName])) {
             return;
@@ -175,23 +211,50 @@ class EntityType implements EntityTypeInterface{
         $this->database->query('ALTER TABLE entities_' . $this->getType() . ' ADD ' . $attributeName . ' ' . $dataTypeString . ' ' . $default);
     }
 
+    /**
+     * Delete an attribute from the entity type.
+     *
+     * @param string $attributeName The name of the attribute to delete.
+     * 
+     * @return void
+     */
     public function deleteAttribute(string $attributeName): void {
         $this->database->delete('entity_' . $this->getType() . '_attributes', ['attribute_name' => $attributeName]);
         $this->database->query('ALTER TABLE entities_' . $this->getType() . ' DROP ' . $attributeName);
     }
 
+    /**
+     * Get the name of the entity type.
+     *
+     * @return string|null The name of the entity type.
+     */
     public function getType(): ?string {
         return $this->type;
     }
 
-    public function getTypeId(): ?string {
+    /**
+     * Get the ID of the entity type.
+     *
+     * @return int|null The ID of the entity type.
+     */
+    public function getTypeId(): ?int {
         return $this->typeId;
     }
 
+    /**
+     * Get the attributes associated with the entity type.
+     *
+     * @return array The attributes as an associative array.
+     */
     public function getAttributes(): array {
         return $this->attributes;
     }
 
+    /**
+     * Get metadata for the entity type attributes.
+     *
+     * @return array The attribute metadata as an associative array.
+     */
     public function getAttributesMeta(): array {
         return $this->attributesMeta;
     }

@@ -1,7 +1,9 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * This cron job is responsible for periodically removing expired user sessions based on the session expiration settings.
+ *
+ * @copyright WereWolf Labs OÜ.
  */
 
 namespace Framework\Http\Session\Cron;
