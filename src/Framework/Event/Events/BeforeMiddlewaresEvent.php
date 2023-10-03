@@ -35,6 +35,18 @@ class BeforeMiddlewaresEvent implements StoppableEventInterface {
         return $this->route;
     }
 
+    public function setRequest(ServerRequestInterface $request): void {
+        $this->request = $request;
+    }
+
+    public function setResponse(ResponseInterface $response): void {
+        $this->response = $response;
+    }
+
+    public function setRoute(Route $route): void {
+        $this->route = $route;
+    }
+
     public function stopEvent(): void {
         $this->stopped = true;
     }
