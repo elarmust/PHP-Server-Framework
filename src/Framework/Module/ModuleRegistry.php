@@ -6,25 +6,44 @@
  * Copyright @ WereWolf Labs OÜ.
  */
 
-namespace Framework\Core\Module;
+namespace Framework\Module;
 
-use Exception;
 use Psr\Log\LogLevel;
+use RuntimeException;
+use Framework\Framework;
 use Framework\Logger\Logger;
+use InvalidArgumentException;
 use Framework\Core\ClassContainer;
+use Framework\Module\AbstractModule;
 
-class ModuleManager {
+class ModuleRegistry {
+    private Framework $framework;
     private ClassContainer $classContainer;
     private Logger $logger;
     private array $modules = [];
+    private array $loadedModules = [];
+    public const MODULE_PATHS = ['Modules', 'Vendor'];
 
-    public function __construct(ClassContainer $classContainer, Logger $logger) {
+    public function __construct(Framework $framework, ClassContainer $classContainer, Logger $logger) {
+        $this->framework = $framework;
         $this->classContainer = $classContainer;
         $this->logger = $logger;
-        $moduleConfigsUnordered = [];
+    }
 
+    public function init() {
+        
+    }
+
+    /**
+     * Attempts to find and return list of available modules.
+     * 
+     * @throws RuntimeException
+     * @return array An array of available module names. module name => [path, namespace]
+     */
+    public function findModules(): array {
+        $modulesFound = [];
         // Load other module configurations into array
-        foreach (['modules', 'vendor'] as $path) {
+        foreach ($this::MODULE_PATHS as $path) {
             // Ignore files.
             if (!is_dir(BASE_PATH . '/' . $path)) {
                 continue;
@@ -41,61 +60,73 @@ class ModuleManager {
                 foreach ($modules as $module) {
                     $modulePath = BASE_PATH . '/' . $path . '/' . $vendor . '/' . $module;
                     // Ignore folders with no module configuration file or load file.
-                    if (!file_exists($modulePath . '/module.php') || !file_exists($modulePath . '/Enable.php')) {
+                    if (!file_exists($modulePath . '/' . $module . '.php')) {
                         continue;
                     }
 
-                    require_once $modulePath . '/module.php';
-                    if (!isset($moduleInfo['name'])) {
-                        throw new Exception('Module ' . $vendor . '_' . $module . ' is missing a name!');
+                    $moduleName = $vendor . '\\' . $module;
+                    $moduleClass = $moduleName . '\\' . $module;
+                    if (!class_exists($moduleClass) || !in_array(ModuleInterface::class, class_implements($moduleClass))) {
+                        throw new InvalidArgumentException($moduleName . '\\' . $module . ' must implement ' . ModuleInterface::class . '!');
                     }
 
-                    if (!isset($moduleInfo['description'])) {
-                        throw new Exception('Module ' . $vendor . '_' . $module . ' is missing description!');
+                    if (isset($modulesFound[$moduleName])) {
+                        throw new RuntimeException('Ambiguous module ' . $moduleName . ' in ' . $modulePath . '! ' . $moduleName . ' already exists in ' . $modulesFound[$moduleName][0] . '.');
                     }
 
-                    if (!isset($moduleInfo['version'])) {
-                        throw new Exception('Module ' . $vendor . '_' . $module . ' is missing version!');
-                    }
-
-                    $moduleData['name'] = $moduleInfo['name'];
-                    $moduleData['vendor'] = $vendor;
-                    $moduleData['version'] = $moduleInfo['version'];
-                    $moduleData['path'] = $modulePath;
-                    $moduleData['classPath'] = $vendor . '\\' . $module;
-
-                    $moduleData['dependencies'] = array_values(array_unique($moduleInfo['dependencies'] ?? []));
-                    $moduleConfigsUnordered[$moduleData['classPath']] = $moduleData;
+                    $modulesFound[$moduleName] = $modulePath;
                 }
             }
         }
+
+        $this->modules = array_merge($this->modules, $modulesFound);
+        return $modulesFound;
 
         foreach ($moduleConfigsUnordered as $module => $moduleData) {
             $arrayToBeSorted[$module] = $moduleData['dependencies'] ?? [];
         }
 
         foreach ($this->orderModules($arrayToBeSorted ?? []) as $module) {
-            $this->modules[$module] = new Module(...$moduleConfigsUnordered[$module]);
+            $this->modules[$module] = new AbstractModule(...$moduleConfigsUnordered[$module]);
         }
     }
 
-    public function loadModule(Module $moduleName) {
-        $enableClass = $moduleName->getClassPath() . '\\Enable';
-        $moduleEnable = $this->classContainer->get($enableClass, cache: false);
-        $moduleEnable->onEnable();
+    public function loadModule(string $modulePath): ModuleInterface {
+        $pathParts = explode('/', $modulePath);
+        if (count($pathParts) < 2) {
+            throw new InvalidArgumentException('Module path ' . $modulePath . ' appears to be invalid!');
+        }
+
+        $lastKey = array_key_last($pathParts);
+        $vendor = $pathParts[$lastKey - 1];
+        $module = $pathParts[$lastKey];
+        $moduleName = $vendor . '\\' . $module;
+        $moduleClass = $moduleName . '\\' . $module;
+        if (!class_exists($moduleClass)) {
+            throw new InvalidArgumentException('Module class ' . $moduleClass . ' could not be located!');
+        }
+
+        $module = $this->classContainer->get($moduleClass, [$this->framework, $moduleName, $modulePath]);
+        $module->load();
+        $this->loadedModules[$moduleName] = $module;
+        return $this->loadedModules[$moduleName];
     }
 
-    public function unloadModule(Module $moduleName) {
-        $enableClass = $moduleName->getClassPath() . '\\Enable';
+    public function unloadModule(ModuleInterface $moduleName) {
+        $enableClass = $moduleName->getClassPath() . '\\Module';
         $moduleEnable = $this->classContainer->get($enableClass, cache: false);
         $moduleEnable->onDisable();
     }
 
     public function getModules(): array {
+        return $this->loadedModules;
+    }
+
+    public function getAllModules() {
         return $this->modules;
     }
 
-    public function getModule(string $moduleName): ?Module {
+    public function getModule(string $moduleName): ?ModuleInterface {
         return $this->modules[$moduleName] ?? null;
     }
 

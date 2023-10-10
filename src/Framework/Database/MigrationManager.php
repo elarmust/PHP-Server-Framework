@@ -13,23 +13,24 @@ use Psr\Log\LogLevel;
 use Framework\Logger\Logger;
 use InvalidArgumentException;
 use Framework\Core\ClassContainer;
-use Framework\Core\Module\ModuleManager;
+use Framework\Module\ModuleRegistry;
 
 class MigrationManager {
     private ClassContainer $classContainer;
-    private ModuleManager $moduleManager;
+    private ModuleRegistry $moduleRegistry;
     private Logger $logger;
     private array $migrations = [];
 
-    public function __construct(ClassContainer $classContainer, ModuleManager $moduleManager, Logger $logger) {
+    public function __construct(ClassContainer $classContainer, ModuleRegistry $moduleRegistry, Logger $logger) {
         $this->classContainer = $classContainer;
-        $this->moduleManager = $moduleManager;
+        $this->moduleRegistry = $moduleRegistry;
         $this->logger = $logger;
         $this->loadMigrations();
     }
 
     public function loadMigrations() {
-        $modulesList = $this->moduleManager->getModules();
+        $modulesList = $this->moduleRegistry->getModules();
+        error_log(print_r($modulesList, 1));
 
         foreach ($modulesList as $module) {
             $modulePath = $module->getPath();

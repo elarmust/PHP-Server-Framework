@@ -9,8 +9,10 @@
 
 namespace Framework;
 
-use Framework\Core\Module\ModuleManager;
 use Framework\Core\ClassContainer;
+use Throwable;
+
+use Framework\Module\ModuleRegistry;
 use Framework\Event\Events\WebSocketCloseEvent;
 use Framework\Event\Events\WebSocketOpenEvent;
 use Framework\Event\Events\HttpStartEvent;
@@ -36,7 +38,7 @@ use OpenSwoole\Util;
 use Psr\Log\LogLevel;
 
 class Framework {
-    private ModuleManager $moduleManager;
+    private ModuleRegistry $moduleRegistry;
     private ClassContainer $classContainer;
     private Configuration $configuration;
     private HttpRouter $router;
@@ -62,7 +64,7 @@ class Framework {
         $databaseParams = $this->classContainer->prepareArguments(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
         $this->classContainer->get(Database::class, $databaseParams);
         $this->classContainer->get(CronManager::class);
-        $this->moduleManager = $this->classContainer->get(ModuleManager::class);
+        $this->moduleRegistry = $this->classContainer->get(ModuleRegistry::class);
         $this->EventDispatcher = $this->classContainer->get(EventDispatcher::class, [$this->classContainer->get(EventListenerProvider::class)]);
         $this->router = $this->classContainer->get(HttpRouter::class);
         $this->webSocketRegistry = $this->classContainer->get(WebSocketRegistry::class);
@@ -76,11 +78,16 @@ class Framework {
 
         Coroutine::run(function () {
             $this->classContainer->get(Enable::class)->onEnable();
-    
+
             // Load modules.
-            foreach ($this->moduleManager->getModules() as $module) {
-                $this->logger->log(LogLevel::INFO, 'Loading module \'' . $module->getName() . '\'...', identifier: 'framework');
-                $this->moduleManager->loadModule($module);
+            foreach ($this->moduleRegistry->findModules() as $moduleName => $path) {
+                $this->logger->log(LogLevel::INFO, 'Loading module \'' . $moduleName . '\'...', identifier: 'framework');
+                try {
+                    $this->moduleRegistry->loadModule($path);
+                } catch (Throwable $e) {
+                    $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
+                    $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                }
             }
         });
 
@@ -186,9 +193,9 @@ class Framework {
             Coroutine::cancel($cid);
         }
 
-        foreach (array_reverse($this->moduleManager->getModules()) as $module) {
+        foreach (array_reverse($this->moduleRegistry->getModules()) as $module) {
             $this->logger->log(LogLevel::INFO, 'Unloading module \'' . $module->getName() . '\'...', identifier: 'framework');
-            $this->moduleManager->unloadModule($module);
+            $this->moduleRegistry->unloadModule($module);
         }
 
         $this->logger->log(LogLevel::INFO, 'Server stopped!', identifier: 'framework');

@@ -8,17 +8,14 @@
 
 namespace Framework;
 
-use Framework\Core\Module\ModuleEnableInterface;
 use Framework\Layout\Controllers\BasicPage;
 use Framework\Http\RequestHandler;
 use Framework\Http\RouteRegistry;
 use Framework\Event\EventListenerProvider;
-use Framework\Http\Session\Events\BeforePageLoad;
 use Framework\Cron\CronManager;
 use Framework\Core\Commands\Maintenance;
 use Framework\Core\Commands\Stop;
 use Framework\Cron\Commands\Cron;
-use Framework\Core\Module\ModuleManager;
 use Framework\Http\RouteRegister;
 use Framework\View\ViewRegistry;
 use Framework\Cli\Cli;
@@ -26,7 +23,6 @@ use Framework\ClI\HttpStart;
 use Framework\Cron\HttpStart as CronStart;
 use Framework\Core\ClassContainer;
 use Framework\Database\Commands\Migrate;
-use Framework\Event\Events\BeforePageLoadEvent;
 use Framework\Event\Events\HttpStartEvent;
 use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Http\Session\SessionMiddleware;
@@ -34,10 +30,9 @@ use Framework\View\View;
 use OpenSwoole\Event;
 use OpenSwoole\Coroutine\System;
 
-class Enable implements ModuleEnableInterface {
+class Enable {
     public RouteRegistry $routeRegistry;
     public ViewRegistry $viewRegistry;
-    public ModuleManager $moduleManager;
     private ClassContainer $classContainer;
     private Cli $cli;
     private CronManager $cronManager;
@@ -47,7 +42,6 @@ class Enable implements ModuleEnableInterface {
      * @param ClassContainer $classContainer
      * @param RouteRegister $register
      * @param ViewRegistry $viewRegistry
-     * @param ModuleManager $moduleManager
      * @param Cli $cli
      * @param CronManager $cronManager
      * @param EventListenerProvider $eventListenerProvider
@@ -56,14 +50,12 @@ class Enable implements ModuleEnableInterface {
         ClassContainer $classContainer,
         RouteRegistry $routeRegistry,
         ViewRegistry $viewRegistry,
-        ModuleManager $moduleManager,
         Cli $cli,
         CronManager $cronManager,
         EventListenerProvider $eventListenerProvider
     ) {
         $this->routeRegistry = $routeRegistry;
         $this->viewRegistry = $viewRegistry;
-        $this->moduleManager = $moduleManager;
         $this->classContainer = $classContainer;
         $this->cli = $cli;
         $this->cronManager = $cronManager;
