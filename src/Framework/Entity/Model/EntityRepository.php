@@ -14,17 +14,11 @@ use Framework\Entity\Model\EntityInterface;
 use Framework\Entity\Model\EntityRepositoryInterface;
 
 class EntityRepository implements EntityRepositoryInterface {
-    private Database $database;
-    private EntityInterface $entityBase;
-
     /**
      * @param Database $database The database connection to use for database operations.
      * @param EntityInterface $entity The base entity that this repository works with.
      */
-    public function __construct(Database $datbase, EntityInterface $entity) {
-        $this->database = $datbase;
-        $this->entityBase = $entity;
-    }
+    public function __construct(private Database $database, private EntityInterface $entityBase) {}
 
     /**
      * Create a new entity in the database.

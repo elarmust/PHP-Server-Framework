@@ -8,40 +8,20 @@
 
 namespace Framework\Module;
 
+use Throwable;
 use Psr\Log\LogLevel;
 use RuntimeException;
 use Framework\Framework;
-use Framework\Logger\Logger;
-use InvalidArgumentException;
-use Framework\Core\ClassContainer;
-use Framework\Module\AbstractModule;
 
 class ModuleRegistry {
-    private Framework $framework;
-    private ClassContainer $classContainer;
-    private Logger $logger;
     private array $modules = [];
     private array $loadedModules = [];
     public const MODULE_PATHS = ['Modules', 'Vendor'];
 
-    public function __construct(Framework $framework, ClassContainer $classContainer, Logger $logger) {
-        $this->framework = $framework;
-        $this->classContainer = $classContainer;
-        $this->logger = $logger;
-    }
+    public function __construct(private Framework $framework) {
 
-    public function init() {
-        
-    }
-
-    /**
-     * Attempts to find and return list of available modules.
-     * 
-     * @throws RuntimeException
-     * @return array An array of available module names. module name => [path, namespace]
-     */
-    public function findModules(): array {
         $modulesFound = [];
+        $graph = [];
         // Load other module configurations into array
         foreach ($this::MODULE_PATHS as $path) {
             // Ignore files.
@@ -67,55 +47,40 @@ class ModuleRegistry {
                     $moduleName = $vendor . '\\' . $module;
                     $moduleClass = $moduleName . '\\' . $module;
                     if (!class_exists($moduleClass) || !in_array(ModuleInterface::class, class_implements($moduleClass))) {
-                        throw new InvalidArgumentException($moduleName . '\\' . $module . ' must implement ' . ModuleInterface::class . '!');
+                        throw new RuntimeException($moduleName . '\\' . $module . ' must implement ' . ModuleInterface::class . '!');
                     }
 
                     if (isset($modulesFound[$moduleName])) {
                         throw new RuntimeException('Ambiguous module ' . $moduleName . ' in ' . $modulePath . '! ' . $moduleName . ' already exists in ' . $modulesFound[$moduleName][0] . '.');
                     }
 
-                    $modulesFound[$moduleName] = $modulePath;
+                    try {
+                        $newModule = $this->framework->getClassContainer()->get($moduleClass);
+                        $newModule->init($this->framework, $moduleName, $modulePath);
+                        $modulesFound[$newModule->getName()] = $newModule;
+                        $graph[$newModule->getName()] = [$newModule->loadBefore(), $newModule->loadAfter()];
+                    } catch (Throwable $e) {
+                        $this->framework->getLogger()->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
+                        $this->framework->getLogger()->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                    }
                 }
             }
         }
 
-        $this->modules = array_merge($this->modules, $modulesFound);
-        return $modulesFound;
-
-        foreach ($moduleConfigsUnordered as $module => $moduleData) {
-            $arrayToBeSorted[$module] = $moduleData['dependencies'] ?? [];
-        }
-
-        foreach ($this->orderModules($arrayToBeSorted ?? []) as $module) {
-            $this->modules[$module] = new AbstractModule(...$moduleConfigsUnordered[$module]);
+        foreach ($this->topologicalSort($graph) as $module) {
+            $this->modules[$module] = $modulesFound[$module];
         }
     }
 
-    public function loadModule(string $modulePath): ModuleInterface {
-        $pathParts = explode('/', $modulePath);
-        if (count($pathParts) < 2) {
-            throw new InvalidArgumentException('Module path ' . $modulePath . ' appears to be invalid!');
-        }
-
-        $lastKey = array_key_last($pathParts);
-        $vendor = $pathParts[$lastKey - 1];
-        $module = $pathParts[$lastKey];
-        $moduleName = $vendor . '\\' . $module;
-        $moduleClass = $moduleName . '\\' . $module;
-        if (!class_exists($moduleClass)) {
-            throw new InvalidArgumentException('Module class ' . $moduleClass . ' could not be located!');
-        }
-
-        $module = $this->classContainer->get($moduleClass, [$this->framework, $moduleName, $modulePath]);
+    public function loadModule(ModuleInterface $module): ModuleInterface {
         $module->load();
-        $this->loadedModules[$moduleName] = $module;
-        return $this->loadedModules[$moduleName];
+        $this->loadedModules[$module->getName()] = $module;
+        return $module;
     }
 
-    public function unloadModule(ModuleInterface $moduleName) {
-        $enableClass = $moduleName->getClassPath() . '\\Module';
-        $moduleEnable = $this->classContainer->get($enableClass, cache: false);
-        $moduleEnable->onDisable();
+    public function unloadModule(ModuleInterface $module): void {
+        $module->unload();
+        unset($this->loadedModules[$module->getName()]);
     }
 
     public function getModules(): array {
@@ -130,10 +95,39 @@ class ModuleRegistry {
         return $this->modules[$moduleName] ?? null;
     }
 
-    private function orderModules(array $graph): array {
+    /**
+     * Perform a topological sort on a directed acyclic graph.
+     *
+     * This function takes a directed acyclic graph as input, represented as an associative array.
+     * Each vertex in the graph is a key in the array, and its associated value is an array with two sub-arrays:
+     * - The first sub-array contains a list of previous vertexes (vertexes that precede the current vertex).
+     * - The second sub-array contains a list of following vertex (vertexes that come after the current vertex).
+     *
+     * @param array $graph The directed acyclic graph to perform the topological sort on.
+     *
+     * @return array An array containing the topological ordering of vertexes.
+     */
+    public function topologicalSort(array $graph) {
+        foreach ($graph as $vertex => $edgeTypes) {
+            foreach ($edgeTypes[0] ?? [] as $beforeVertex) {
+            	if (!isset($graph[$beforeVertex])) {
+                    $this->framework->getLogger()->log(LogLevel::WARNING, $vertex . ' has invalid dependency \'' . $beforeVertex . '\'', identifier: 'framework');
+            		continue;
+            	}
+
+	            if (!in_array($vertex, $graph[$beforeVertex][1] ?? [])) {
+	                $graph[$beforeVertex][1][] = $vertex;
+	            }
+            }
+        }
+
+        foreach ($graph as $vertex => $edgeTypes) {
+            $graph[$vertex] = $edgeTypes[1] ?? [];
+        }
+
         $inDegree = [];
         $sorted = [];
-
+    
         // Initialize in-degree for each vertex
         foreach ($graph as $vertex => $adjList) {
             $inDegree[$vertex] = 0;
@@ -146,7 +140,7 @@ class ModuleRegistry {
                     $inDegree[$adjVertex]++;
                 } else {
                     unset($graph[$vertex][array_search($adjVertex, $graph[$vertex])]);
-                    $this->logger->log(LogLevel::WARNING, 'Module \'' . $vertex . '\' has invalid dependency \'' . $adjVertex . '\'', identifier: 'framework');
+                    $this->framework->getLogger()->log(LogLevel::WARNING, $vertex . ' has invalid dependency \'' . $adjVertex . '\'', identifier: 'framework');
                 }
             }
         }
@@ -171,13 +165,13 @@ class ModuleRegistry {
 
         // Check for circular dependency
         if (count($sorted) != count($graph)) {
-            foreach ($graph as $node => $vertexes) {
-                if (!in_array($node, $sorted)) {
-                    $this->logger->log(LogLevel::WARNING, 'Module \'' . $node . '\' has circular dependency!', identifier: 'framework');
+            foreach ($graph as $vertex => $edges) {
+                if (!in_array($vertex, $sorted)) {
+                    $this->framework->getLogger()->log(LogLevel::WARNING, $vertex . ' has circular dependency!', identifier: 'framework');
                 }
             }
         }
 
-        return array_reverse($sorted);
+        return $sorted;
     }
 }

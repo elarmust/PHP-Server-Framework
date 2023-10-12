@@ -12,12 +12,9 @@ use Framework\Http\Route;
 use Framework\Core\ClassContainer;
 
 class RouteRegistry {
-    private ClassContainer $classContainer;
     private array $routes = [];
 
-    public function __construct(ClassContainer $classContainer) {
-        $this->classContainer = $classContainer;
-    }
+    public function __construct(private ClassContainer $classContainer) {}
 
     /**
      * Register a new Route.

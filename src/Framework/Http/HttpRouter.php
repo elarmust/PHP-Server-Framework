@@ -23,11 +23,6 @@ use Psr\Log\LogLevel;
 use Throwable;
 
 class HttpRouter {
-    private ClassContainer $classContainer;
-    private EventDispatcher $EventDispatcher;
-    private RouteRegistry $routeRegistry;
-    private Logger $logger;
-
     /**
      * @param ClassContainer $classContainer
      * @param EventDispatcher $EventDispatcher
@@ -35,16 +30,11 @@ class HttpRouter {
      * @param Logger $logger
      */
     public function __construct(
-        ClassContainer $classContainer,
-        EventDispatcher $EventDispatcher,
-        RouteRegistry $routeRegistry,
-        Logger $logger
-    ) {
-        $this->classContainer = $classContainer;
-        $this->EventDispatcher = $EventDispatcher;
-        $this->routeRegistry = $routeRegistry;
-        $this->logger = $logger;
-    }
+        private ClassContainer $classContainer,
+        private EventDispatcher $EventDispatcher,
+        private RouteRegistry $routeRegistry,
+        private Logger $logger
+    ) {}
 
     /**
      * Processes an incoming HTTP request and generates an HTTP response.

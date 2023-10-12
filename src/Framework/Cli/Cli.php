@@ -11,19 +11,12 @@ namespace Framework\Cli;
 use Psr\Log\LogLevel;
 use Framework\Logger\Logger;
 use Framework\CLI\CommandInterface;
-use Framework\Core\ApplicationInterface;
 
-class Cli implements ApplicationInterface {
-    private Logger $logger;
+class Cli {
     private array $commands = [];
     public $stdin;
 
-    public function __construct(Logger $logger) {
-        $this->logger = $logger;
-    }
-
-    public function run() {
-    }
+    public function __construct(private Logger $logger) {}
 
     public function runCommand(array $commandArgs) {
         $commandRoutesMatches = [];

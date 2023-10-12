@@ -17,15 +17,11 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 class SessionMiddleware implements MiddlewareInterface {
-    private SessionManager $sessionManager;
-    private Configuration $configuration;
-    private Framework $server;
-
-    public function __construct(SessionManager $sessionManager, Configuration $configuration, Framework $server) {
-        $this->sessionManager = $sessionManager;
-        $this->configuration = $configuration;
-        $this->server = $server;
-    }
+    public function __construct(
+        private SessionManager $sessionManager,
+        private Configuration $configuration,
+        private Framework $server
+    ) {}
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
         $existingCookies = $request->getCookieParams();

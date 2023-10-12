@@ -10,16 +10,10 @@ namespace Framework\Database\Commands;
 
 use Framework\Cli\Cli;
 use Framework\Cli\CommandInterface;
-use Framework\Database\MigrationManager;
+use Framework\Database\Migrations;
 
 class Migrate implements CommandInterface {
-    private MigrationManager $migrationManager;
-    private Cli $cli;
-
-    public function __construct(MigrationManager $migrationManager, Cli $cli) {
-        $this->migrationManager = $migrationManager;
-        $this->cli = $cli;
-    }
+    public function __construct(private Migrations $migrations, private Cli $cli) {}
 
     public function run(array $commandArgs): null|string {
         switch (strtolower($commandArgs[1] ?? '')) {
@@ -48,7 +42,7 @@ class Migrate implements CommandInterface {
                     $version = null;
                 }
 
-                $migrations = $this->migrationManager->getMigrations($migrationNameArg);
+                $migrations = $this->migrations->getMigrations($migrationNameArg);
                 if (!$migrations) {
                     return "\033[31mMigration '" . $migrationNameArg . "' does not exit!\033[0m";
                 }
@@ -86,7 +80,7 @@ class Migrate implements CommandInterface {
 
                         foreach ($migrationBatches as $migrationBatch) {
                             foreach ($migrationBatch->getDatabases() as $database) {
-                                $resultTemp = $this->migrationManager->runMigration($migrationBatch, $database, $up);
+                                $resultTemp = $this->migrations->runMigration($migrationBatch, $database, $up);
                                 if ($resultTemp) {
                                     $result = $resultTemp;
                                 }
@@ -127,14 +121,14 @@ class Migrate implements CommandInterface {
 
                 return null;
             case 'list':
-                return 'Migrations: ' . implode(', ', array_keys($this->migrationManager->getMigrations()));
+                return 'Migrations: ' . implode(', ', array_keys($this->migrations->getMigrations()));
             case 'info':
                 $commandArgs[2] = strtolower($commandArgs[2]);
                 if (!isset($commandArgs[2]) || $commandArgs[2] == '') {
                     return "\033[31mMissing argument: migration name\033[0m";
                 }
 
-                $migrations = $this->migrationManager->getMigrations($commandArgs[2])[$commandArgs[2]] ?? [];
+                $migrations = $this->migrations->getMigrations($commandArgs[2])[$commandArgs[2]] ?? [];
                 if (!$migrations) {
                     return "\033[31mMigration '" . $commandArgs[2] . "' does not exist!\033[0m";
                 }
@@ -152,7 +146,7 @@ class Migrate implements CommandInterface {
                     foreach ($migrationBatches as $migration) {
                         foreach ($migration->getDatabases() as $database) {
                             $versionDatabases[$version][] = $database->getName();
-                            if ($this->migrationManager->migrationPackageHasBeenRun($migration, $database)) {
+                            if ($this->migrations->migrationPackageHasBeenRun($migration, $database)) {
                                 $versionSuccess[$version][] = $database->getName();
                             } else {
                                 $versionFail[$version][] = $database->getName();

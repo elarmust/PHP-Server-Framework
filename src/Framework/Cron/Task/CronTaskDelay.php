@@ -11,13 +11,7 @@ use Framework\Task\TaskInterface;
 use Framework\Task\TaskScheduler;
 
 class CronTaskDelay implements TaskInterface {
-    private CronTask $cronTask;
-    private TaskScheduler $taskScheduler;
-
-    public function __construct(TaskScheduler $taskScheduler, CronTask $cronTask) {
-        $this->cronTask = $cronTask;
-        $this->taskScheduler = $taskScheduler;
-    }
+    public function __construct(private TaskScheduler $taskScheduler, private CronTask $cronTask) {}
 
     public function getName(): string {
         return 'CronTaskDelay';

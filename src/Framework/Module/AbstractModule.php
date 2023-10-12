@@ -10,8 +10,10 @@ use Framework\Framework;
 
 abstract class AbstractModule implements ModuleInterface {
     private Framework $framework;
-    private ?string $name = null;
-    private ?string $path = null;
+    private string $name;
+    private string $path;
+    protected array $loadBefore = [];
+    protected array $loadAfter = [];
 
     public final function init(
         Framework $framework,
@@ -51,8 +53,12 @@ abstract class AbstractModule implements ModuleInterface {
         return '1.0.0';
     }
 
-    public function getDependencies(): array {
-        return [];
+    public final function loadAfter(): array {
+        return $this->loadAfter;
+    }
+
+    public final function loadBefore(): array {
+        return $this->loadBefore;
     }
 
     public function getDescription(): string {

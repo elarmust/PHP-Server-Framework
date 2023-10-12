@@ -14,13 +14,10 @@ use Framework\WebSocket\WebSocketMessageHandler;
 use Framework\WebSocket\WebSocketControllerInterface;
 
 class WebSocketRegistry {
-    private ClassContainer $classContainer;
     private array $controllerStack = [];
     private string $messageHandler;
 
-    public function __construct(ClassContainer $classContainer) {
-        $this->classContainer = $classContainer;
-    }
+    public function __construct(private ClassContainer $classContainer) {}
 
     /**
      * Add WebSocketControllerInterface compatible controllers to the WebSocket controller stack.

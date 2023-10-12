@@ -12,16 +12,13 @@ use Framework\Cron\CronInterface;
 use Framework\Http\Session\SessionManager;
 
 class SessionCleanup implements CronInterface {
-    private SessionManager $sessionManager;
     private bool $enabled = true;
     private string $schedule = '* * * * *';
 
     /**
      * @param SessionManager $sessionManager
      */
-    public function __construct(SessionManager $sessionManager) {
-        $this->sessionManager = $sessionManager;
-    }
+    public function __construct(private SessionManager $sessionManager) {}
 
     /**
      * Run cron job.

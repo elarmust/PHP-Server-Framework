@@ -12,12 +12,10 @@ use Framework\Http\Session\Session;
 use Framework\Configuration\Configuration;
 
 class SessionManager {
-    private Configuration $configuration;
     private array $sessions = [];
     private int $expiration;
 
-    public function __construct(Configuration $configuration) {
-        $this->configuration = $configuration;
+    public function __construct(private Configuration $configuration) {
         $this->expiration = $this->configuration->getConfig('sessionExpirationSeconds') ?? 86400;
     }
 

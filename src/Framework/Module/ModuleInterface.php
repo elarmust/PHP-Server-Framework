@@ -35,7 +35,9 @@ interface ModuleInterface {
 
     public function getVersion(): string;
 
-    public function getDependencies(): array;
+    public function loadBefore(): array;
+
+    public function loadAfter(): array;
 
     public function getDescription(): string;
 }

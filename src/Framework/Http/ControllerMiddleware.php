@@ -16,17 +16,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 class ControllerMiddleware implements ControllerStackInterface {
-    private ClassContainer $classContainer;
-    private Route $route;
     private array $controllerStack = [];
 
     /**
      * @param ClassContainer $classContainer
      * @param Route $route
      */
-    public function __construct(ClassContainer $classContainer, Route $route) {
-        $this->classContainer = $classContainer;
-        $this->route = $route;
+    public function __construct(private ClassContainer $classContainer, private Route $route) {
         $this->controllerStack = $this->route->getControllerStack();
     }
 

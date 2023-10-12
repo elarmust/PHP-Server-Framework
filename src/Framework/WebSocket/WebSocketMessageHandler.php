@@ -16,17 +16,14 @@ use OpenSwoole\WebSocket\Server;
 use Framework\Core\ClassContainer;
 
 class WebSocketMessageHandler implements WebSocketMessageHandlerInterface {
-    private ClassContainer $classContainer;
-    private array $controllerStack = [];
-
     /**
      * @param ClassContainer $classContainer Class container.
      * @param array $controllers List of controllers to process.
      */
-    public function __construct(ClassContainer $classContainer, array $controllers) {
-        $this->classContainer = $classContainer;
-        $this->controllerStack = $controllers;
-    }
+    public function __construct(
+        private ClassContainer $classContainer,
+        private array $controllerStack = []
+    ) {}
 
     /**
      * Process each controller in the stack and return the final Response.

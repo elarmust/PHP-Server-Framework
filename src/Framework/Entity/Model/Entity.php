@@ -13,7 +13,6 @@ use Framework\Entity\Exceptions\EntityNotFoundException;
 use Framework\Entity\Exceptions\EntityAttributeNotFoundException;
 
 class Entity extends EntityType implements EntityInterface {
-    private ClassContainer $classContainer;
     public array $attributes = [];
     private ?int $entityId = null;
 
@@ -21,8 +20,7 @@ class Entity extends EntityType implements EntityInterface {
      * @param ClassContainer $classContainer
      * @param string $entityType
      */
-    function __construct(ClassContainer $classContainer, string $entityType) {
-        $this->classContainer = $classContainer;
+    function __construct(private ClassContainer $classContainer, string $entityType) {
         parent::__construct(...$this->classContainer->prepareArguments(EntityType::class, [$entityType]));
         $this->loadType();
     }

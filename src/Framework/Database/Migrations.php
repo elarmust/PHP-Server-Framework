@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Data migrations manager
+ * Data migrations
  *
  * Copyright @ WereWolf Labs OÜ.
  */
@@ -15,22 +15,19 @@ use InvalidArgumentException;
 use Framework\Core\ClassContainer;
 use Framework\Module\ModuleRegistry;
 
-class MigrationManager {
-    private ClassContainer $classContainer;
-    private ModuleRegistry $moduleRegistry;
-    private Logger $logger;
+class Migrations {
     private array $migrations = [];
 
-    public function __construct(ClassContainer $classContainer, ModuleRegistry $moduleRegistry, Logger $logger) {
-        $this->classContainer = $classContainer;
-        $this->moduleRegistry = $moduleRegistry;
-        $this->logger = $logger;
+    public function __construct(
+        private ClassContainer $classContainer,
+        private ModuleRegistry $moduleRegistry,
+        private Logger $logger
+    ) {
         $this->loadMigrations();
     }
 
     public function loadMigrations() {
-        $modulesList = $this->moduleRegistry->getModules();
-        error_log(print_r($modulesList, 1));
+        $modulesList = $this->moduleRegistry->getAllModules();
 
         foreach ($modulesList as $module) {
             $modulePath = $module->getPath();

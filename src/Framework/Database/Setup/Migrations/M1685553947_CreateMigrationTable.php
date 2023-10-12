@@ -13,12 +13,7 @@ use Framework\Database\MigrationInterface;
 
 
 class M1685553947_CreateMigrationTable implements MigrationInterface {
-    private Configuration $configuration;
-    private ClassContainer $classContainer;
-
-    public function __construct(ClassContainer $classContainer, Configuration $configuration) {
-        $this->configuration = $configuration;
-        $this->classContainer = $classContainer;
+    public function __construct(private ClassContainer $classContainer, private Configuration $configuration) {
         $configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
     }
 

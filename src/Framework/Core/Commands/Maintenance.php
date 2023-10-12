@@ -11,11 +11,7 @@ use Framework\Core\ClassContainer;
 use Framework\Cli\CommandInterface;
 
 class Maintenance implements CommandInterface {
-    private ClassContainer $classContainer;
-
-    public function __construct(ClassContainer $classContainer) {
-        $this->classContainer = $classContainer;
-    }
+    public function __construct(private ClassContainer $classContainer) {}
 
     public function run(array $commandArgs): null|string {
         $commandArgs[1] = strtolower($commandArgs[1] ?? '');

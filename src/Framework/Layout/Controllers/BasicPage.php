@@ -9,11 +9,7 @@ use Framework\Http\ControllerStackInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class BasicPage extends AbstractRouteController {
-    private ViewRegistry $viewRegistry;
-
-    public function __construct(ViewRegistry $viewRegistry) {
-        $this->viewRegistry = $viewRegistry;
-    }
+    public function __construct(private ViewRegistry $viewRegistry) {}
 
     public function execute(ServerRequestInterface $request, ResponseInterface $response, ControllerStackInterface $controllerStack): ResponseInterface {
         $view = $this->viewRegistry->getView('basicPage');

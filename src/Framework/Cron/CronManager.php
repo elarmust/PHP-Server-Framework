@@ -18,15 +18,10 @@ use Framework\Database\Database;
 use Framework\Cron\CronInterface;
 
 class CronManager {
-    private Database $database;
-    private Logger $logger;
     private array $cronJobs = [];
     private array $cronJobsRunning = [];
 
-    public function __construct(Database $database, Logger $logger) {
-        $this->database = $database;
-        $this->logger = $logger;
-    }
+    public function __construct(private Database $database, private Logger $logger) {}
 
     /**
      * Run a cron job

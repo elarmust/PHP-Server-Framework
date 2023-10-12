@@ -11,21 +11,19 @@ namespace Framework\Http;
 
 use Psr\Http\Message\ResponseInterface;
 use Framework\Http\Route;
-
 use Framework\Core\ClassContainer;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use OpenSwoole\Core\Psr\Response;
 
 class RequestHandler implements RequestHandlerInterface {
-    private ClassContainer $classContainer;
     private ResponseInterface $response;
-    private Route $route;
     private array $middlewareStack = [];
 
-    public function __construct(ClassContainer $classContainer, Route $route) {
-        $this->classContainer = $classContainer;
-        $this->route = $route;
+    public function __construct(
+        private ClassContainer $classContainer,
+        private Route $route
+    ) {
         $this->middlewareStack = $this->route->getMiddlewareStack();
         $this->response = new Response('', 404);
     }

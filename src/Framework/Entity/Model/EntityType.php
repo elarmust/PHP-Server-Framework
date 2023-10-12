@@ -19,9 +19,6 @@ use Framework\Database\Database;
 use Exception;
 
 class EntityType implements EntityTypeInterface{
-    private ClassContainer $classContainer;
-    protected Database $database;
-    protected string $type;
     protected int $typeId;
     protected bool $eav;
     protected array $attributes;
@@ -32,11 +29,11 @@ class EntityType implements EntityTypeInterface{
      * @param Database $database
      * @param string $typeName The name of the entity type.
      */
-    function __construct(ClassContainer $classContainer, Database $database, string $typeName) {
-        $this->classContainer = $classContainer;
-        $this->database = $database;
-        $this->type = $typeName;
-    }
+    function __construct(
+        private ClassContainer $classContainer,
+        protected Database $database,
+        protected string $type
+    ) {}
 
     /**
      * Load entity type from the database.

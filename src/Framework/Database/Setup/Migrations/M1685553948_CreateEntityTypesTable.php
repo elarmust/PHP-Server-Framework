@@ -12,12 +12,7 @@ use Framework\Configuration\Configuration;
 use Framework\Database\MigrationInterface;
 
 class M1685553948_CreateEntityTypesTable implements MigrationInterface {
-    private Configuration $configuration;
-    private ClassContainer $classContainer;
-
-    public function __construct(ClassContainer $classContainer, Configuration $configuration) {
-        $this->classContainer = $classContainer;
-        $this->configuration = $configuration;
+    public function __construct(private ClassContainer $classContainer, private Configuration $configuration) {
         $configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
     }
 

@@ -10,11 +10,9 @@ use Framework\Http\Session\Session;
 use Framework\Configuration\Configuration;
 
 class Csrf {
-    private Configuration $configuration;
     private int $defaultExpiration;
 
-    public function __construct(Configuration $configuration) {
-        $this->configuration = $configuration;
+    public function __construct(private Configuration $configuration) {
         $this->defaultExpiration = $this->configuration->getConfig('defaultCsrfTokenExpirationSeconds') ?? 86400;
     }
 

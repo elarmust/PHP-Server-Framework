@@ -9,11 +9,7 @@ namespace Framework\Event\Events;
 use Framework\Framework;
 
 class HttpStartEvent {
-    private Framework $framework;
-
-    public function __construct(Framework $framework) {
-        $this->framework = $framework;
-    }
+    public function __construct(private Framework $framework) {}
 
     public function getFramework(): Framework {
         return $this->framework;

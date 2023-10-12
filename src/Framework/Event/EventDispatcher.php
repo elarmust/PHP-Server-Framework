@@ -15,14 +15,10 @@ use Psr\EventDispatcher\StoppableEventInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 
 class EventDispatcher implements EventDispatcherInterface {
-    private $eventListenerProvider;
-
     /**
      * @param ListenerProviderInterface $eventListenerProvider
      */
-    public function __construct(ListenerProviderInterface $eventListenerProvider) {
-        $this->eventListenerProvider = $eventListenerProvider;
-    }
+    public function __construct(private ListenerProviderInterface $eventListenerProvider) {}
 
     /**
      * Dispatch event
