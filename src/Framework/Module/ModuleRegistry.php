@@ -107,7 +107,7 @@ class ModuleRegistry {
      *
      * @return array An array containing the topological ordering of vertexes.
      */
-    public function topologicalSort(array $graph) {
+    public function topologicalSort(array $graph): array {
         foreach ($graph as $vertex => $edgeTypes) {
             foreach ($edgeTypes[0] ?? [] as $beforeVertex) {
             	if (!isset($graph[$beforeVertex])) {

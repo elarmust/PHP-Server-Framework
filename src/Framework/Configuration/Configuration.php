@@ -5,7 +5,7 @@
  */
 
 namespace Framework\Configuration;
-use Exception;
+
 use InvalidArgumentException;
 
 class Configuration {
@@ -28,7 +28,7 @@ class Configuration {
             $function = 'decode' . $format;
             $this->config = $this->$function();
         } else {
-            throw new Exception('Configuration file ' . $filePath . ' does not exist!');
+            throw new InvalidArgumentException('Configuration file ' . $filePath . ' does not exist!');
         }
     }
 
