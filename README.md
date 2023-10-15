@@ -48,3 +48,4 @@ If you'd like to contribute, you can do the following:
 + Unit tests
 + Better CLI
 + XML and YML configuration support
++ Expand csrf functionality
