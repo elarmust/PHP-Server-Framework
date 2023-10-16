@@ -3,15 +3,15 @@
 /**
  * This class provides methods for creating, finding, loading, updating, and deleting entities.
  *
- * @copyright WereWolf Labs OÜ.
+ * @copyright WW Byte OÜ.
  */
 
-namespace Framework\Entity\Model;
+namespace Framework\Entity;
 
 use InvalidArgumentException;
 use Framework\Database\Database;
-use Framework\Entity\Model\EntityInterface;
-use Framework\Entity\Model\EntityRepositoryInterface;
+use Framework\Entity\EntityInterface;
+use Framework\Entity\EntityRepositoryInterface;
 
 class EntityRepository implements EntityRepositoryInterface {
     /**

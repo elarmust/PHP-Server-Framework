@@ -4,7 +4,7 @@
  * This class serves as an implementation of the Psr\EventDispatcher\ListenerProviderInterface,
  * allowing you to register, retrieve, and unregister event listeners for various events.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Event;

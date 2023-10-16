@@ -3,7 +3,7 @@
 /**
  * Data migrations
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Database;
@@ -12,7 +12,7 @@ use Throwable;
 use Psr\Log\LogLevel;
 use Framework\Logger\Logger;
 use InvalidArgumentException;
-use Framework\Core\ClassContainer;
+use Framework\Container\ClassContainer;
 use Framework\Module\ModuleRegistry;
 
 class Migrations {
@@ -41,7 +41,7 @@ class Migrations {
                 $migrationPath = $module->getClassPath() . '\\Setup\\Migrations\\' . $moduleMigration;
                 $name = str_replace('.php', '', $migrationPath);
 
-                $migration = $this->classContainer->get($name, cache: false);
+                $migration = $this->classContainer->get($name, singleton: false);
                 $this->migrations[strtolower($module->getClassPath())][$migration->version()][str_replace('.php', '', $moduleMigration)] = $migration;
             }
         }
@@ -52,7 +52,7 @@ class Migrations {
             $internalMigration = str_replace('.php', '', $internalMigration);
             $migrationPath = 'Framework\\Database\\Setup\\Migrations\\' . $internalMigration;
 
-            $migration = $this->classContainer->get($migrationPath, cache: false);
+            $migration = $this->classContainer->get($migrationPath, singleton: false);
             $this->migrations['framework'][$migration->version()][$internalMigration] = $migration;
         }
     }

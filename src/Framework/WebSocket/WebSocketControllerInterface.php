@@ -3,7 +3,7 @@
 /**
  * This interface defines the fundamental function of a WebSocket controller.
  * 
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\WebSocket;

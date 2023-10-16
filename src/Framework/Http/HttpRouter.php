@@ -5,12 +5,12 @@
  * appropriate request handlers based on the defined routes.
  * It serves as the entry point for processing incoming requests within a web application.
  * 
- * Copyright © WereWolf Labs OÜ.
+ * Copyright © WW Byte OÜ.
  */
 
 namespace Framework\Http;
 
-use Framework\Core\ClassContainer;
+use Framework\Container\ClassContainer;
 use Framework\Event\Events\BeforeMiddlewaresEvent;
 use Framework\Event\EventDispatcher;
 use Framework\Http\RouteRegistry;
@@ -58,7 +58,7 @@ class HttpRouter {
                 $this->EventDispatcher->dispatch(new BeforeMiddlewaresEvent($request, $response, $route));
 
                 // Get a new RequestHandler instance for this route and handle it.
-                $requestHandler = $this->classContainer->get($route->getRequestHandler(), [$route], cache: false);
+                $requestHandler = $this->classContainer->get($route->getRequestHandler(), [$route], singleton: false);
                 $response = $requestHandler->handle($request);
             } catch (Throwable $e) {
                 $this->logger->log(LogLevel::NOTICE, $e->getMessage(), identifier: 'framework');

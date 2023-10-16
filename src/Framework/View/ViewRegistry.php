@@ -3,7 +3,7 @@
 /**
  * The ViewRegistry class provides a central repository for managing reusable views.
  * 
- * Copyright © WereWolf Labs OÜ.
+ * Copyright © WW Byte OÜ.
  */
 
 namespace Framework\View;

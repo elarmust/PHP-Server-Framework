@@ -3,7 +3,7 @@
 /**
  * Class for managing modules.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Module;
@@ -111,7 +111,7 @@ class ModuleRegistry {
         foreach ($graph as $vertex => $edgeTypes) {
             foreach ($edgeTypes[0] ?? [] as $beforeVertex) {
             	if (!isset($graph[$beforeVertex])) {
-                    $this->framework->getLogger()->log(LogLevel::WARNING, $vertex . ' has invalid dependency \'' . $beforeVertex . '\'', identifier: 'framework');
+                    $this->framework->getLogger()->log(LogLevel::WARNING, 'Could not locate dependency \'' . $beforeVertex . '\' for \''  . $vertex . '\'!', identifier: 'framework');
             		continue;
             	}
 
@@ -140,7 +140,6 @@ class ModuleRegistry {
                     $inDegree[$adjVertex]++;
                 } else {
                     unset($graph[$vertex][array_search($adjVertex, $graph[$vertex])]);
-                    $this->framework->getLogger()->log(LogLevel::WARNING, $vertex . ' has invalid dependency \'' . $adjVertex . '\'', identifier: 'framework');
                 }
             }
         }

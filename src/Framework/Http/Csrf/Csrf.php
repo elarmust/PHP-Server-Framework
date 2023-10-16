@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Http\Csrf;
@@ -21,9 +21,10 @@ class Csrf {
      * 
      * @param Session &$session
      * @param int $expiration
-     * @return int
+     * @return string
      */
-    public function generateCsrfToken(Session &$session, int $expiration = $this->defaultExpiration): int {
+    public function generateCsrfToken(Session &$session, ?int $expiration = null): string {
+        $expiration ??= $this->defaultExpiration;
         $data = $session->getData();
         $key = bin2hex(random_bytes(32));
         $data['csrfTokens'][$key] = ['start' => time(), 'expiration' => $expiration];
@@ -35,14 +36,14 @@ class Csrf {
      * Check if Session object contains a valid token provided.
      * This will also delete matching and expired keys.
      * 
-     * @param int $token
+     * @param string $token
      * @param Session $session
      * @return bool
      */
-    public function validateCsrfToken(int $token, Session $session): bool {
+    public function validateCsrfToken(string $token, Session $session): bool {
         $return = false;
         foreach ($session->getData()['csrfTokens'] ?? [] as $sessionToken => $tokenData) {
-            if ($token == $sessionToken) {
+            if ($token === $sessionToken) {
                 if (time() - $tokenData['start'] < $tokenData['expiration']) {
                     $sessionData = $session->getData();
                     unset($sessionData['csrfTokens'][$sessionToken]);

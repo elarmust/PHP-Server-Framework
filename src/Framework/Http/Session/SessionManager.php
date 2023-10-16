@@ -3,7 +3,7 @@
 /**
  * This class facilitates session management.
  *
- * @copyright WereWolf Labs OÜ.
+ * @copyright WW Byte OÜ.
  */
 
 namespace Framework\Http\Session;
@@ -40,7 +40,7 @@ class SessionManager {
      * @param int $sessionId Session ID.
      * @return Session
      */
-    public function getSession(?string $sessionId = null): Session {
+    public function &getSession(?string $sessionId = null): Session {
         if (isset($this->sessions[$sessionId])) {
             $session = $this->sessions[$sessionId];
 
@@ -63,7 +63,7 @@ class SessionManager {
         return $session;
     }
 
-    public function getSessions(): array {
+    public function &getSessions(): array {
         return $this->sessions;
     }
 

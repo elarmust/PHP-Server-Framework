@@ -3,7 +3,7 @@
 /**
  * Cli application for Framework
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Cli;

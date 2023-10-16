@@ -4,7 +4,7 @@
  * Cron management.
  * Allows you to register and run cron jobs.
  * 
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Cron;

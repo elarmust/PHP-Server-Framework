@@ -3,7 +3,7 @@
 /**
  * HTML editor.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Utils;

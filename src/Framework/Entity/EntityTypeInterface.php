@@ -3,10 +3,10 @@
 /**
  * Interface for managing entity types and their attributes.
  *
- * @copyright @ WereWolf Labs OÜ.
+ * @copyright @ WW Byte OÜ.
  */
 
-namespace Framework\Entity\Model;
+namespace Framework\Entity;
 
 use Framework\Database\DataTypes\DataTypeInterface;
 

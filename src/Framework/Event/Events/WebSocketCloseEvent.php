@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @copyright  WereWolf Labs OÜ
+ * @copyright  WW Byte OÜ
  */
 
 namespace Framework\Event\Events;

@@ -3,20 +3,21 @@
 /**
  * This class contains enable and disable methods.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework;
 
 use Framework\Layout\Controllers\BasicPage;
 use Framework\Http\RequestHandler;
-use Framework\Core\Commands\Maintenance;
-use Framework\Core\Commands\Stop;
+use Framework\Cli\Commands\Maintenance;
+use Framework\Cli\Commands\Stop;
 use Framework\Cron\Commands\Cron;
 use Framework\ClI\HttpStart;
 use Framework\Cron\HttpStart as CronStart;
 use Framework\Database\Commands\Migrate;
 use Framework\Event\Events\HttpStartEvent;
+use Framework\Http\Csrf\CsrfMiddleware;
 use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Http\Session\SessionMiddleware;
 use Framework\View\View;
@@ -32,7 +33,7 @@ class Init {
     ) {}
 
     /**
-     * Register necessary core features.
+     * Register necessary Container features.
      *
      * @return void
      */
@@ -53,21 +54,21 @@ class Init {
 
         // Register built in commands.
         $cli = $this->framework->getCli();
-        $cli->registerCommandHandler('stop', $classContainer->get(Stop::class, cache: false));
-        $cli->registerCommandHandler('maintenance', $classContainer->get(Maintenance::class, cache: false));
-        $cli->registerCommandHandler('cron', $classContainer->get(Cron::class, cache: false));
-        $cli->registerCommandHandler('migrate', $classContainer->get(Migrate::class, cache: false));
+        $cli->registerCommandHandler('stop', $classContainer->get(Stop::class, singleton: false));
+        $cli->registerCommandHandler('maintenance', $classContainer->get(Maintenance::class, singleton: false));
+        $cli->registerCommandHandler('cron', $classContainer->get(Cron::class, singleton: false));
+        $cli->registerCommandHandler('migrate', $classContainer->get(Migrate::class, singleton: false));
 
         // Register built in cron job.
-        $this->framework->getCron()->registerCronJob($classContainer->get(SessionCleanup::class, cache: false));
+        $this->framework->getCron()->registerCronJob($classContainer->get(SessionCleanup::class, singleton: false));
 
         // Register built in event listeners.
-        $this->framework->getEventListenerProvider()->registerEventListener(HttpStartEvent::class, $classContainer->get(HttpStart::class, cache: false));
-        $this->framework->getEventListenerProvider()->registerEventListener(HttpStartEvent::class, $classContainer->get(CronStart::class, cache: false));
+        $this->framework->getEventListenerProvider()->registerEventListener(HttpStartEvent::class, $classContainer->get(HttpStart::class, singleton: false));
+        $this->framework->getEventListenerProvider()->registerEventListener(HttpStartEvent::class, $classContainer->get(CronStart::class, singleton: false));
     }
 
     /**
-     * Unregister previously registered core features.
+     * Unregister previously registered Container features.
      *
      * @return void
      */

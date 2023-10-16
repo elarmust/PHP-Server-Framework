@@ -3,7 +3,7 @@
 /**
  * Attribute data type interface
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Database\DataTypes;

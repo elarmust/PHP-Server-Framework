@@ -4,14 +4,14 @@
  * RequestHandler class is responsible for executing a stack of PSR-15 middlewares
  * and returning the resulting PSR-7 response.
  * 
- * Copyright © WereWolf Labs OÜ.
+ * Copyright © WW Byte OÜ.
  */
 
 namespace Framework\Http;
 
 use Psr\Http\Message\ResponseInterface;
 use Framework\Http\Route;
-use Framework\Core\ClassContainer;
+use Framework\Container\ClassContainer;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use OpenSwoole\Core\Psr\Response;
@@ -30,13 +30,13 @@ class RequestHandler implements RequestHandlerInterface {
 
     public function handle(ServerRequestInterface $request): ResponseInterface {
         if (empty($this->middlewareStack)) {
-            // Return response, if there are no more middleware left.
+            // Return response, if there are no more middlewares left.
             return $this->response;
         }
 
         // Process the middleware
         $middleWare = array_shift($this->middlewareStack);
-        $middleWare = $this->classContainer->get($middleWare, [$this->route], cache: false);
+        $middleWare = $this->classContainer->get($middleWare, [$this->route], singleton: false);
         $this->response = $middleWare->process($request, $this);
         return $this->response;
     }

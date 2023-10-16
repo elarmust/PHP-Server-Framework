@@ -3,7 +3,7 @@
 /**
  * Represents a basic view for rendering static and dynamic content.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\View;

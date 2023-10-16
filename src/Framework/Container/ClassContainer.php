@@ -1,15 +1,15 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
-namespace Framework\Core;
+namespace Framework\Container;
 
 use ReflectionClass;
 use ReflectionException;
 use Psr\Container\ContainerInterface;
-use Framework\Core\Exception\NotFoundException;
+use InvalidArgumentException;
 
 class ClassContainer implements ContainerInterface {
     protected array $objectInstances = [];
@@ -17,24 +17,25 @@ class ClassContainer implements ContainerInterface {
     /**
      * Get and instantiate classes
      *
-     * @param string $className // Class path.
-     * @param array $args // Parameters to pass to the class.
-     * @param string $alias // Instance alias.
-     * @param bool $cache // Use cache cache for results.
+     * @param string $className Class path.
+     * @param array $args Parameters to pass to the class.
+     * @param string $alias Instance alias.
+     * @param bool $singleton Use a singleton or new instance.
+     * 
+     * @throws InvalidArgumentException
      * @return Object
-     * @throws NotFoundException
      */
-    public function get(string $className, array $args = [], string $alias = 'default', bool $cache = true): object {
-        if (isset($this->objectInstances[$className][$alias]) && $cache) {
+    public function get(string $className, array $args = [], string $alias = 'default', bool $singleton = true): object {
+        if (isset($this->objectInstances[$className][$alias]) && $singleton) {
             return $this->objectInstances[$className][$alias];
         }
 
         if (!$this->has($className)) {
-            throw new NotFoundException('Class ' . $className . ' could not be found!');
+            throw new InvalidArgumentException('Class ' . $className . ' could not be found!');
         }
 
         $return = new $className(...$this->prepareArguments($className, $args));
-        if (!isset($this->objectInstances[$className][$alias]) && $cache) {
+        if (!isset($this->objectInstances[$className][$alias]) && $singleton) {
             $this->objectInstances[$className][$alias] = $return;
         }
 
@@ -56,10 +57,11 @@ class ClassContainer implements ContainerInterface {
     /**
      * Get prepared class arguments
      *
-     * @param string $classPath // Class path.
-     * @param array $params // Parameters to pass to the object.
-     * @return array
+     * @param string $classPath Class path.
+     * @param array $params Parameters to pass to the object.
+     * 
      * @throws ReflectionException
+     * @return array
      */
     public function prepareArguments(string $classPath, array $params = []): array {
         $objectParams = $params;

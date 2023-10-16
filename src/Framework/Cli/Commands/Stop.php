@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
-namespace Framework\Core\Commands;
+namespace Framework\Cli\Commands;
 
 use Framework\Framework;
-use Framework\Core\ClassContainer;
+use Framework\Container\ClassContainer;
 use Framework\Cli\CommandInterface;
 
 class Stop implements CommandInterface {

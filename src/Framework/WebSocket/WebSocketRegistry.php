@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright © WereWolf Labs OÜ.
+ * Copyright © WW Byte OÜ.
  */
 
 namespace Framework\WebSocket;
@@ -9,7 +9,7 @@ namespace Framework\WebSocket;
 use InvalidArgumentException;
 use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\WebSocket\Server;
-use Framework\Core\ClassContainer;
+use Framework\Container\ClassContainer;
 use Framework\WebSocket\WebSocketMessageHandler;
 use Framework\WebSocket\WebSocketControllerInterface;
 
@@ -84,7 +84,7 @@ class WebSocketRegistry {
      * @return WebSocketMessageHandlerInterface The WebSocket message handler instance.
      */
     public function getMessageHandler(): WebSocketMessageHandlerInterface {
-        return $this->classContainer->get($this->messageHandler ?? WebSocketMessageHandler::class, [$this->getControllerStack()], cache: false);
+        return $this->classContainer->get($this->messageHandler ?? WebSocketMessageHandler::class, [$this->getControllerStack()], singleton: false);
     }
 
     /**
@@ -112,7 +112,7 @@ class WebSocketRegistry {
 
         // Process the middleware
         $controller = array_shift($this->controllerStack);
-        $controller = $this->classContainer->get($controller, cache: false);
+        $controller = $this->classContainer->get($controller, singleton: false);
         return $controller->execute($server, $frame, $this);
     }
 }

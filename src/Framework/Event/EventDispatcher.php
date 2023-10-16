@@ -5,7 +5,7 @@
  * within the application. It implements the Psr\EventDispatcher\EventDispatcherInterface
  * and serves as a bridge between event listeners and the events themselves.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Event;

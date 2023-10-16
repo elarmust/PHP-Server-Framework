@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Database\Setup\Migrations;
 
-use Framework\Core\ClassContainer;
+use Framework\Container\ClassContainer;
 use Framework\Database\Database;
 use Framework\Configuration\Configuration;
 use Framework\Database\MigrationInterface;
@@ -37,7 +37,7 @@ class M1685553947_CreateMigrationTable implements MigrationInterface {
 
     public function getDatabases(): array {
         $databaseInfo = $this->configuration->getConfig('databases.main');
-        $database = $this->classContainer->get(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password']], cache: false);
+        $database = $this->classContainer->get(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password']], singleton: false);
         return [$database];
     }
 }

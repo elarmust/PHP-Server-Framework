@@ -3,12 +3,12 @@
 /**
  * Task Scheduler handles task scheduling and execution.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Task;
 
-use Swoole\Timer;
+use OpenSwoole\Timer;
 use InvalidArgumentException;
 
 class TaskScheduler {

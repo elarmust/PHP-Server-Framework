@@ -4,36 +4,31 @@
  * Server class that initializes all modules and starts
  * necessary processes for http server, cli and scheduler.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework;
 
-use Framework\Core\ClassContainer;
-use Framework\Init;
-
-use Framework\Cli\Cli;
-
-use Framework\Database\Migrations;
-
-use Throwable;
-
-use Framework\Module\ModuleRegistry;
+use Framework\Logger\LogAdapters\DefaultLogAdapter;
 use Framework\Event\Events\WebSocketCloseEvent;
 use Framework\Event\Events\WebSocketOpenEvent;
+use Framework\Configuration\Configuration;
+use Framework\WebSocket\WebSocketRegistry;
 use Framework\Event\Events\HttpStartEvent;
 use Framework\Event\EventListenerProvider;
+use Framework\Module\ModuleRegistry;
 use Framework\Event\EventDispatcher;
-use Framework\WebSocket\WebSocketRegistry;
-use Framework\Database\Database;
-use Framework\Http\HttpRouter;
-use Framework\Logger\LogAdapters\DefaultLogAdapter;
-use Framework\Configuration\Configuration;
-use Framework\Cron\CronManager;
-use Framework\Logger\Logger;
+use Framework\Container\ClassContainer;
+use Framework\Database\Migrations;
 use Framework\Http\RouteRegistry;
 use Framework\Task\TaskScheduler;
+use Framework\Database\Database;
 use Framework\View\ViewRegistry;
+use Framework\Cron\CronManager;
+use Framework\Http\HttpRouter;
+use Framework\Logger\Logger;
+use Framework\Cli\Cli;
+use Framework\Init;
 use OpenSwoole\Core\Psr\ServerRequest;
 use OpenSwoole\WebSocket\Server;
 use OpenSwoole\WebSocket\Frame;
@@ -45,6 +40,7 @@ use OpenSwoole\Timer;
 use OpenSwoole\Util;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LogLevel;
+use Throwable;
 
 class Framework {
     private ModuleRegistry $moduleRegistry;
@@ -137,7 +133,7 @@ class Framework {
         });
 
         // Reset database object.
-        $this->classContainer->set($this->classContainer->get(Database::class, $databaseParams, cache: false));
+        $this->classContainer->set($this->classContainer->get(Database::class, $databaseParams, singleton: false));
 
 
         $this->logger->log(LogLevel::INFO, 'Starting HTTP server...', identifier: 'framework');

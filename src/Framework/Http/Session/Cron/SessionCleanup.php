@@ -3,7 +3,7 @@
 /**
  * This cron job is responsible for periodically removing expired user sessions based on the session expiration settings.
  *
- * @copyright WereWolf Labs OÜ.
+ * @copyright WW Byte OÜ.
  */
 
 namespace Framework\Http\Session\Cron;

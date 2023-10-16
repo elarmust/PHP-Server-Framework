@@ -6,14 +6,14 @@
  * on to the next controller in the chain until a final response Frame is generated.
  *
  * @package Framework\WebSocket
- * @copyright © WereWolf Labs OÜ.
+ * @copyright © WW Byte OÜ.
  */
 
 namespace Framework\WebSocket;
 
 use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\WebSocket\Server;
-use Framework\Core\ClassContainer;
+use Framework\Container\ClassContainer;
 
 class WebSocketMessageHandler implements WebSocketMessageHandlerInterface {
     /**
@@ -41,7 +41,7 @@ class WebSocketMessageHandler implements WebSocketMessageHandlerInterface {
 
         // Process the middleware
         $controller = array_shift($this->controllerStack);
-        $controller = $this->classContainer->get($controller, cache: false);
+        $controller = $this->classContainer->get($controller, singleton: false);
         return $controller->execute($server, $frame, $this);
     }
 }
