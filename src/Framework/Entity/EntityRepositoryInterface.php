@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
-namespace Framework\Entity\Model;
+namespace Framework\Entity;
 
-use Framework\Entity\Model\EntityInterface;
+use Framework\Entity\EntityInterface;
 
 interface EntityRepositoryInterface {
     public function create(array $entityData): EntityInterface;

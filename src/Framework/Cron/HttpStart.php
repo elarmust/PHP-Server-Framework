@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Cron;
@@ -13,13 +13,7 @@ use Framework\Cron\Task\CronTaskDelay;
 use Framework\Event\EventListenerInterface;
 
 class HttpStart implements EventListenerInterface {
-    private CronTaskDelay $cronTaskDelay;
-    private TaskScheduler $taskScheduler;
-
-    public function __construct(TaskScheduler $taskScheduler, CronTaskDelay $cronTaskDelay) {
-        $this->cronTaskDelay = $cronTaskDelay;
-        $this->taskScheduler = $taskScheduler;
-    }
+    public function __construct(private TaskScheduler $taskScheduler, private CronTaskDelay $cronTaskDelay) {}
 
     public function __invoke(object $event): void {
         $nextMinute = new DateTime();

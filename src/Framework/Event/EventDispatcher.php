@@ -5,7 +5,7 @@
  * within the application. It implements the Psr\EventDispatcher\EventDispatcherInterface
  * and serves as a bridge between event listeners and the events themselves.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Event;
@@ -15,14 +15,10 @@ use Psr\EventDispatcher\StoppableEventInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 
 class EventDispatcher implements EventDispatcherInterface {
-    private $eventListenerProvider;
-
     /**
      * @param ListenerProviderInterface $eventListenerProvider
      */
-    public function __construct(ListenerProviderInterface $eventListenerProvider) {
-        $this->eventListenerProvider = $eventListenerProvider;
-    }
+    public function __construct(private ListenerProviderInterface $eventListenerProvider) {}
 
     /**
      * Dispatch event

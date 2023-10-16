@@ -1,23 +1,17 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Cron\Commands;
 
 use Framework\Cron\CronManager;
 use Framework\Cli\CommandInterface;
-use Framework\Core\ClassContainer;
+use Framework\Container\ClassContainer;
 
 class Cron implements CommandInterface {
-    public ClassContainer $classContainer;
-    public CronManager $cronManager;
-
-    public function __construct(ClassContainer $classContainer, CronManager $cronManager) {
-        $this->classContainer = $classContainer;
-        $this->cronManager = $cronManager;
-    }
+    public function __construct(private ClassContainer $classContainer, private CronManager $cronManager) {}
 
     public function run(array $commandArgs): string {
         $force = false;

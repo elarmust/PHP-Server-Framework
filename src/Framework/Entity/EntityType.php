@@ -5,23 +5,19 @@
  *
  * This class handles the creation, management, and deletion of entity types and their attributes.
  *
- * @copyright WereWolf Labs OÜ.
+ * @copyright WW Byte OÜ.
  */
 
-namespace Framework\Entity\Model;
+namespace Framework\Entity;
 
-use Framework\Core\ClassContainer;
-use Framework\Entity\Exceptions\EntityAttributeAlreadyExistsException;
-use Framework\Entity\Exceptions\EntityTypeAlreadyExistsException;
-use Framework\Entity\Exceptions\EntityTypeNotFoundException;
+use Framework\Container\ClassContainer;
 use Framework\Database\DataTypes\DataTypeInterface;
 use Framework\Database\Database;
 use Exception;
+use InvalidArgumentException;
+use RuntimeException;
 
-class EntityType implements EntityTypeInterface{
-    private ClassContainer $classContainer;
-    protected Database $database;
-    protected string $type;
+class EntityType implements EntityTypeInterface {
     protected int $typeId;
     protected bool $eav;
     protected array $attributes;
@@ -32,22 +28,22 @@ class EntityType implements EntityTypeInterface{
      * @param Database $database
      * @param string $typeName The name of the entity type.
      */
-    function __construct(ClassContainer $classContainer, Database $database, string $typeName) {
-        $this->classContainer = $classContainer;
-        $this->database = $database;
-        $this->type = $typeName;
-    }
+    function __construct(
+        private ClassContainer $classContainer,
+        protected Database $database,
+        protected string $type
+    ) {}
 
     /**
      * Load entity type from the database.
      *
-     * @throws EntityTypeNotFoundException If the entity type does not exist.
+     * @throws RuntimeException
      * @return void
      */
     public function loadType(): void {
         $entityTypeData = $this->database->select('entity_types', null, ['entity_type' => $this->getType()]);
         if (!$entityTypeData) {
-            throw new EntityTypeNotFoundException($this->getType());
+            throw new RuntimeException($this->getType());
         }
 
         $this->typeId = $entityTypeData[0]['id'];
@@ -56,33 +52,33 @@ class EntityType implements EntityTypeInterface{
         foreach ($entityAttributes ?? [] as $attribute) {
             $this->attributesMeta[$attribute['attribute_name']]['attributeId'] = $attribute['id'];
             if ($attribute['get_class'] && !class_exists($attribute['get_class'])) {
-                throw new Exception("Class '" . $attribute['get_class'] . "' does not exist!");
+                throw new RuntimeException("Class '" . $attribute['get_class'] . "' does not exist!");
             }
 
             if ($attribute['get_class']) {
-                $class = $this->classContainer->get($attribute['get_class'], [$this], cache: false);
+                $class = $this->classContainer->get($attribute['get_class'], [$this], singleton: false);
                 $this->attributesMeta[$attribute['attribute_name']]['getClass'] = $class;
             } else {
                 $this->attributesMeta[$attribute['attribute_name']]['getClass'] = null;
             }
 
             if ($attribute['set_class'] && !class_exists($attribute['set_class'])) {
-                throw new Exception("Class '" . $attribute['set_class'] . "' does not exist!");
+                throw new RuntimeException("Class '" . $attribute['set_class'] . "' does not exist!");
             }
 
             if ($attribute['set_class']) {
-                $class = $this->classContainer->get($attribute['set_class'], [$this], cache: false);
+                $class = $this->classContainer->get($attribute['set_class'], [$this], singleton: false);
                 $this->attributesMeta[$attribute['attribute_name']]['setClass'] = $class;
             } else {
                 $this->attributesMeta[$attribute['attribute_name']]['setClass'] = null;
             }
 
             if ($attribute['input_list_class'] && !class_exists($attribute['input_list_class'])) {
-                throw new Exception("Class '" . $attribute['input_list_class'] . "' does not exist!");
+                throw new RuntimeException("Class '" . $attribute['input_list_class'] . "' does not exist!");
             }
 
             if ($attribute['input_list_class']) {
-                $class = $this->classContainer->get($attribute['input_list_class'], [$this], cache: false);
+                $class = $this->classContainer->get($attribute['input_list_class'], [$this], singleton: false);
                 $this->attributesMeta[$attribute['attribute_name']]['inputListClass'] = $class;
             } else {
                 $this->attributesMeta[$attribute['attribute_name']]['inputListClass'] = null;
@@ -96,13 +92,13 @@ class EntityType implements EntityTypeInterface{
     /**
      * Create a new entity type.
      *
-     * @throws EntityTypeAlreadyExistsException If the entity type already exists.
+     * @throws RuntimeException If the entity type already exists.
      * @return void
      */
     public function createType(): void {
         $existing = $this->database->select('entity_types', null, ['entity_type' => $this->getType()]);
         if ($existing) {
-            throw new EntityTypeAlreadyExistsException($this->getType());
+            throw new RuntimeException($this->getType());
         }
 
         $this->database->insert('entity_types', ['entity_type' => $this->getType()]);
@@ -158,7 +154,7 @@ class EntityType implements EntityTypeInterface{
      * @param string|null $setClass The class used for postprocessing the value before saving.
      * @param string|null $inputListClass The class used for retrieving a list of accepted values.
      * 
-     * @throws EntityAttributeAlreadyExistsException If the attribute already exists.
+     * @throws InvalidArgumentException
      * @throws Exception If the provided class for getting, setting, or input list does not exist.
      * @return void
      */
@@ -168,20 +164,20 @@ class EntityType implements EntityTypeInterface{
         }
 
         if ($getClass && !class_exists($getClass)) {
-            throw new Exception("Class '" . $getClass . "' does not exist!");
+            throw new InvalidArgumentException("Class '" . $getClass . "' does not exist!");
         }
 
         if ($setClass && !class_exists($setClass)) {
-            throw new Exception("Class '" . $setClass . "' does not exist!");
+            throw new InvalidArgumentException("Class '" . $setClass . "' does not exist!");
         }
 
         if ($inputListClass && !class_exists($inputListClass)) {
-            throw new Exception("Class '" . $inputListClass . "' does not exist!");
+            throw new InvalidArgumentException("Class '" . $inputListClass . "' does not exist!");
         }
 
         $existing = $this->database->select('entity_' . $this->getType() . '_attributes', null, ['attribute_name' => $attributeName]);
         if ($existing) {
-            throw new EntityAttributeAlreadyExistsException($attributeName);
+            throw new InvalidArgumentException($attributeName);
 
         }
 

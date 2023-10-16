@@ -3,23 +3,19 @@
 /**
  * This class represents a user session and provides methods to access and manage session data.
  *
- * @copyright WereWolf Labs OÜ.
+ * @copyright WW Byte OÜ.
  */
 
 namespace Framework\Http\Session;
 
 class Session {
-    private array $sessionData;
-    private string $id;
     private int $timestamp;
 
     /**
      * @param string $sessionId
-     * @param array $data
+     * @param array $data = []
      */
-    public function __construct(string $sessionId, array $data = []) {
-        $this->id = $sessionId;
-        $this->sessionData = $data;
+    public function __construct(private string $sessionId, private array $sessionData = []) {
         $this->timestamp = time();
     }
 
@@ -29,7 +25,7 @@ class Session {
      * @return string
      */
     public function getId(): string {
-        return $this->id;
+        return $this->sessionId;
     }
 
     /**

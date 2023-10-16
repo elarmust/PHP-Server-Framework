@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\CLI;
@@ -11,11 +11,7 @@ use Framework\Event\EventListenerInterface;
 use OpenSwoole\Event as SwooleEvent;
 
 class HttpStart implements EventListenerInterface {
-    private Cli $cli;
-
-    public function __construct(Cli $cli) {
-        $this->cli = $cli;
-    }
+    public function __construct(private Cli $cli) {}
 
     public function __invoke(object $event): void {
         $this->cli->stdin = fopen('php://stdin', 'r');

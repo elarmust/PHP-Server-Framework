@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @copyright  WereWolf Labs OÜ
+ * @copyright  WW Byte OÜ
  */
 
 namespace Framework\Event\Events;
@@ -12,16 +12,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\EventDispatcher\StoppableEventInterface;
 
 class BeforeMiddlewaresEvent implements StoppableEventInterface {
-    private ServerRequestInterface $request;
-    private ResponseInterface $response;
-    private Route $route;
     private bool $stopped = false;
 
-    public function __construct(ServerRequestInterface $request, ResponseInterface $response, Route $route) {
-        $this->request = $request;
-        $this->response = $response;
-        $this->route = $route;
-    }
+    public function __construct(
+        private ServerRequestInterface $request,
+        private ResponseInterface $response,
+        private Route $route
+    ) {}
 
     public function getRequest(): ServerRequestInterface {
         return $this->request;

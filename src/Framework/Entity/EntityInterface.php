@@ -3,10 +3,10 @@
 /**
  * An interface that defines common methods for loading, saving, deleting, and retrieving data for entities.
  *
- * @copyright WereWolf Labs OÜ.
+ * @copyright WW Byte OÜ.
  */
 
-namespace Framework\Entity\Model;
+namespace Framework\Entity;
 
 interface EntityInterface {
     /**

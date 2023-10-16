@@ -3,7 +3,7 @@
 /**
  * Represents a basic view for displaying JSON encoded data.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\View;

@@ -3,7 +3,7 @@
 /**
  * TaskInterface class defines mandatory properties and methods for a task.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Task;

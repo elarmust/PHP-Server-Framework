@@ -6,7 +6,7 @@
  * Implementing classes should process, incoming requests, perform any necessary actions
  * and return a PSR-7 response.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Http;

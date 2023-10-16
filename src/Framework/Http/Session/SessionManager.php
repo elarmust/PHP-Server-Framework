@@ -3,7 +3,7 @@
 /**
  * This class facilitates session management.
  *
- * @copyright WereWolf Labs OÜ.
+ * @copyright WW Byte OÜ.
  */
 
 namespace Framework\Http\Session;
@@ -12,12 +12,10 @@ use Framework\Http\Session\Session;
 use Framework\Configuration\Configuration;
 
 class SessionManager {
-    private Configuration $configuration;
     private array $sessions = [];
     private int $expiration;
 
-    public function __construct(Configuration $configuration) {
-        $this->configuration = $configuration;
+    public function __construct(private Configuration $configuration) {
         $this->expiration = $this->configuration->getConfig('sessionExpirationSeconds') ?? 86400;
     }
 
@@ -42,7 +40,7 @@ class SessionManager {
      * @param int $sessionId Session ID.
      * @return Session
      */
-    public function getSession(?string $sessionId = null): Session {
+    public function &getSession(?string $sessionId = null): Session {
         if (isset($this->sessions[$sessionId])) {
             $session = $this->sessions[$sessionId];
 
@@ -65,7 +63,7 @@ class SessionManager {
         return $session;
     }
 
-    public function getSessions(): array {
+    public function &getSessions(): array {
         return $this->sessions;
     }
 

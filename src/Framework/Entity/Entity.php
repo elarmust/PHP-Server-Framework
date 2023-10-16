@@ -3,17 +3,15 @@
 /**
  * Represents an entity object that interacts with the database.
  *
- * @copyright WereWolf Labs OÜ.
+ * @copyright WW Byte OÜ.
  */
 
-namespace Framework\Entity\Model;
+namespace Framework\Entity;
 
-use Framework\Core\ClassContainer;
-use Framework\Entity\Exceptions\EntityNotFoundException;
-use Framework\Entity\Exceptions\EntityAttributeNotFoundException;
+use Framework\Container\ClassContainer;
+use InvalidArgumentException;
 
 class Entity extends EntityType implements EntityInterface {
-    private ClassContainer $classContainer;
     public array $attributes = [];
     private ?int $entityId = null;
 
@@ -21,8 +19,7 @@ class Entity extends EntityType implements EntityInterface {
      * @param ClassContainer $classContainer
      * @param string $entityType
      */
-    function __construct(ClassContainer $classContainer, string $entityType) {
-        $this->classContainer = $classContainer;
+    function __construct(private ClassContainer $classContainer, string $entityType) {
         parent::__construct(...$this->classContainer->prepareArguments(EntityType::class, [$entityType]));
         $this->loadType();
     }
@@ -32,13 +29,13 @@ class Entity extends EntityType implements EntityInterface {
      *
      * @param int $entityId The ID of the entity to load.
      * 
-     * @throws EntityNotFoundException If the entity is not found.
+     * @throws InvalidArgumentException If the entity is not found.
      * @return void
      */
     public function load(int $entityId): void {
         $attributeDataQuery = $this->database->select('entities_' . $this->getType(), where: ['id' => $entityId]);
         if (!$attributeDataQuery) {
-            Throw New EntityNotFoundException($entityId);
+            Throw New InvalidArgumentException($entityId);
         }
 
         $this->entityId = $entityId;
@@ -81,7 +78,7 @@ class Entity extends EntityType implements EntityInterface {
      *
      * @param array $attributesValue An associative array of attribute names and their values.
      * 
-     * @throws EntityAttributeNotFoundException If an attribute specified in $attributesValue is not found.
+     * @throws InvalidArgumentException If an attribute specified in $attributesValue is not found.
      * @return void
      */
     public function setData(array $attributesValue): void {
@@ -94,7 +91,7 @@ class Entity extends EntityType implements EntityInterface {
 
                 $this->attributes[$attribute] = $value;
             } else {
-                throw new EntityAttributeNotFoundException($attribute);
+                throw new InvalidArgumentException($attribute);
             }
         }
     }
@@ -113,7 +110,7 @@ class Entity extends EntityType implements EntityInterface {
      *
      * @param array $fields An array of field names to retrieve data for.
      * 
-     * @throws EntityAttributeNotFoundException If a specified field is not found.
+     * @throws InvalidArgumentException If a specified field is not found.
      * @return array
      */
     public function getData(array $fields = []): array{
@@ -132,7 +129,7 @@ class Entity extends EntityType implements EntityInterface {
                     $return[$field] = $this->attributes[$field];
                 }
             } else {
-                throw new EntityAttributeNotFoundException($field);
+                throw new InvalidArgumentException($field);
             }
         }
 

@@ -1,11 +1,11 @@
 {
-    "name": "werewolflabs/framework",
+    "name": "wwbyte/framework",
     "description": "Lightweight PHP framework based on OpenSwoole.",
     "type": "project",
     "license": "MPL 2.0",
     "authors": [
         {
-            "name": "WereWolf Labs OÜ"
+            "name": "WW Byte OÜ"
         }
     ],
     "require": {
@@ -13,7 +13,7 @@
         "psr/container": "^2.0",
         "psr/log": "^3.0@dev",
         "openswoole/ide-helper": "dev-master",
-        "openswoole/core": "dev-master",
+        "openswoole/Container": "dev-master",
         "psr/http-message": "^1.0",
         "psr/http-server-handler": "^1.0@dev",
         "psr/http-server-middleware": "^1.0@dev",

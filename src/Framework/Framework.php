@@ -4,26 +4,31 @@
  * Server class that initializes all modules and starts
  * necessary processes for http server, cli and scheduler.
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework;
 
-use Framework\Core\Module\ModuleManager;
-use Framework\Core\ClassContainer;
+use Framework\Logger\LogAdapters\DefaultLogAdapter;
 use Framework\Event\Events\WebSocketCloseEvent;
 use Framework\Event\Events\WebSocketOpenEvent;
+use Framework\Configuration\Configuration;
+use Framework\WebSocket\WebSocketRegistry;
 use Framework\Event\Events\HttpStartEvent;
 use Framework\Event\EventListenerProvider;
+use Framework\Module\ModuleRegistry;
 use Framework\Event\EventDispatcher;
-use Framework\WebSocket\WebSocketRegistry;
+use Framework\Container\ClassContainer;
+use Framework\Database\Migrations;
+use Framework\Http\RouteRegistry;
+use Framework\Task\TaskScheduler;
 use Framework\Database\Database;
-use Framework\Http\HttpRouter;
-use Framework\Logger\LogAdapters\DefaultLogAdapter;
-use Framework\Configuration\Configuration;
+use Framework\View\ViewRegistry;
 use Framework\Cron\CronManager;
+use Framework\Http\HttpRouter;
 use Framework\Logger\Logger;
-use Framework\Enable;
+use Framework\Cli\Cli;
+use Framework\Init;
 use OpenSwoole\Core\Psr\ServerRequest;
 use OpenSwoole\WebSocket\Server;
 use OpenSwoole\WebSocket\Frame;
@@ -33,10 +38,12 @@ use OpenSwoole\Coroutine;
 use OpenSwoole\Constant;
 use OpenSwoole\Timer;
 use OpenSwoole\Util;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LogLevel;
+use Throwable;
 
 class Framework {
-    private ModuleManager $moduleManager;
+    private ModuleRegistry $moduleRegistry;
     private ClassContainer $classContainer;
     private Configuration $configuration;
     private HttpRouter $router;
@@ -44,28 +51,36 @@ class Framework {
     private Server $server;
     private EventDispatcher $EventDispatcher;
     private WebSocketRegistry $webSocketRegistry;
+    private Database $database;
+    private Init $init;
     private bool $maintenance = false;
     private bool $ssl = false;
+    private float $startTime;
+    private string $ip;
+    private int $port;
 
     public function __construct() {
+        $serverOptions = [
+            'enable_coroutine' => true,
+            'pid_file' => BASE_PATH . '/var/server.pid',
+            'worker_num' => 2 * Util::getCPUNum(),
+            'max_coroutine' => 3000,
+            'open_http2_protocol' => true
+        ];
+
+        $this->startTime = microtime(true);
         $this->classContainer = new ClassContainer();
         $this->classContainer->set($this);
         $this->classContainer->set($this->classContainer);
-        define('SERVER_START_TIME', microtime(true));
         $this->logger = $this->classContainer->get(Logger::class, [$this->classContainer->get(DefaultLogAdapter::class)]);
         $this->logger->log(LogLevel::INFO, 'Starting Framework server...', identifier: 'framework');
+
+
+        $this->logger->log(LogLevel::INFO, 'Loading configuration...', identifier: 'framework');
         $this->configuration = $this->classContainer->get(Configuration::class);
         $this->configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
-        define('SERVER_IP', $this->configuration->getConfig('ip'));
-        define('SERVER_PORT', $this->configuration->getConfig('port'));
-        $databaseInfo = $this->configuration->getConfig('databases.main');
-        $databaseParams = $this->classContainer->prepareArguments(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
-        $this->classContainer->get(Database::class, $databaseParams);
-        $this->classContainer->get(CronManager::class);
-        $this->moduleManager = $this->classContainer->get(ModuleManager::class);
-        $this->EventDispatcher = $this->classContainer->get(EventDispatcher::class, [$this->classContainer->get(EventListenerProvider::class)]);
-        $this->router = $this->classContainer->get(HttpRouter::class);
-        $this->webSocketRegistry = $this->classContainer->get(WebSocketRegistry::class);
+        $this->ip = $this->configuration->getConfig('ip');
+        $this->port = $this->configuration->getConfig('port');
 
         if ($this->configuration->getConfig('cert.cert') && $this->configuration->getConfig('cert.key')) {
             $swooleSock = Constant::SOCK_TCP | Constant::SSL;
@@ -74,48 +89,62 @@ class Framework {
             $swooleSock = Constant::SOCK_TCP;
         }
 
+        if ($this->ssl) {
+            $serverOptions['ssl_cert_file'] = $this->configuration->getConfig('cert.cert');
+            $serverOptions['ssl_key_file'] = $this->configuration->getConfig('cert.key');
+        }
+
+
+        $this->logger->log(LogLevel::INFO, 'Initializing database...', identifier: 'framework');
+        $databaseInfo = $this->configuration->getConfig('databases.main');
+        $databaseParams = $this->classContainer->prepareArguments(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
+        $this->database = $this->classContainer->get(Database::class, $databaseParams);
+
+
+        $this->logger->log(LogLevel::INFO, 'Initializing event dispatcher...', identifier: 'framework');
+        $this->EventDispatcher = $this->classContainer->get(EventDispatcher::class, [$this->classContainer->get(EventListenerProvider::class)]);
+
+
+        $this->logger->log(LogLevel::INFO, 'Initializing HTTP router...', identifier: 'framework');
+        $this->router = $this->classContainer->get(HttpRouter::class);
+
+
+        if (($this->configuration->getConfig('websocket.enabled') ?? false) == true) {
+            $this->logger->log(LogLevel::INFO, 'Initializing websocket...', identifier: 'framework');
+            $this->webSocketRegistry = $this->classContainer->get(WebSocketRegistry::class);
+        }
+
+        $this->logger->log(LogLevel::INFO, 'Initializing module registry...', identifier: 'framework');
+        $this->moduleRegistry = $this->classContainer->get(ModuleRegistry::class);
         Coroutine::run(function () {
-            $this->classContainer->get(Enable::class)->onEnable();
-    
+            $this->init = new Init($this);
+            $this->init->start();
+
             // Load modules.
-            foreach ($this->moduleManager->getModules() as $module) {
+            foreach ($this->moduleRegistry->getAllModules() as $module) {
                 $this->logger->log(LogLevel::INFO, 'Loading module \'' . $module->getName() . '\'...', identifier: 'framework');
-                $this->moduleManager->loadModule($module);
+                try {
+                    $this->moduleRegistry->loadModule($module);
+                } catch (Throwable $e) {
+                    $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
+                    $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                }
             }
         });
 
-        $this->classContainer->set($this->classContainer->get(Database::class, $databaseParams, cache: false));
-        $this->server = $this->classContainer->get(Server::class, [SERVER_IP, SERVER_PORT, Server::POOL_MODE, $swooleSock]);
-        $this->run();
-    }
+        // Reset database object.
+        $this->classContainer->set($this->classContainer->get(Database::class, $databaseParams, singleton: false));
 
-    /**
-     * Run server processes
-     *
-     * @return void
-     */
-    private function run(): void {
-        $set = [
-            'enable_coroutine' => true,
-            'pid_file' => BASE_PATH . '/var/server.pid',
-            'worker_num' => 2 * Util::getCPUNum(),
-            'max_coroutine' => 3000,
-            'open_http2_protocol' => true
-        ];
 
-        if ($this->ssl) {
-            $set['ssl_cert_file'] = $this->configuration->getConfig('cert.cert');
-            $set['ssl_key_file'] = $this->configuration->getConfig('cert.key');
-        }
-
-        $this->server->set($set);
+        $this->logger->log(LogLevel::INFO, 'Starting HTTP server...', identifier: 'framework');
+        $this->server = $this->classContainer->get(Server::class, [$this->ip, $this->port, Server::POOL_MODE, $swooleSock]);
+        $this->server->set($serverOptions);
 
         $this->server->on('request', function (Request $request, Response $response) {
             \OpenSwoole\Core\Psr\Response::emit($response, $this->router->process(ServerRequest::from($request)));
         });
 
         if (($this->configuration->getConfig('websocket.enabled') ?? false) == true) {
-            $this->logger->log(LogLevel::INFO, 'Websocket enabled.', identifier: 'framework');
             $this->server->on('open', function (Server $server, Request $request) {
                 $event = $this->EventDispatcher->dispatch(new WebSocketOpenEvent($server, $request));
                 if ($event->isPropagationStopped()) {
@@ -136,7 +165,7 @@ class Framework {
 
         $this->server->on('Start', function () {
             $this->EventDispatcher->dispatch(new HttpStartEvent($this));
-            $this->logger->log(LogLevel::INFO, 'Framework server is ready. Listening on: ' . SERVER_IP . ' ' . SERVER_PORT . ', Load time: ' . round(microtime(true) - SERVER_START_TIME, 2) . 's', identifier: 'framework');
+            $this->logger->log(LogLevel::INFO, 'Framework server is ready. Listening on: ' . $this->ip . ' ' . $this->port . ', Load time: ' . round(microtime(true) - $this->startTime, 2) . 's', identifier: 'framework');
         });
 
         $this->server->start();
@@ -173,7 +202,7 @@ class Framework {
      *
      * @return void
      */
-    public function stopServer(): void {
+    public function stop(): void {
         $this->logger->log(LogLevel::INFO, 'Stopping server...', identifier: 'framework');
 
         // Cancel all timers
@@ -186,19 +215,87 @@ class Framework {
             Coroutine::cancel($cid);
         }
 
-        foreach (array_reverse($this->moduleManager->getModules()) as $module) {
+        foreach (array_reverse($this->moduleRegistry->getModules()) as $module) {
             $this->logger->log(LogLevel::INFO, 'Unloading module \'' . $module->getName() . '\'...', identifier: 'framework');
-            $this->moduleManager->unloadModule($module);
+            $this->moduleRegistry->unloadModule($module);
         }
 
         $this->logger->log(LogLevel::INFO, 'Server stopped!', identifier: 'framework');
-        $this->classContainer->get(Enable::class)->onDisable();
+        $this->init->stop();
 
         $this->server->shutdown();
     }
 
     public function getServer(): Server {
         return $this->server;
+    }
+
+    public function getDatabase(): Database {
+        return $this->database;
+    }
+
+    public function getClassContainer(): ClassContainer {
+        return $this->classContainer;
+    }
+
+    public function getEventDispatcher(): EventDispatcherInterface {
+        return $this->EventDispatcher;
+    }
+
+    public function getEventListenerProvider(): EventListenerProvider {
+        return $this->classContainer->get(EventListenerProvider::class);
+    }
+
+    public function getModuleRegistry(): ModuleRegistry {
+        return $this->moduleRegistry;
+    }
+
+    public function getConfiguration(): Configuration {
+        return $this->configuration;
+    }
+
+    public function getWebsocket(): WebSocketRegistry {
+        return $this->webSocketRegistry;
+    }
+
+    public function getTaskScheduler(): TaskScheduler {
+        return $this->classContainer->get(TaskScheduler::class);
+    }
+
+    public function getViewRegistry(): ViewRegistry {
+        return $this->classContainer->get(ViewRegistry::class);
+    }
+
+    public function getRouteRegistry(): RouteRegistry {
+        return $this->classContainer->get(RouteRegistry::class);
+    }
+
+    public function getMigrations(): Migrations {
+        return $this->classContainer->get(Migrations::class);
+    }
+
+    public function getCli(): Cli {
+        return $this->classContainer->get(Cli::class);
+    }
+
+    public function getLogger(): Logger {
+        return $this->logger;
+    }
+
+    public function getCron(): CronManager {
+        return $this->classContainer->get(CronManager::class);
+    }
+
+    public function getIp(): string {
+        return $this->ip;
+    }
+
+    public function getPort(): int {
+        return $this->port;
+    }
+
+    public function getStartTime(): float {
+        return $this->startTime;
     }
 
     public function sslEnabled(): bool {

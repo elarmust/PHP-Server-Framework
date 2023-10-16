@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Database;
@@ -15,24 +15,18 @@ use OpenSwoole\Core\Coroutine\Client\PDOConfig;
 use OpenSwoole\Core\Coroutine\Client\PDOClientFactory;
 
 class Database {
-    private string $username;
-    private string $database;
-    private string $password;
-    private string $host;
-    private string $charset;
-    private int $port;
     private ClientPool $pool;
-    private Logger $logger;
 
-    public function __construct(Logger $logger, string $host, int $port, string $database, string $username, string $password, string $charset = 'utf8mb4', int $maxPoolSize = 50) {
-        $this->logger = $logger;
-        $this->host = $host;
-        $this->port = $port;
-        $this->database = $database;
-        $this->username = $username;
-        $this->password = $password;
-        $this->charset = $charset;
-
+    public function __construct(
+        private Logger $logger,
+        private string $host,
+        private int $port,
+        private string $database,
+        private string $username,
+        private string $password,
+        private string $charset = 'utf8mb4',
+        private int $maxPoolSize = 50
+    ) {
         $mysqlConfig = new PDOConfig();
         $mysqlConfig->withHost($this->host);
         $mysqlConfig->withPort($this->port);

@@ -3,7 +3,7 @@
 /**
  * Class for constructing a Route which contains a route path, controllers, middlewares and request handler.
  * 
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Http;

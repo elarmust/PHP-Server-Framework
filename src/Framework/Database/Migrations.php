@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Data migrations manager
+ * Data migrations
  *
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Database;
@@ -12,24 +12,22 @@ use Throwable;
 use Psr\Log\LogLevel;
 use Framework\Logger\Logger;
 use InvalidArgumentException;
-use Framework\Core\ClassContainer;
-use Framework\Core\Module\ModuleManager;
+use Framework\Container\ClassContainer;
+use Framework\Module\ModuleRegistry;
 
-class MigrationManager {
-    private ClassContainer $classContainer;
-    private ModuleManager $moduleManager;
-    private Logger $logger;
+class Migrations {
     private array $migrations = [];
 
-    public function __construct(ClassContainer $classContainer, ModuleManager $moduleManager, Logger $logger) {
-        $this->classContainer = $classContainer;
-        $this->moduleManager = $moduleManager;
-        $this->logger = $logger;
+    public function __construct(
+        private ClassContainer $classContainer,
+        private ModuleRegistry $moduleRegistry,
+        private Logger $logger
+    ) {
         $this->loadMigrations();
     }
 
     public function loadMigrations() {
-        $modulesList = $this->moduleManager->getModules();
+        $modulesList = $this->moduleRegistry->getAllModules();
 
         foreach ($modulesList as $module) {
             $modulePath = $module->getPath();
@@ -43,7 +41,7 @@ class MigrationManager {
                 $migrationPath = $module->getClassPath() . '\\Setup\\Migrations\\' . $moduleMigration;
                 $name = str_replace('.php', '', $migrationPath);
 
-                $migration = $this->classContainer->get($name, cache: false);
+                $migration = $this->classContainer->get($name, singleton: false);
                 $this->migrations[strtolower($module->getClassPath())][$migration->version()][str_replace('.php', '', $moduleMigration)] = $migration;
             }
         }
@@ -54,7 +52,7 @@ class MigrationManager {
             $internalMigration = str_replace('.php', '', $internalMigration);
             $migrationPath = 'Framework\\Database\\Setup\\Migrations\\' . $internalMigration;
 
-            $migration = $this->classContainer->get($migrationPath, cache: false);
+            $migration = $this->classContainer->get($migrationPath, singleton: false);
             $this->migrations['framework'][$migration->version()][$internalMigration] = $migration;
         }
     }

@@ -1,25 +1,21 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
-namespace Framework\Core\Commands;
+namespace Framework\Cli\Commands;
 
 use Framework\Framework;
-use Framework\Core\ClassContainer;
+use Framework\Container\ClassContainer;
 use Framework\Cli\CommandInterface;
 
 class Stop implements CommandInterface {
-    private ClassContainer $classContainer;
-
-    public function __construct(ClassContainer $classContainer) {
-        $this->classContainer = $classContainer;
-    }
+    public function __construct(private ClassContainer $classContainer) {}
 
     public function run(array $commandArgs): string {
         $server = $this->classContainer->get(Framework::class);
-        $server->stopServer();
+        $server->stop();
         return '';
     }
 

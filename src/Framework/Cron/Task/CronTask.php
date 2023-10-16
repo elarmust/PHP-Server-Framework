@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Cron\Task;
@@ -10,11 +10,7 @@ use Framework\Cron\CronManager;
 use Framework\Task\TaskInterface;
 
 class CronTask implements TaskInterface {
-    private CronManager $cron;
-
-    public function __construct(CronManager $cron) {
-        $this->cron = $cron;
-    }
+    public function __construct(private CronManager $cron) {}
 
     public function getName(): string {
         return 'CronTask';

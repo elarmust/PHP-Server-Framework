@@ -4,7 +4,7 @@
  * This interface defines the contract that WebSocket message handlers must adhere to.
  *
  * @package Framework\WebSocket
- * @copyright © WereWolf Labs OÜ.
+ * @copyright © WW Byte OÜ.
  */
 
 namespace Framework\WebSocket;

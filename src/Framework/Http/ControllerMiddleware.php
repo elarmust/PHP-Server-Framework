@@ -3,30 +3,26 @@
 /**
  * A middleware for processing a route controller stack.
  * 
- * Copyright @ WereWolf Labs OÜ.
+ * Copyright @ WW Byte OÜ.
  */
 
 namespace Framework\Http;
 
 use Framework\Http\Route;
-use Framework\Core\ClassContainer;
+use Framework\Container\ClassContainer;
 use Psr\Http\Message\ResponseInterface;
 use Framework\Http\ControllerStackInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 class ControllerMiddleware implements ControllerStackInterface {
-    private ClassContainer $classContainer;
-    private Route $route;
     private array $controllerStack = [];
 
     /**
      * @param ClassContainer $classContainer
      * @param Route $route
      */
-    public function __construct(ClassContainer $classContainer, Route $route) {
-        $this->classContainer = $classContainer;
-        $this->route = $route;
+    public function __construct(private ClassContainer $classContainer, private Route $route) {
         $this->controllerStack = $this->route->getControllerStack();
     }
 
@@ -58,7 +54,7 @@ class ControllerMiddleware implements ControllerStackInterface {
 
         // Process the controller.
         $controllerClass = array_shift($this->controllerStack);
-        $controllerClass = $this->classContainer->get($controllerClass, cache: false);
+        $controllerClass = $this->classContainer->get($controllerClass, singleton: false);
         return $controllerClass->execute($request, $response, $this);
     }
 }

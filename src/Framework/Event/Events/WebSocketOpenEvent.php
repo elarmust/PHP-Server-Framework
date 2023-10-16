@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @copyright  WereWolf Labs OÜ
+ * @copyright  WW Byte OÜ
  */
 
 namespace Framework\Event\Events;
@@ -11,13 +11,9 @@ use OpenSwoole\WebSocket\Server;
 use Psr\EventDispatcher\StoppableEventInterface;
 
 class WebSocketOpenEvent implements StoppableEventInterface {
-    private Server $server;
-    private Request $request;
     private bool $stopped = false;
-    public function __construct(Server $server, Request $request) {
-        $this->server = $server;
-        $this->request = $request;
-    }
+
+    public function __construct(private Server $server, private Request $request) {}
 
     public function getServer(): Server {
         return $this->server;
