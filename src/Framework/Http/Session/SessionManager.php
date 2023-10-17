@@ -21,11 +21,11 @@ class SessionManager {
 
     /**
      * Returns a random 32 character session id.
-     * 
+     *
      * @return string
      */
     public function generateSessionId(): string {
-        while(true) {
+        while (true) {
             $randomString = bin2hex(random_bytes(32));
 
             if (!isset($this->sessions[$randomString])) {
@@ -36,7 +36,7 @@ class SessionManager {
 
     /**
      * Return session object.
-     * 
+     *
      * @param int $sessionId Session ID.
      * @return Session
      */

@@ -2,7 +2,7 @@
 
 /**
  * Class for constructing a Route which contains a route path, controllers, middlewares and request handler.
- * 
+ *
  * Copyright @ WW Byte OÜ.
  */
 
@@ -21,7 +21,7 @@ class Route {
 
     /**
      * Create a new route from path and RequestHandlerInterface.
-     * 
+     *
      * @param string $path
      * @param string $requestHandler
      */
@@ -32,9 +32,9 @@ class Route {
 
     /**
      * Set the RequestHandler for the Route.
-     * 
+     *
      * @param string $requestHandler
-     * 
+     *
      * @return Route
      * @throws InvalidArgumentException
      */
@@ -49,9 +49,9 @@ class Route {
 
     /**
      * Set the ControllerStackInterface compatible class responsible for processing the controller stack.
-     * 
+     *
      * @param string $controllers ControllerStackInterface compatible class name.
-     * 
+     *
      * @return Route
      */
     public function setControllerStackClass(string $controllerStack): Route {
@@ -65,9 +65,9 @@ class Route {
 
     /**
      * Set the list of controllers for this route.
-     * 
+     *
      * @param array $controllers An array of RouteControllerInterface compatible controllers.
-     * 
+     *
      * @return Route
      * @throws InvalidArgumentException
      */
@@ -78,9 +78,9 @@ class Route {
 
     /**
      * Add a new controller to the list of controllers for this route.
-     * 
+     *
      * @param array $controllers An array of RouteControllerInterface compatible controllers.
-     * 
+     *
      * @return Route
      * @throws InvalidArgumentException
      */
@@ -98,9 +98,9 @@ class Route {
 
     /**
      * Remove a new controller from the list of controllers for this route.
-     * 
+     *
      * @param array $controllerClassNames An array of controller class names to remove.
-     * 
+     *
      * @return Route
      */
     public function removeControllers(array $controllerClassNames): Route {
@@ -113,9 +113,9 @@ class Route {
 
     /**
      * Add new MiddlewareInterface compatible middlewares to the middleware stack associated with this route.
-     * 
+     *
      * @param array $middlewares An array of MiddlewareInterface compatible middlewares.
-     * 
+     *
      * @return Route
      * @throws InvalidArgumentException
      */
@@ -133,9 +133,9 @@ class Route {
 
     /**
      * Remove a middleware from the middleware stack associated with this route.
-     * 
+     *
      * @param array $middlewareClassNames
-     * 
+     *
      * @return Route
      */
     public function removeMiddlewares(array $middlewareClassNames): Route {
@@ -148,9 +148,9 @@ class Route {
 
     /**
      * Replace existing middleware stack with new MiddlewareInterface compatible middlewares.
-     * 
+     *
      * @param array $middlewares An array of MiddlewareInterface compatible middlewares.
-     * 
+     *
      * @return Route
      */
     public function setMiddlewareStack(array $middlewares): Route {
@@ -160,7 +160,7 @@ class Route {
 
     /**
      * Get the path this Route is registered for.
-     * 
+     *
      * @return string
      */
     public function getPath(): string {
@@ -169,7 +169,7 @@ class Route {
 
     /**
      * Get the class responsible for processing the controller stack.
-     * 
+     *
      * @return string Returns the default ControllerMiddleware, if none have been defined.
      */
     public function getControllerStackClass(): string {
@@ -178,7 +178,7 @@ class Route {
 
     /**
      * Get a list of controllers associated with this route.
-     * 
+     *
      * @return array
      */
     public function getControllerStack(): array {
@@ -187,7 +187,7 @@ class Route {
 
     /**
      * Get the Middleware stack.
-     * 
+     *
      * @return array
      */
     public function getMiddlewareStack(): array {
@@ -197,7 +197,7 @@ class Route {
 
     /**
      * Get Route RequestHandler.
-     * 
+     *
      * @return string
      */
     public function getRequestHandler(): string {

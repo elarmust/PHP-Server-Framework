@@ -2,7 +2,7 @@
 
 /**
  * Middleware for initializing a session and sending a session cookie.
- * 
+ *
  * Copyright @ WW Byte OÜ.
  */
 
@@ -24,7 +24,8 @@ class CsrfMiddleware implements MiddlewareInterface {
         private Configuration $configuration,
         private Framework $server,
         private Csrf $csrf
-    ) {}
+    ) {
+    }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
         $existingCookies = $request->getCookieParams();

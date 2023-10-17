@@ -26,50 +26,50 @@ class HtmlEditor {
     public function __construct(DOMDocument|DomNode|string $content) {
         libxml_use_internal_errors(true);
 
-		if ($content instanceof DOMNode || $content instanceof DOMDocument) {
-	        $this->dom = $content;
-		} else {
-	        $this->dom = $this->createDom($content);
-		}
+        if ($content instanceof DOMNode || $content instanceof DOMDocument) {
+            $this->dom = $content;
+        } else {
+            $this->dom = $this->createDom($content);
+        }
 
-		if ($this->dom instanceof DOMDocument) {
+        if ($this->dom instanceof DOMDocument) {
             $this->xPath = new DOMXPath($this->dom);
-		} else {
+        } else {
             $this->xPath = new DOMXPath($this->dom->ownerDocument);
-		}
+        }
 
         libxml_clear_errors();
     }
 
     /**
      * Append html content
-     * 
+     *
      * @param string|HtmlEditor $append Content to append. Either a string or an HtmlEditor object.
      * @param string $query Optional XPath query. This is relative to the current selected element.
      * @param $innerHtml = false When false, appends to the selected element; when true, appends to its contents.
-     * 
+     *
      * @return HtmlEditor
      */
     public function append(string|HtmlEditor $append, string $pathQuery = '', $innerHtml = false): HtmlEditor {
         if ($this->xPath) {
-        	if (is_string($append)) {
-	        	$tempDom = $this->createDom('<wrapper>' . $append . '</wrapper>');
-            	$childNodes = $tempDom->getElementsByTagName('wrapper')[0]->childNodes;
-        	} else {
-            	$childNodes = $append->getDom()->childNodes;
-        	}
+            if (is_string($append)) {
+                $tempDom = $this->createDom('<wrapper>' . $append . '</wrapper>');
+                $childNodes = $tempDom->getElementsByTagName('wrapper')[0]->childNodes;
+            } else {
+                $childNodes = $append->getDom()->childNodes;
+            }
 
-            foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) as $node) {
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $node) {
                 foreach ($childNodes as $childNode) {
                     $element = $this->dom->ownerDocument->importNode($childNode, true);
                     if ($innerHtml) {
                         $node->appendChild($element);
                     } else {
                         if ($node->nextSibling) {
-						    $node->parentNode->insertBefore($element, $node->nextSibling);
-						} else {
-						    $node->appendChild($element);
-						}
+                            $node->parentNode->insertBefore($element, $node->nextSibling);
+                        } else {
+                            $node->appendChild($element);
+                        }
                     }
                 }
             }
@@ -80,7 +80,7 @@ class HtmlEditor {
 
     /**
      * Prepends html content
-     * 
+     *
      * @param string|HtmlEditor $prepend Content to prepend. Either a string or an HtmlEditor object.
      * @param string $query Optional XPath query. This is relative to the current selected element.
      * @param $innerHtml = false When false, prepends to the selected element; when true, prepends to its contents.
@@ -88,20 +88,20 @@ class HtmlEditor {
      */
     public function prepend(string|HtmlEditor $prepend, string $pathQuery = '', $innerHtml = false): HtmlEditor {
         if ($this->xPath) {
-        	if (is_string($prepend)) {
-	        	$tempDom = $this->createDom('<wrapper>' . $prepend . '</wrapper>');
-            	$childNodes = $tempDom->getElementsByTagName('wrapper')[0]->childNodes;
-        	} else {
-            	$childNodes = $prepend->getDom()->childNodes;
-        	}
+            if (is_string($prepend)) {
+                $tempDom = $this->createDom('<wrapper>' . $prepend . '</wrapper>');
+                $childNodes = $tempDom->getElementsByTagName('wrapper')[0]->childNodes;
+            } else {
+                $childNodes = $prepend->getDom()->childNodes;
+            }
 
-            foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) as $node) {
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $node) {
                 foreach ($childNodes as $childNode) {
                     $element = $this->dom->ownerDocument->importNode($childNode, true);
                     if ($innerHtml) {
-						$node->insertBefore($element, $node->firstChild);
+                        $node->insertBefore($element, $node->firstChild);
                     } else {
-                    	$node->parentNode->insertBefore($element, $node);
+                        $node->parentNode->insertBefore($element, $node);
                     }
                 }
             }
@@ -112,7 +112,7 @@ class HtmlEditor {
 
     /**
      * Replaces html content
-     * 
+     *
      * @param string|HtmlEditor $replace Content to replace. Either a string or an HtmlEditor object.
      * @param string $query Optional XPath query. This is relative to the current selected element.
      * @param $innerHtml = false When false, replaces the entire element; when true, replaces only its content.
@@ -120,38 +120,38 @@ class HtmlEditor {
      */
     public function replace(string|HtmlEditor $replace, string $pathQuery = '', $innerHtml = false): HtmlEditor {
         if ($this->xPath) {
-        	if (is_string($replace)) {
-	        	$tempDom = $this->createDom('<wrapper>' . $replace . '</wrapper>');
-            	$childNodes = $tempDom->getElementsByTagName('wrapper')[0]->childNodes;
-        	} else {
-            	$childNodes = $replace->getDom()->childNodes;
-        	}
+            if (is_string($replace)) {
+                $tempDom = $this->createDom('<wrapper>' . $replace . '</wrapper>');
+                $childNodes = $tempDom->getElementsByTagName('wrapper')[0]->childNodes;
+            } else {
+                $childNodes = $replace->getDom()->childNodes;
+            }
 
-            foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) as $node) {
-            	if ($innerHtml) {
-	                foreach ($node->childNodes as $child) {
-    					$node->removeChild($child);
-	                }
-            	}
-
-				$removeNode = false;
-                foreach ($childNodes as $childNode) {
-                    $element = $this->dom->ownerDocument->importNode($childNode, true);
-                    if ($innerHtml) {
-	                    $node->appendChild($element);
-                    } else {
-                		$removeNode = true;
-                        if ($node->nextSibling) {
-						    $node->parentNode->insertBefore($element, $node->nextSibling);
-						} else {
-                    		$node->parentNode->appendChild($element);
-						}
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $node) {
+                if ($innerHtml) {
+                    foreach ($node->childNodes as $child) {
+                        $node->removeChild($child);
                     }
                 }
 
-				if ($removeNode) {
-    				$node->parentNode->removeChild($node);
-				}
+                $removeNode = false;
+                foreach ($childNodes as $childNode) {
+                    $element = $this->dom->ownerDocument->importNode($childNode, true);
+                    if ($innerHtml) {
+                        $node->appendChild($element);
+                    } else {
+                        $removeNode = true;
+                        if ($node->nextSibling) {
+                            $node->parentNode->insertBefore($element, $node->nextSibling);
+                        } else {
+                            $node->parentNode->appendChild($element);
+                        }
+                    }
+                }
+
+                if ($removeNode) {
+                    $node->parentNode->removeChild($node);
+                }
             }
         }
 
@@ -163,29 +163,29 @@ class HtmlEditor {
      *
      * @param string $query Optional XPath query. This is relative to the current selected element.
      * @param $innerHtml = false When false, removes the entire element; when true, removes only its content.
-     * 
+     *
      * @return HtmlEditor
      */
     public function remove(string $pathQuery = '', $innerHtml = false): HtmlEditor {
         if ($this->xPath) {
-            foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) as $node) {
-            	if ($innerHtml) {
-	                foreach ($node->childNodes as $child) {
-            			// Remove the indentation that would be left after node removal.
-						if ($child->previousSibling instanceof DOMText && preg_match('/^\s*$/', $child->previousSibling->nodeValue)) {
-	    					$node->removeChild($child->previousSibling);
-	            		}
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $node) {
+                if ($innerHtml) {
+                    foreach ($node->childNodes as $child) {
+                        // Remove the indentation that would be left after node removal.
+                        if ($child->previousSibling instanceof DOMText && preg_match('/^\s*$/', $child->previousSibling->nodeValue)) {
+                            $node->removeChild($child->previousSibling);
+                        }
 
-    					$node->removeChild($child);
-	                }
-            	} else {
-            		// Remove the indentation that would be left after node removal.
-					if ($node->previousSibling instanceof DOMText && preg_match('/^\s*$/', $node->previousSibling->nodeValue)) {
-    					$node->parentNode->removeChild($node->previousSibling);
-            		}
+                        $node->removeChild($child);
+                    }
+                } else {
+                    // Remove the indentation that would be left after node removal.
+                    if ($node->previousSibling instanceof DOMText && preg_match('/^\s*$/', $node->previousSibling->nodeValue)) {
+                        $node->parentNode->removeChild($node->previousSibling);
+                    }
 
-    				$node->parentNode->removeChild($node);
-            	}
+                    $node->parentNode->removeChild($node);
+                }
             }
         }
 
@@ -194,14 +194,14 @@ class HtmlEditor {
 
     /**
      * Add attributes to HTML elements matching the given XPath query.
-     * 
+     *
      * @param array $attributesToAdd An associative array of attributes to add (e.g., ['class' => 'new-class', 'data-id' => '123']).
      * @param string $query Optional XPath query. This is relative to the current selected element.
      * @return HtmlEditor
      */
     public function addAttributes(array $attributes, string $pathQuery = ''): HtmlEditor {
         if ($this->xPath) {
-            foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) as $node) {
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $node) {
                 foreach ($attributes as $attribute => $value) {
                     $node->setAttribute($attribute, $value);
                 }
@@ -213,16 +213,16 @@ class HtmlEditor {
 
     /**
      * Replace attributes in HTML elements.
-     * 
+     *
      * @param array $attributesToAdd An associative array of attributes to add (e.g., ['class' => 'new-class', 'data-id' => '123']).
      * @param string $query Optional XPath query. This is relative to the current selected element.
-     * 
+     *
      * @return HtmlEditor
      */
     public function setAttributes(array $attributes, string $pathQuery = ''): HtmlEditor {
         if ($this->xPath) {
             // Loop through the matching elements
-            foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) as $node) {
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $node) {
                 // Remove existing attributes
                 while ($node->hasAttributes()) {
                     $node->removeAttributeNode($node->attributes->item(0));
@@ -240,15 +240,15 @@ class HtmlEditor {
 
     /**
      * Remove attributes from HTML elements.
-     * 
+     *
      * @param array $attributesToRemove An array of attribute names to remove (e.g., ['class', 'data-id']).
      * @param string $query Optional XPath query. This is relative to the current selected element.
-     * 
+     *
      * @return HtmlEditor
      */
     public function removeAttributes(array $attributes = [], string $pathQuery = ''): HtmlEditor {
         if ($this->xPath) {
-            foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) as $node) {
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $node) {
                 // If no specific attributes are provided, remove all attributes
                 if (empty($attributes)) {
                     while ($node->hasAttributes()) {
@@ -267,22 +267,22 @@ class HtmlEditor {
 
     /**
      * Search for HTML elements based on an XPath query and return an array of matching elements.
-     * 
+     *
      * @param string $query Optional XPath query. This is relative to the current selected element.
      * @param bool $clone = false When set to true, it returns the result as a separate and unrelated HTML object.
-     * 
+     *
      * @return array An array of HtmlEditor objects.
      */
     public function search(string $pathQuery, bool $clone = false): array {
         $results = [];
 
         if ($this->xPath) {
-            foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) ?? [] as $node) {
-            	if ($clone) {
-					$results[] = new HtmlEditor($this->getDom()->saveHTML($node));
-            	} else {
-                	$results[] = new HtmlEditor($node);
-            	}
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) ?? [] as $node) {
+                if ($clone) {
+                    $results[] = new HtmlEditor($this->getDom()->saveHTML($node));
+                } else {
+                    $results[] = new HtmlEditor($node);
+                }
             }
         }
 
@@ -291,17 +291,17 @@ class HtmlEditor {
 
     /**
      * Returns the parent of the current selected element.
-     * 
+     *
      * @return ?HtmlEditor Returns the parent of the current selected element or null, if it could not be determined.
      */
-	public function getParent(): ?HtmlEditor {
-		$parent = $this->dom->parentNode;
+    public function getParent(): ?HtmlEditor {
+        $parent = $this->dom->parentNode;
         if ($parent) {
-        	return new HtmlEditor($parent);
+            return new HtmlEditor($parent);
         }
 
-    	return null;
-	}
+        return null;
+    }
 
     /**
      * Retrieve all child elements.
@@ -313,28 +313,28 @@ class HtmlEditor {
     public function getChildren(string $pathQuery = '', ?int $nth = null): array {
         $results = [];
 
-	    if ($this->xPath) {
-	        foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) as $match) {
-				$count = 0;
-	        	foreach ($match->childNodes as $child) {
-        			// Ignore indentations.
-					if ($child instanceof DOMText && preg_match('/^\s*$/', $child->nodeValue)) {
-    					continue;
-            		}
+        if ($this->xPath) {
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $match) {
+                $count = 0;
+                foreach ($match->childNodes as $child) {
+                    // Ignore indentations.
+                    if ($child instanceof DOMText && preg_match('/^\s*$/', $child->nodeValue)) {
+                        continue;
+                    }
 
-					$count++;
-					if (!$nth || $count == $nth) {
-	            		$results[] = new HtmlEditor($child);
+                    $count++;
+                    if (!$nth || $count == $nth) {
+                        $results[] = new HtmlEditor($child);
 
-					    if ($nth && $count == $nth) {
-					        break;
-					    }
-					}
-	        	}
-	        }
-	    }
+                        if ($nth && $count == $nth) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
-		return $results;
+        return $results;
     }
 
     /**
@@ -348,10 +348,10 @@ class HtmlEditor {
         $results = [];
         $parent = $this->getParent();
         if ($parent) {
-            $results = $parent->getChildren($pathQuery, $nth); 
+            $results = $parent->getChildren($pathQuery, $nth);
         }
 
-    	return $results;
+        return $results;
     }
 
     /**
@@ -365,28 +365,28 @@ class HtmlEditor {
     public function getNextSiblings(string $pathQuery = '', ?int $nth = null): array {
         $results = [];
 
-	    if ($this->xPath) {
-	        foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) as $match) {
-	        	$nextSiblingCounter = 0;
-    			$currentNode = $match->nextSibling;
-        	    while ($currentNode !== null) {
-			        if (!($currentNode instanceof DOMText && preg_match('/^\s*$/', $currentNode->nodeValue))) {
-			            $nextSiblingCounter++;
-						if (!$nth || $nextSiblingCounter == $nth) {
-						    $results[] = new HtmlEditor($currentNode);
-						
-						    if ($nth && $nextSiblingCounter == $nth) {
-						        break;
-						    }
-						}
-			        }
+        if ($this->xPath) {
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $match) {
+                $nextSiblingCounter = 0;
+                $currentNode = $match->nextSibling;
+                while ($currentNode !== null) {
+                    if (!($currentNode instanceof DOMText && preg_match('/^\s*$/', $currentNode->nodeValue))) {
+                        $nextSiblingCounter++;
+                        if (!$nth || $nextSiblingCounter == $nth) {
+                            $results[] = new HtmlEditor($currentNode);
 
-			        $currentNode = $currentNode->nextSibling;
-        	    }
-	        }
-	    }
+                            if ($nth && $nextSiblingCounter == $nth) {
+                                break;
+                            }
+                        }
+                    }
 
-		return $results;
+                    $currentNode = $currentNode->nextSibling;
+                }
+            }
+        }
+
+        return $results;
     }
 
     /**
@@ -400,28 +400,28 @@ class HtmlEditor {
     public function getPreviousSiblings(string $pathQuery = '', ?int $nth = null): array {
         $results = [];
 
-	    if ($this->xPath) {
-	        foreach ($this->xPath->query($this->generateAbsoluteXPath() . $pathQuery) as $match) {
-	        	$previousSiblingCounter = 0;
-    			$currentNode = $match->previousSibling;
-        	    while ($currentNode !== null) {
-			        if (!($currentNode instanceof DOMText && preg_match('/^\s*$/', $currentNode->nodeValue))) {
-			            $previousSiblingCounter++;
-						if (!$nth || $previousSiblingCounter == $nth) {
-						    $results[] = new HtmlEditor($currentNode);
-						
-						    if ($nth && $previousSiblingCounter == $nth) {
-						        break;
-						    }
-						}
-			        }
+        if ($this->xPath) {
+            foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $match) {
+                $previousSiblingCounter = 0;
+                $currentNode = $match->previousSibling;
+                while ($currentNode !== null) {
+                    if (!($currentNode instanceof DOMText && preg_match('/^\s*$/', $currentNode->nodeValue))) {
+                        $previousSiblingCounter++;
+                        if (!$nth || $previousSiblingCounter == $nth) {
+                            $results[] = new HtmlEditor($currentNode);
 
-			        $currentNode = $currentNode->previousSibling;
-        	    }
-	        }
-	    }
+                            if ($nth && $previousSiblingCounter == $nth) {
+                                break;
+                            }
+                        }
+                    }
 
-		return $results;
+                    $currentNode = $currentNode->previousSibling;
+                }
+            }
+        }
+
+        return $results;
     }
 
     /**
@@ -431,14 +431,14 @@ class HtmlEditor {
      */
     public function getHtmlContent(): string {
         if ($this->dom instanceof DomDocument) {
-        	return $this->dom->saveHTML($this->dom->documentElement);
-		} else {
-			$tempDom = new DOMDocument();
-			$tempDom->appendChild($tempDom->importNode($this->dom, true));
-			
-			return preg_replace('/^\s*$/m', '', $tempDom->saveHTML());
-        	return $tempDom->saveHTML();
-		}
+            return $this->dom->saveHTML($this->dom->documentElement);
+        } else {
+            $tempDom = new DOMDocument();
+            $tempDom->appendChild($tempDom->importNode($this->dom, true));
+
+            return preg_replace('/^\s*$/m', '', $tempDom->saveHTML());
+            return $tempDom->saveHTML();
+        }
     }
 
     /**
@@ -450,17 +450,17 @@ class HtmlEditor {
         return $this->getHtmlContent();
     }
 
-	public function getRoot(): HtmlEditor {
-		if (!$this->dom instanceof DOMDocument) {
-	        $this->dom = $this->dom->ownerDocument;
-		}
+    public function getRoot(): HtmlEditor {
+        if (!$this->dom instanceof DOMDocument) {
+            $this->dom = $this->dom->ownerDocument;
+        }
 
-		return $this;
-	}
+        return $this;
+    }
 
-	public function getDom(): DOMElement|DOMDocument {
-		return $this->dom;
-	}
+    public function getDom(): DOMElement|DOMDocument {
+        return $this->dom;
+    }
 
     /**
      * Create a new DOMDocument from html string.
@@ -470,7 +470,7 @@ class HtmlEditor {
      */
     private function createDom(string $htmlString): DOMDocument {
         // Create a new DOMDocument for the appended content
-        $dom = new DOMDocument;
+        $dom = new DOMDocument();
         $dom->encoding = 'UTF-8'; // Set the charset explicitly for UTF-8
         // Load the appended HTML content
         libxml_use_internal_errors(true); // For malformed HTML warning suppression
@@ -479,52 +479,52 @@ class HtmlEditor {
         return $dom;
     }
 
-	private function generateAbsoluteXPath() {
-		$elem = $this->dom;
+    private function generateAbsoluteXpath() {
+        $elem = $this->dom;
 
-	    // Check if the input is a DOMDocument
-	    if ($elem instanceof DOMDocument) {
-	        return '/';
-	    }
+        // Check if the input is a DOMDocument
+        if ($elem instanceof DOMDocument) {
+            return '/';
+        }
 
-	    $xpath = '';
+        $xpath = '';
 
-	    // Start from the given element and traverse up the tree
-	    while ($elem !== null) {
-	        $elementXPath = $elem->localName;
+        // Start from the given element and traverse up the tree
+        while ($elem !== null) {
+            $elementXPath = $elem->localName;
 
-	        // If the element has an ID, use it in the XPath query
-	        if (!$elem instanceof DOMDocument && $elem->hasAttribute('id')) {
-	            $elementXPath .= '[@id="' . $elem->getAttribute('id') . '"]';
-	            break; // Stop if we found an element with an ID
-	        }
+            // If the element has an ID, use it in the XPath query
+            if (!$elem instanceof DOMDocument && $elem->hasAttribute('id')) {
+                $elementXPath .= '[@id="' . $elem->getAttribute('id') . '"]';
+                break; // Stop if we found an element with an ID
+            }
 
-	        $siblings = 1;
-	        $previous = $elem->previousSibling;
+            $siblings = 1;
+            $previous = $elem->previousSibling;
 
-	        // Count preceding sibling elements with the same tag name
-	        while ($previous !== null) {
-	            if ($previous instanceof DOMElement && $previous->localName === $elem->localName) {
-	                $siblings++;
-	            }
-	            $previous = $previous->previousSibling;
-	        }
+            // Count preceding sibling elements with the same tag name
+            while ($previous !== null) {
+                if ($previous instanceof DOMElement && $previous->localName === $elem->localName) {
+                    $siblings++;
+                }
+                $previous = $previous->previousSibling;
+            }
 
-	        // Append the position among siblings if there are multiple
-	        if ($siblings > 1) {
-	            $elementXPath .= '[' . $siblings . ']';
-	        }
+            // Append the position among siblings if there are multiple
+            if ($siblings > 1) {
+                $elementXPath .= '[' . $siblings . ']';
+            }
 
-	        // Prepend the element's XPath to the current XPath
-	        $xpath = '/' . $elementXPath . $xpath;
+            // Prepend the element's XPath to the current XPath
+            $xpath = '/' . $elementXPath . $xpath;
 
-	        // Move up to the parent element
-	        $elem = $elem->parentNode;
-	    }
+            // Move up to the parent element
+            $elem = $elem->parentNode;
+        }
 
-	    // Add a leading slash to indicate the root element
-	    $xpath = $xpath;
+        // Add a leading slash to indicate the root element
+        $xpath = $xpath;
 
-	    return $xpath;
-	}
+        return $xpath;
+    }
 }

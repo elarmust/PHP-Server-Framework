@@ -16,7 +16,7 @@ class TaskScheduler {
 
     public function schedule(TaskInterface $task, int $delay): void {
         if ($delay < 1) {
-            throw new InvalidArgumentException("Delay must be > 0!");
+            throw new InvalidArgumentException('Delay must be > 0!');
         }
 
         $taskId = Timer::after($delay, function () use (&$task) {
@@ -24,14 +24,14 @@ class TaskScheduler {
             unset($this->taskList[$task->getName()]);
         });
 
-        if ($taskId !== false ) {
+        if ($taskId !== false) {
             $this->taskList[$task->getName()] = $taskId;
         }
     }
 
     public function scheduleRecurring(TaskInterface $task, int $delay): void {
         if ($delay < 1) {
-            throw new InvalidArgumentException("Delay must be > 0!");
+            throw new InvalidArgumentException('Delay must be > 0!');
         }
 
         $taskId = Timer::tick($delay, function () use (&$task, &$taskId) {
@@ -41,7 +41,7 @@ class TaskScheduler {
             }
         });
 
-        if ($taskId !== false ) {
+        if ($taskId !== false) {
             $this->taskList[$task->getName()] = $taskId;
         }
     }

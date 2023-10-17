@@ -71,7 +71,7 @@ class Migrations {
 
     /**
      * Get migration objects
-     * 
+     *
      * @param string $migrationName Which migrations should be returned.
      * @return array Returns an array of migration objects or an empty array.
      */
@@ -109,7 +109,7 @@ class Migrations {
 
     /**
      * Run module migration
-     * 
+     *
      * @param MigrationInterface $migration Migration object.
      * @param Database $database Migration database.
      * @param bool $up Migrate up or down.
@@ -118,7 +118,7 @@ class Migrations {
      */
     public function runMigration(MigrationInterface $migration, Database $database, bool $up = true): bool {
         if ($up) {
-            if (!$this->migrationPackageHasBeenRun($migration, $database)) {                
+            if (!$this->migrationPackageHasBeenRun($migration, $database)) {
                 try {
                     $migration->up($database);
                 } catch (Throwable $e) {

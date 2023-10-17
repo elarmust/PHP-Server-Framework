@@ -9,7 +9,7 @@
 namespace Framework\Database\DataTypes;
 
 interface DataTypeInterface {
-    public function dataType(): string ;
+    public function dataType(): string;
 
     public function dataLength(): null|int;
 

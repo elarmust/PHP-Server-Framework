@@ -3,7 +3,7 @@
 /**
  * Cron management.
  * Allows you to register and run cron jobs.
- * 
+ *
  * Copyright @ WW Byte OÜ.
  */
 
@@ -21,7 +21,8 @@ class CronManager {
     private array $cronJobs = [];
     private array $cronJobsRunning = [];
 
-    public function __construct(private Database $database, private Logger $logger) {}
+    public function __construct(private Database $database, private Logger $logger) {
+    }
 
     /**
      * Run a cron job

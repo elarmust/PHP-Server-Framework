@@ -1,7 +1,6 @@
 <?php
 
 /**
- * 
  * Copyright @ WW Byte OÜ.
  */
 

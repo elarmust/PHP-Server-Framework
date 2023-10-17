@@ -4,7 +4,7 @@
  * Copyright @ WW Byte OÜ.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -16,7 +16,7 @@ if (!defined('PHP_VERSION_ID') || PHP_VERSION_ID < 80200) {
     die();
 }
 
-spl_autoload_register(function($class) {
+spl_autoload_register(function ($class) {
     $namespace = str_replace('\\', '/', $class) . '.php';
 
     $paths = ['src', 'modules', 'vendor'];

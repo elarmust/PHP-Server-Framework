@@ -13,21 +13,21 @@ interface EntityInterface {
      * Load data for the entity from the database.
      *
      * @param int $entityId The ID of the entity to load.
-     * 
+     *
      * @return void
      */
     public function load(int $entityId): void;
 
     /**
      * Save the entity's data to the database.
-     * 
+     *
      * @return void
      */
     public function save(): void;
 
     /**
      * Delete the entity from the database.
-     * 
+     *
      * @return void
      */
     public function delete(): void;
@@ -36,7 +36,7 @@ interface EntityInterface {
      * Set data for multiple entity attributes.
      *
      * @param array $attributesValue An associative array of attribute names and their values.
-     * 
+     *
      * @return void
      */
     public function setData(array $attributesValue): void;
@@ -52,7 +52,7 @@ interface EntityInterface {
      * Get data for specific entity fields.
      *
      * @param array $fields An array of field names to retrieve data for.
-     * 
+     *
      * @return array An associative array of field names and their values.
      */
     public function getData(array $fields = []): array;

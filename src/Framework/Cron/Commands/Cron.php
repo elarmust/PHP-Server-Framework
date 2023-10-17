@@ -11,7 +11,8 @@ use Framework\Cli\CommandInterface;
 use Framework\Container\ClassContainer;
 
 class Cron implements CommandInterface {
-    public function __construct(private ClassContainer $classContainer, private CronManager $cronManager) {}
+    public function __construct(private ClassContainer $classContainer, private CronManager $cronManager) {
+    }
 
     public function run(array $commandArgs): string {
         $force = false;

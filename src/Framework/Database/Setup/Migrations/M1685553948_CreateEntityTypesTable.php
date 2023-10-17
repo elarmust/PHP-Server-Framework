@@ -17,12 +17,12 @@ class M1685553948_CreateEntityTypesTable implements MigrationInterface {
     }
 
     public function up(Database $database) {
-        $database->query("
+        $database->query('
             CREATE TABLE `entity_types` (
                 `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 `entity_type` VARCHAR(32) NOT NULL
             )
-        ");
+        ');
     }
 
     public function down(Database $database) {

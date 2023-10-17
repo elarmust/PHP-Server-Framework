@@ -40,7 +40,7 @@ interface EntityTypeInterface {
      * @param string|null $getClass The class used for preprocessing the retrieved value.
      * @param string|null $setClass The class used for postprocessing the value before saving.
      * @param string|null $inputListClass The class used for retrieving a list of accepted values.
-     * 
+     *
      * @return void
      */
     public function addAttribute(string $attributeName, DataTypeInterface $dataType, string $getClass = null, string $setClass = null, string $inputListClass = null): void;
@@ -49,7 +49,7 @@ interface EntityTypeInterface {
      * Delete an attribute from the entity type.
      *
      * @param string $attributeName The name of the attribute to delete.
-     * 
+     *
      * @return void
      */
     public function deleteAttribute(string $attributeName): void;

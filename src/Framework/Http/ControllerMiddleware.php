@@ -2,7 +2,7 @@
 
 /**
  * A middleware for processing a route controller stack.
- * 
+ *
  * Copyright @ WW Byte OÜ.
  */
 
@@ -28,10 +28,10 @@ class ControllerMiddleware implements ControllerStackInterface {
 
     /**
      * Process the route controllers.
-     * 
+     *
      * @param ServerRequestInterface $request
      * @param RequestHandlerInterface $handler
-     * 
+     *
      * @return ResponseInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
@@ -40,10 +40,10 @@ class ControllerMiddleware implements ControllerStackInterface {
 
     /**
      * Execute the next controller in the controller stack chain.
-     * 
+     *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * 
+     *
      * @return ResponseInterface
      */
     public function execute(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {

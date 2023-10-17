@@ -3,7 +3,7 @@
 /**
  * RequestHandler class is responsible for executing a stack of PSR-15 middlewares
  * and returning the resulting PSR-7 response.
- * 
+ *
  * Copyright © WW Byte OÜ.
  */
 

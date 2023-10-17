@@ -17,14 +17,14 @@ class M1685553949_CreateCronHistoryTable implements MigrationInterface {
     }
 
     public function up(Database $database) {
-        $database->query("
+        $database->query('
             CREATE TABLE `cron_history` (
                 `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 `cron_job` VARCHAR(64) NOT NULL,
                 `start_time` DATETIME NOT NULL,
                 `end_time` DATETIME DEFAULT NULL
             )
-        ");
+        ');
     }
 
     public function down(Database $database) {

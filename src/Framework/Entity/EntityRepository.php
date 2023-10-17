@@ -18,13 +18,14 @@ class EntityRepository implements EntityRepositoryInterface {
      * @param Database $database The database connection to use for database operations.
      * @param EntityInterface $entity The base entity that this repository works with.
      */
-    public function __construct(private Database $database, private EntityInterface $entityBase) {}
+    public function __construct(private Database $database, private EntityInterface $entityBase) {
+    }
 
     /**
      * Create a new entity in the database.
      *
      * @param EntityInterface $entity The entity data to create.
-     * 
+     *
      * @return void
      * @todo Implement the create method.
      */
@@ -40,7 +41,7 @@ class EntityRepository implements EntityRepositoryInterface {
      * @param null|int|string $value The value to search for.
      * @param int $limit The maximum number of entities to retrieve.
      * @param int $start The starting index for retrieving entities.
-     * 
+     *
      * @throws InvalidArgumentException If the specified attribute does not exist in the entity.
      * @return array<EntityInterface> An array of entities matching the search criteria.
      */
@@ -57,8 +58,7 @@ class EntityRepository implements EntityRepositoryInterface {
                 entities_' . $type . '
             WHERE
                 ' . $attribute . ' = ?
-            LIMIT ' . $start . ', ' . $limit
-        , [$value]);
+            LIMIT ' . $start . ', ' . $limit, [$value]);
         $entities = [];
         if (!is_array($query)) {
             return $entities;
@@ -75,7 +75,7 @@ class EntityRepository implements EntityRepositoryInterface {
      * Load an entity from the database by its ID.
      *
      * @param int $id The ID of the entity to load.
-     * 
+     *
      * @return EntityInterface
      * @todo Implement the create method.
      */
@@ -89,7 +89,7 @@ class EntityRepository implements EntityRepositoryInterface {
      * Update an entity in the database.
      *
      * @param EntityInterface $entity The entity to update.
-     * 
+     *
      * @return EntityInterface
      */
     public function update(EntityInterface $entity): EntityInterface {
@@ -101,7 +101,7 @@ class EntityRepository implements EntityRepositoryInterface {
      * Delete an entity from the database.
      *
      * @param EntityInterface $entity The entity to delete.
-     * 
+     *
      * @return void
      */
     public function delete(EntityInterface $entity): void {

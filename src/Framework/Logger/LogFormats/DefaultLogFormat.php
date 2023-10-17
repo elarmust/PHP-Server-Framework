@@ -27,7 +27,7 @@ class DefaultLogFormat implements LogFormatInterface {
 
         // Apply additional formatting logic here if needed
         return sprintf(
-            "[%s] %s: %s%s %s",
+            '[%s] %s: %s%s %s',
             date('Y-m-d H:i:s'),
             $this->colorize($level, strtoupper($level)),
             $identifier,

@@ -8,7 +8,7 @@
 
 namespace Framework\Database\DataTypes;
 
-use \InvalidArgumentException;
+use InvalidArgumentException;
 
 class DataTypeDateTime implements DataTypeInterface {
     private null|string $defaultValue = null;

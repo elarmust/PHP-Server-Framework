@@ -13,7 +13,8 @@ use Psr\EventDispatcher\StoppableEventInterface;
 class WebSocketOpenEvent implements StoppableEventInterface {
     private bool $stopped = false;
 
-    public function __construct(private Server $server, private Request $request) {}
+    public function __construct(private Server $server, private Request $request) {
+    }
 
     public function getServer(): Server {
         return $this->server;

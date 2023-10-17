@@ -23,11 +23,12 @@ class WebSocketMessageHandler implements WebSocketMessageHandlerInterface {
     public function __construct(
         private ClassContainer $classContainer,
         private array $controllerStack = []
-    ) {}
+    ) {
+    }
 
     /**
      * Process each controller in the stack and return the final Response.
-     * 
+     *
      * @param Server $server Current WebSocket server instance.
      * @param Frame $frame Basic response Frame to work with.
      *

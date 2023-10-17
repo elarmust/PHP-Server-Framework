@@ -15,7 +15,7 @@ class View implements ViewInterface {
 
     /**
      * Set view contents.
-     * 
+     *
      * @param string $view
      * @return ViewInterface
      */
@@ -26,7 +26,7 @@ class View implements ViewInterface {
 
     /**
      * Return a rendered view string.
-     * 
+     *
      * @param array $variables = []
      * @return string
      */

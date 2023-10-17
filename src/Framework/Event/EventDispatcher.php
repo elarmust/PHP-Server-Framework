@@ -18,13 +18,14 @@ class EventDispatcher implements EventDispatcherInterface {
     /**
      * @param ListenerProviderInterface $eventListenerProvider
      */
-    public function __construct(private ListenerProviderInterface $eventListenerProvider) {}
+    public function __construct(private ListenerProviderInterface $eventListenerProvider) {
+    }
 
     /**
      * Dispatch event
      *
      * @param object $event Event object.
-     * 
+     *
      * @return object Returns a modified event.
      */
     public function dispatch(object $event): object {

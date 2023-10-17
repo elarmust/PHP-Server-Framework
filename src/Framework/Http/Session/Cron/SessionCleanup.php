@@ -18,7 +18,8 @@ class SessionCleanup implements CronInterface {
     /**
      * @param SessionManager $sessionManager
      */
-    public function __construct(private SessionManager $sessionManager) {}
+    public function __construct(private SessionManager $sessionManager) {
+    }
 
     /**
      * Run cron job.

@@ -17,7 +17,8 @@ use Psr\EventDispatcher\ListenerProviderInterface;
 class EventListenerProvider implements ListenerProviderInterface {
     private $listeners = [];
 
-    public function __construct(private Framework $framework) {}
+    public function __construct(private Framework $framework) {
+    }
 
     /**
      * Add a listener to an event.
@@ -26,7 +27,7 @@ class EventListenerProvider implements ListenerProviderInterface {
      * @param EventListenerInterface $listener An instance of a listener.
      * @param array $precedingDependency = [] an array of listener class names that need to come before the current listener.
      * @param array $followingDependency = [] an array of listener class names that need to come after the current listener
-     * 
+     *
      * @throws InvalidArgumentException
      * @return void
      */
@@ -41,7 +42,7 @@ class EventListenerProvider implements ListenerProviderInterface {
 
     /**
      * Returns event listeners for a given event.
-     * 
+     *
      * @param object $event
      * @return iterable
      */
