@@ -18,7 +18,7 @@ class Csrf {
 
     /**
      * Generate a new CSRF token for Session. Returns the newly created CSRF token key.
-     * 
+     *
      * @param Session &$session
      * @param int $expiration
      * @return string
@@ -35,7 +35,7 @@ class Csrf {
     /**
      * Check if Session object contains a valid token provided.
      * This will also delete matching and expired keys.
-     * 
+     *
      * @param string $token
      * @param Session $session
      * @return bool
@@ -60,7 +60,7 @@ class Csrf {
 
     /**
      * Cleans the session of expired CSRF tokens.
-     * 
+     *
      * @param Session $session
      * @return void
      */

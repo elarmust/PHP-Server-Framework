@@ -11,20 +11,19 @@ use Framework\Database\Database;
 use Framework\Configuration\Configuration;
 use Framework\Database\MigrationInterface;
 
-
 class M1685553947_CreateMigrationTable implements MigrationInterface {
     public function __construct(private ClassContainer $classContainer, private Configuration $configuration) {
         $configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
     }
 
     public function up(Database $database) {
-        $database->query("
+        $database->query('
             CREATE TABLE `migrations` (
                 `id` int NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 `migration` VARCHAR(256) NOT NULL,
                 `version` VARCHAR(32) NOT NULL
             )
-        ");
+        ');
     }
 
     public function down(Database $database) {

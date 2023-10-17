@@ -13,11 +13,12 @@ use Framework\Cli\CommandInterface;
 use Framework\Database\Migrations;
 
 class Migrate implements CommandInterface {
-    public function __construct(private Migrations $migrations, private Cli $cli) {}
+    public function __construct(private Migrations $migrations, private Cli $cli) {
+    }
 
     public function run(array $commandArgs): null|string {
         switch (strtolower($commandArgs[1] ?? '')) {
-            case 'run': 
+            case 'run':
                 if (count($commandArgs) < 3) {
                     return "\033[31mUsage: [up/down] [migration name / all] <version>\033[0m";
                 }
@@ -174,10 +175,10 @@ class Migrate implements CommandInterface {
                             $databaseColor = 31;
                         }
 
-                        $databaseStrings[] = "\033[" . $databaseColor . "m" . $database ."\033[0m";
+                        $databaseStrings[] = "\033[" . $databaseColor . 'm' . $database . "\033[0m";
                     }
 
-                    $string .= "\033[" . $versionColor . "m" . $version . "\033[0m (" . implode(', ', $databaseStrings) . ')' . PHP_EOL;
+                    $string .= "\033[" . $versionColor . 'm' . $version . "\033[0m (" . implode(', ', $databaseStrings) . ')' . PHP_EOL;
                 }
 
                 return rtrim($string, PHP_EOL);

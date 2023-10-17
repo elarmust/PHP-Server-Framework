@@ -173,7 +173,7 @@ class Framework {
 
     /**
      * Set maintenance mode.
-     * 
+     *
      * @param bool $state
      *
      * @return void

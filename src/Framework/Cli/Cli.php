@@ -16,7 +16,8 @@ class Cli {
     private array $commands = [];
     public $stdin;
 
-    public function __construct(private Logger $logger) {}
+    public function __construct(private Logger $logger) {
+    }
 
     public function runCommand(array $commandArgs) {
         $commandRoutesMatches = [];

@@ -21,7 +21,7 @@ class Session {
 
     /**
      * Get Session ID.
-     * 
+     *
      * @return string
      */
     public function getId(): string {
@@ -30,7 +30,7 @@ class Session {
 
     /**
      * Get Session Data.
-     * 
+     *
      * @return array
      */
     public function getData(): array {
@@ -39,7 +39,7 @@ class Session {
 
     /**
      * Get Session timestamp.
-     * 
+     *
      * @return int
      */
     public function getTimestamp(): int {
@@ -48,7 +48,7 @@ class Session {
 
     /**
      * Update session timestamp.
-     * 
+     *
      * @return void
      */
     public function updateTimestamp(): void {
@@ -57,7 +57,7 @@ class Session {
 
     /**
      * Set Session data.
-     * 
+     *
      * @param array $data
      * @return void
      */

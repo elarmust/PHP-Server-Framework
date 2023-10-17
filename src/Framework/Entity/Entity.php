@@ -19,7 +19,7 @@ class Entity extends EntityType implements EntityInterface {
      * @param ClassContainer $classContainer
      * @param string $entityType
      */
-    function __construct(private ClassContainer $classContainer, string $entityType) {
+    public function __construct(private ClassContainer $classContainer, string $entityType) {
         parent::__construct(...$this->classContainer->prepareArguments(EntityType::class, [$entityType]));
         $this->loadType();
     }
@@ -28,14 +28,14 @@ class Entity extends EntityType implements EntityInterface {
      * Load the entity data from database.
      *
      * @param int $entityId The ID of the entity to load.
-     * 
+     *
      * @throws InvalidArgumentException If the entity is not found.
      * @return void
      */
     public function load(int $entityId): void {
         $attributeDataQuery = $this->database->select('entities_' . $this->getType(), where: ['id' => $entityId]);
         if (!$attributeDataQuery) {
-            Throw New InvalidArgumentException($entityId);
+            throw new InvalidArgumentException($entityId);
         }
 
         $this->entityId = $entityId;
@@ -51,7 +51,7 @@ class Entity extends EntityType implements EntityInterface {
 
     /**
      * Save the entity data to the database.
-     * 
+     *
      * @return void
      */
     public function save(): void {
@@ -66,7 +66,7 @@ class Entity extends EntityType implements EntityInterface {
 
     /**
      * Delete the entity from the database.
-     * 
+     *
      * @return void
      */
     public function delete(): void {
@@ -77,7 +77,7 @@ class Entity extends EntityType implements EntityInterface {
      * Set data for entity attributes.
      *
      * @param array $attributesValue An associative array of attribute names and their values.
-     * 
+     *
      * @throws InvalidArgumentException If an attribute specified in $attributesValue is not found.
      * @return void
      */
@@ -109,11 +109,11 @@ class Entity extends EntityType implements EntityInterface {
      * Get data for specific entity fields.
      *
      * @param array $fields An array of field names to retrieve data for.
-     * 
+     *
      * @throws InvalidArgumentException If a specified field is not found.
      * @return array
      */
-    public function getData(array $fields = []): array{
+    public function getData(array $fields = []): array {
         if (!$fields) {
             $fields = $this->getFields();
         }

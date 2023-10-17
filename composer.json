@@ -13,7 +13,7 @@
         "psr/container": "^2.0",
         "psr/log": "^3.0@dev",
         "openswoole/ide-helper": "dev-master",
-        "openswoole/Container": "dev-master",
+        "openswoole/core": "dev-master",
         "psr/http-message": "^1.0",
         "psr/http-server-handler": "^1.0@dev",
         "psr/http-server-middleware": "^1.0@dev",
@@ -28,5 +28,8 @@
             ]
         }
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "require-dev": {
+        "squizlabs/php_codesniffer": "4.0.x-dev"
+    }
 }

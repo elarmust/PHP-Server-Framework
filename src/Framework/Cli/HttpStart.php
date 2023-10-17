@@ -11,7 +11,8 @@ use Framework\Event\EventListenerInterface;
 use OpenSwoole\Event as SwooleEvent;
 
 class HttpStart implements EventListenerInterface {
-    public function __construct(private Cli $cli) {}
+    public function __construct(private Cli $cli) {
+    }
 
     public function __invoke(object $event): void {
         $this->cli->stdin = fopen('php://stdin', 'r');

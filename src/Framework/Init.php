@@ -17,7 +17,6 @@ use Framework\ClI\HttpStart;
 use Framework\Cron\HttpStart as CronStart;
 use Framework\Database\Commands\Migrate;
 use Framework\Event\Events\HttpStartEvent;
-use Framework\Http\Csrf\CsrfMiddleware;
 use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Http\Session\SessionMiddleware;
 use Framework\View\View;
@@ -28,9 +27,8 @@ class Init {
     /**
      * @param Framework $framework
      */
-    public function __construct(
-        private Framework $framework,
-    ) {}
+    public function __construct(private Framework $framework) {
+    }
 
     /**
      * Register necessary Container features.
@@ -84,4 +82,4 @@ class Init {
         $this->framework->getEventListenerProvider()->unregisterEventListener(HttpStartEvent::class, CronStart::class);
         Event::del($cli->stdin);
     }
- }
+}

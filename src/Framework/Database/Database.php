@@ -119,7 +119,7 @@ class Database {
 
     /**
      * Insert a single entry into database.
-     * 
+     *
      * @param string $table Table name.
      * @param array $data Data to insert.
      */
@@ -168,7 +168,7 @@ class Database {
 
     /**
      * Prepare and execute SQL queries.
-     * 
+     *
      * @param array $query SQL query to process.
      * @param array $params List of parameters to prepare.
      */

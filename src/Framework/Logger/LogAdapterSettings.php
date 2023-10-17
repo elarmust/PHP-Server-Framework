@@ -2,7 +2,7 @@
 
 /**
  * Trait for managing log adapter settings.
- * 
+ *
  * Copyright @ WW Byte OÜ.
  */
 

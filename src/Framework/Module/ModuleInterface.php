@@ -19,13 +19,13 @@ interface ModuleInterface {
      * This method will be called when module is loaded.
      * This should contain code needed to set up module functionalities.
      */
-    public function Load();
+    public function load();
 
     /*
      * This method will be called when module is unloaded.
      * This should contain code needed to disable module functionalities.
      */
-    public function Unload();
+    public function unload();
 
     public function getFramework(): Framework;
 

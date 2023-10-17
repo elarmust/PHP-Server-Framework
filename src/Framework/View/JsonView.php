@@ -15,7 +15,7 @@ class JsonView implements ViewInterface {
 
     /**
      * Set view contents.
-     * 
+     *
      * @param array $view
      * @return ViewInterface
      */
@@ -26,7 +26,7 @@ class JsonView implements ViewInterface {
 
     /**
      * Return json encoded view.
-     * 
+     *
      * @return string
      */
     public function getView(): string {

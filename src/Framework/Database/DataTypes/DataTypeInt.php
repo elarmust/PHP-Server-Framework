@@ -8,7 +8,7 @@
 
 namespace Framework\Database\DataTypes;
 
-use \InvalidArgumentException;
+use InvalidArgumentException;
 
 class DataTypeInt implements DataTypeInterface {
     private int $dataLength = 1;

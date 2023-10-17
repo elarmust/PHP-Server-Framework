@@ -28,11 +28,12 @@ class EntityType implements EntityTypeInterface {
      * @param Database $database
      * @param string $typeName The name of the entity type.
      */
-    function __construct(
+    public function __construct(
         private ClassContainer $classContainer,
         protected Database $database,
         protected string $type
-    ) {}
+    ) {
+    }
 
     /**
      * Load entity type from the database.
@@ -153,7 +154,7 @@ class EntityType implements EntityTypeInterface {
      * @param string|null $getClass The class used for preprocessing the retrieved value.
      * @param string|null $setClass The class used for postprocessing the value before saving.
      * @param string|null $inputListClass The class used for retrieving a list of accepted values.
-     * 
+     *
      * @throws InvalidArgumentException
      * @throws Exception If the provided class for getting, setting, or input list does not exist.
      * @return void
@@ -178,7 +179,6 @@ class EntityType implements EntityTypeInterface {
         $existing = $this->database->select('entity_' . $this->getType() . '_attributes', null, ['attribute_name' => $attributeName]);
         if ($existing) {
             throw new InvalidArgumentException($attributeName);
-
         }
 
         $dataTypeString = $dataType->dataType();
@@ -211,7 +211,7 @@ class EntityType implements EntityTypeInterface {
      * Delete an attribute from the entity type.
      *
      * @param string $attributeName The name of the attribute to delete.
-     * 
+     *
      * @return void
      */
     public function deleteAttribute(string $attributeName): void {

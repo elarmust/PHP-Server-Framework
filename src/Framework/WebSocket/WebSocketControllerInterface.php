@@ -2,7 +2,7 @@
 
 /**
  * This interface defines the fundamental function of a WebSocket controller.
- * 
+ *
  * Copyright @ WW Byte OÜ.
  */
 
@@ -15,7 +15,7 @@ use OpenSwoole\WebSocket\Server;
 interface WebSocketControllerInterface {
     /**
      * Process the WebSocket controller and return a Frame response.
-     * 
+     *
      * @param Server $server Current WebSocket server instance.
      * @param Frame $frame Frame returned by previous controller in the stack.
      * @param WebSocketMessageHandlerInterface $messageHandler WebSocket message handler instance.

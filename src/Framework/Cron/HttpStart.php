@@ -13,7 +13,8 @@ use Framework\Cron\Task\CronTaskDelay;
 use Framework\Event\EventListenerInterface;
 
 class HttpStart implements EventListenerInterface {
-    public function __construct(private TaskScheduler $taskScheduler, private CronTaskDelay $cronTaskDelay) {}
+    public function __construct(private TaskScheduler $taskScheduler, private CronTaskDelay $cronTaskDelay) {
+    }
 
     public function __invoke(object $event): void {
         $nextMinute = new DateTime();

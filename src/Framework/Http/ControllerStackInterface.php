@@ -13,7 +13,7 @@ use Psr\Http\Message\ServerRequestInterface;
 interface ControllerStackInterface extends MiddlewareInterface {
     /**
      * Process the controller stack and return a response.
-     * 
+     *
      * @param ServerRequestInterface $request The incoming Request to the server.
      * @param ResponseInterface $response The response returned by Middlewares.
      *

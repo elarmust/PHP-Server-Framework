@@ -17,11 +17,12 @@ class WebSocketRegistry {
     private array $controllerStack = [];
     private string $messageHandler;
 
-    public function __construct(private ClassContainer $classContainer) {}
+    public function __construct(private ClassContainer $classContainer) {
+    }
 
     /**
      * Add WebSocketControllerInterface compatible controllers to the WebSocket controller stack.
-     * 
+     *
      * @param array $controllers An array of WebSocketControllerInterface compatible controllers.
      * @return WebSocketRegistry
      */
@@ -39,7 +40,7 @@ class WebSocketRegistry {
 
     /**
      * Remove a controller from WebSocket controller stack.
-     * 
+     *
      * @param array $controllerClassNames An array of controller class names to to remove.
      * @return WebSocketRegistry
      */
@@ -53,7 +54,7 @@ class WebSocketRegistry {
 
     /**
      * Replace the WebSocket controller stack controllers.
-     * 
+     *
      * @param array $controllers An array of WebSocketControllerInterface compatible controllers.
      * @return WebSocketRegistry
      */
@@ -64,7 +65,7 @@ class WebSocketRegistry {
 
     /**
      * Set WebSocket message handler.
-     * 
+     *
      * @param string $handler A WebSocketMessageHandlerInterface compatible handler.
      * @return WebSocketRegistry
      */
@@ -98,7 +99,7 @@ class WebSocketRegistry {
 
     /**
      * Process each controller in the stack and return the final Frame.
-     * 
+     *
      * @param Server $server Current WebSocket server instance.
      * @param Frame $frame Basic response Frame to work with.
      *

@@ -10,7 +10,8 @@ use Framework\Cron\CronManager;
 use Framework\Task\TaskInterface;
 
 class CronTask implements TaskInterface {
-    public function __construct(private CronManager $cron) {}
+    public function __construct(private CronManager $cron) {
+    }
 
     public function getName(): string {
         return 'CronTask';

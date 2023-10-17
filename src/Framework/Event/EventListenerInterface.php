@@ -3,7 +3,7 @@
 /**
  * This interface defines the contract that event listeners must adhere to.
  * Event listeners are responsible for handling events when they are dispatched.
- * 
+ *
  * Copyright @ WW Byte OÜ.
  */
 

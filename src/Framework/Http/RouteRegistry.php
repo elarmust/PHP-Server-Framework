@@ -2,7 +2,7 @@
 
 /**
  * Registry for RequestHandlers, Controllers, Middlewares and their associated routes.
- * 
+ *
  * Copyright @ WW Byte OÜ.
  */
 
@@ -14,11 +14,12 @@ use Framework\Container\ClassContainer;
 class RouteRegistry {
     private array $routes = [];
 
-    public function __construct(private ClassContainer $classContainer) {}
+    public function __construct(private ClassContainer $classContainer) {
+    }
 
     /**
      * Register a new Route.
-     * 
+     *
      * @param string $path
      * @param string $requestHandler
      * @return Route
@@ -31,7 +32,7 @@ class RouteRegistry {
 
     /**
      * Remove a route from Route registry.
-     * 
+     *
      * @param string $path
      * @return void
      */
@@ -41,7 +42,7 @@ class RouteRegistry {
 
     /**
      * Returns a Route for the provided path.
-     * 
+     *
      * @return ?Route
      */
     public function getRoute(string $path): ?Route {
@@ -50,7 +51,7 @@ class RouteRegistry {
 
     /**
      * Returns a list of registered Routes.
-     * 
+     *
      * @return array
      */
     public function listRoutes(): array {

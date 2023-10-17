@@ -110,14 +110,14 @@ class ModuleRegistry {
     public function topologicalSort(array $graph): array {
         foreach ($graph as $vertex => $edgeTypes) {
             foreach ($edgeTypes[0] ?? [] as $beforeVertex) {
-            	if (!isset($graph[$beforeVertex])) {
+                if (!isset($graph[$beforeVertex])) {
                     $this->framework->getLogger()->log(LogLevel::WARNING, 'Could not locate dependency \'' . $beforeVertex . '\' for \''  . $vertex . '\'!', identifier: 'framework');
-            		continue;
-            	}
+                    continue;
+                }
 
-	            if (!in_array($vertex, $graph[$beforeVertex][1] ?? [])) {
-	                $graph[$beforeVertex][1][] = $vertex;
-	            }
+                if (!in_array($vertex, $graph[$beforeVertex][1] ?? [])) {
+                    $graph[$beforeVertex][1][] = $vertex;
+                }
             }
         }
 
@@ -127,7 +127,7 @@ class ModuleRegistry {
 
         $inDegree = [];
         $sorted = [];
-    
+
         // Initialize in-degree for each vertex
         foreach ($graph as $vertex => $adjList) {
             $inDegree[$vertex] = 0;

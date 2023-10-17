@@ -4,7 +4,7 @@
  * HttpRouter class is responsible for routing incoming HTTP requests to the
  * appropriate request handlers based on the defined routes.
  * It serves as the entry point for processing incoming requests within a web application.
- * 
+ *
  * Copyright © WW Byte OÜ.
  */
 
@@ -34,7 +34,8 @@ class HttpRouter {
         private EventDispatcher $EventDispatcher,
         private RouteRegistry $routeRegistry,
         private Logger $logger
-    ) {}
+    ) {
+    }
 
     /**
      * Processes an incoming HTTP request and generates an HTTP response.

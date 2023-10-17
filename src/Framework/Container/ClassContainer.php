@@ -21,7 +21,7 @@ class ClassContainer implements ContainerInterface {
      * @param array $args Parameters to pass to the class.
      * @param string $alias Instance alias.
      * @param bool $singleton Use a singleton or new instance.
-     * 
+     *
      * @throws InvalidArgumentException
      * @return Object
      */
@@ -59,7 +59,7 @@ class ClassContainer implements ContainerInterface {
      *
      * @param string $classPath Class path.
      * @param array $params Parameters to pass to the object.
-     * 
+     *
      * @throws ReflectionException
      * @return array
      */

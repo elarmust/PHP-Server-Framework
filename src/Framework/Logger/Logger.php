@@ -16,7 +16,7 @@ class Logger extends AbstractLogger {
 
     /**
      * Write to logs using default logger adapter.
-     * 
+     *
      * @param $level
      * @param string|\Stringable $message
      * @param array $context = []

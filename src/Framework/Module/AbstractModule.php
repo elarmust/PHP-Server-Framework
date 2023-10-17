@@ -15,7 +15,7 @@ abstract class AbstractModule implements ModuleInterface {
     protected array $loadBefore = [];
     protected array $loadAfter = [];
 
-    public final function init(
+    final public function init(
         Framework $framework,
         string $name,
         string $path
@@ -29,23 +29,23 @@ abstract class AbstractModule implements ModuleInterface {
      * This method will be called when module is loaded.
      * This should contain code needed to set up module functionalities.
      */
-    abstract public function Load();
+    abstract public function load();
 
     /*
      * This method will be called when module is unloaded.
      * This should contain code needed to disable module functionalities.
      */
-    abstract public function Unload();
+    abstract public function unload();
 
-    public final function getFramework(): Framework {
+    final public function getFramework(): Framework {
         return $this->framework;
     }
 
-    public final function getName(): string {
+    final public function getName(): string {
         return $this->name;
     }
 
-    public final function getPath(): string {
+    final public function getPath(): string {
         return $this->path;
     }
 
@@ -53,11 +53,11 @@ abstract class AbstractModule implements ModuleInterface {
         return '1.0.0';
     }
 
-    public final function loadAfter(): array {
+    final public function loadAfter(): array {
         return $this->loadAfter;
     }
 
-    public final function loadBefore(): array {
+    final public function loadBefore(): array {
         return $this->loadBefore;
     }
 

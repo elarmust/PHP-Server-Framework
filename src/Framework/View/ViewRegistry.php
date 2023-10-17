@@ -2,7 +2,7 @@
 
 /**
  * The ViewRegistry class provides a central repository for managing reusable views.
- * 
+ *
  * Copyright © WW Byte OÜ.
  */
 
@@ -15,7 +15,7 @@ class ViewRegistry {
 
     /**
      * Register a new view
-     * 
+     *
      * @param ViewInterface $view
      * @return void
      */
@@ -44,7 +44,7 @@ class ViewRegistry {
 
     /**
      * Get base view by name
-     * 
+     *
      * @param string $viewName
      * @throws InvalidArgumentException
      * @return ViewInterface Cloned view
