@@ -38,11 +38,11 @@ class Migrations {
 
             $moduleMigrations = array_diff(scandir($modulePath . '/Setup/Migrations'), ['..', '.']);
             foreach ($moduleMigrations as $moduleMigration) {
-                $migrationPath = $module->getClassPath() . '\\Setup\\Migrations\\' . $moduleMigration;
+                $migrationPath = $module->getName() . '\\Setup\\Migrations\\' . $moduleMigration;
                 $name = str_replace('.php', '', $migrationPath);
 
                 $migration = $this->classContainer->get($name, singleton: false);
-                $this->migrations[strtolower($module->getClassPath())][$migration->version()][str_replace('.php', '', $moduleMigration)] = $migration;
+                $this->migrations[strtolower($module->getName())][$migration->version()][str_replace('.php', '', $moduleMigration)] = $migration;
             }
         }
 

@@ -9,13 +9,9 @@
 namespace Framework\Http;
 
 use Framework\Http\Route;
-use Framework\Container\ClassContainer;
 
 class RouteRegistry {
     private array $routes = [];
-
-    public function __construct(private ClassContainer $classContainer) {
-    }
 
     /**
      * Register a new Route.
@@ -24,10 +20,9 @@ class RouteRegistry {
      * @param string $requestHandler
      * @return Route
      */
-    public function registerRoute(string $path, string $requestHandler): Route {
-        $newRoute = $this->classContainer->get(Route::class, [$path, $requestHandler], singleton: false);
-        $this->routes[$path] = $newRoute;
-        return $newRoute;
+    public function registerRoute(Route $route): RouteRegistry {
+        $this->routes[$route->getPath()] = $route;
+        return $this;
     }
 
     /**

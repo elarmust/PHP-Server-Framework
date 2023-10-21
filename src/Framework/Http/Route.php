@@ -9,6 +9,7 @@
 namespace Framework\Http;
 
 use InvalidArgumentException;
+use Framework\Http\RequestHandler;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
@@ -25,7 +26,7 @@ class Route {
      * @param string $path
      * @param string $requestHandler
      */
-    public function __construct(string $path, string $requestHandler) {
+    public function __construct(string $path, string $requestHandler = RequestHandler::class) {
         $this->setRequestHandler($requestHandler);
         $this->path = $path;
     }

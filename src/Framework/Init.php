@@ -9,7 +9,6 @@
 namespace Framework;
 
 use Framework\Layout\Controllers\BasicPage;
-use Framework\Http\RequestHandler;
 use Framework\Cli\Commands\Maintenance;
 use Framework\Cli\Commands\Stop;
 use Framework\Cron\Commands\Cron;
@@ -17,6 +16,7 @@ use Framework\ClI\HttpStart;
 use Framework\Cron\HttpStart as CronStart;
 use Framework\Database\Commands\Migrate;
 use Framework\Event\Events\HttpStartEvent;
+use Framework\Http\Route;
 use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Http\Session\SessionMiddleware;
 use Framework\View\View;
@@ -39,11 +39,10 @@ class Init {
         $classContainer = $this->framework->getClassContainer();
 
         // Register / root path.
-        $route = $this->framework->getRouteRegistry()->registerRoute('/', RequestHandler::class);
-        // Add the BasicPage controller.
+        $route = new Route('/');
         $route->setControllerStack([BasicPage::class]);
-        // Include session middleware.
         $route->addMiddlewares([SessionMiddleware::class]);
+        $this->framework->getRouteRegistry()->registerRoute($route);
 
         // Create a new default page view.
         $view = new View();
