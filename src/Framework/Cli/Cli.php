@@ -8,9 +8,11 @@
 
 namespace Framework\Cli;
 
-use Psr\Log\LogLevel;
-use Framework\Logger\Logger;
 use Framework\CLI\CommandInterface;
+use Framework\Utils\RouteUtils;
+use Framework\Logger\Logger;
+use Psr\Log\LogLevel;
+use Throwable;
 
 class Cli {
     private array $commands = [];
@@ -20,59 +22,21 @@ class Cli {
     }
 
     public function runCommand(array $commandArgs) {
-        $commandRoutesMatches = [];
-        foreach ($this->getCommands() as $command) {
-            $routeParts = explode('/', $command);
-            $argsToSkip = [];
-
-            $commandRoutesMatches[$command] = 0;
-            foreach ($routeParts as $index => $routePart) {
-                foreach ($commandArgs as $index2 => $cmdParam) {
-                    if (in_array($index2, $argsToSkip)) {
-                        continue;
-                    }
-
-                    if ($routePart == $cmdParam) {
-                        $commandRoutesMatches[$command]++;
-                        $argsToSkip[] = $index2;
-                    } else {
-                        if ($index2 < $index) {
-                            $commandRoutesMatches[$command]--;
-                        }
-                    }
-                }
-            }
-
-            if ($commandRoutesMatches[$command] < 1) {
-                unset($commandRoutesMatches[$command]);
-            }
-        }
-
-        if (!$commandRoutesMatches) {
-            $this->sendToOutput($this->getCommandDescriptions());
-            return;
-        }
-
-        $highestMatch = array_keys($commandRoutesMatches, max($commandRoutesMatches))[0];
-
-        if (count(array_unique($commandRoutesMatches, SORT_REGULAR)) === 1) {
-            $cmdParams = [];
-            foreach ($commandRoutesMatches as $command => $matches) {
-                $cmdParams[$command] = explode('/', $command);
-            }
-
-            $highestMatch = array_keys($cmdParams, min($cmdParams))[0];
-        }
+        $highestMatch = RouteUtils::findNearestMatch(implode(' ', $commandArgs), $this->getCommands(), ' ');
 
         foreach ($this->getCommandHandlers($highestMatch) as $handlerClass) {
-            $result = $handlerClass->run($commandArgs);
+            try {
+                $result = $handlerClass->run($commandArgs);
+            } catch (Throwable $e) {
+                $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
+                $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+            }
+
             if (is_string($result)) {
                 $this->sendToOutput($result);
             } else if (!$result) {
                 return false;
             }
-
-            usleep(50000);
         }
     }
 
