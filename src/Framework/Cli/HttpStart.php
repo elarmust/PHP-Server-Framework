@@ -4,7 +4,7 @@
  * Copyright @ WW Byte OÜ.
  */
 
-namespace Framework\CLI;
+namespace Framework\Cli;
 
 use Framework\Cli\Cli;
 use Framework\Event\EventListenerInterface;

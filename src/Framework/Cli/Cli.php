@@ -8,7 +8,7 @@
 
 namespace Framework\Cli;
 
-use Framework\CLI\CommandInterface;
+use Framework\Cli\CommandInterface;
 use Framework\Utils\RouteUtils;
 use Framework\Logger\Logger;
 use Psr\Log\LogLevel;

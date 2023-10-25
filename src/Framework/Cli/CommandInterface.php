@@ -4,7 +4,7 @@
  * Copyright @ WW Byte OÜ.
  */
 
-namespace Framework\CLI;
+namespace Framework\Cli;
 
 interface CommandInterface {
     public function run(array $commandArgs): null|string;
