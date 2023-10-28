@@ -113,8 +113,9 @@ class Migrations {
      * @param MigrationInterface $migration Migration object.
      * @param Database $database Migration database.
      * @param bool $up Migrate up or down.
-     * @return bool Returns true, if the migration was run or false if the migration could not be run.
+     *
      * @throws InvalidArgumentException
+     * @return bool Returns true, if the migration was run or false if the migration could not be run.
      */
     public function runMigration(MigrationInterface $migration, Database $database, bool $up = true): bool {
         if ($up) {

@@ -21,7 +21,6 @@ use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Http\Session\SessionMiddleware;
 use Framework\View\View;
 use OpenSwoole\Event;
-use OpenSwoole\Coroutine\System;
 
 class Init {
     /**
@@ -46,7 +45,7 @@ class Init {
 
         // Create a new default page view.
         $view = new View();
-        $view->setView(System::readFile(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php'));
+        $view->setView(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php');
         $this->framework->getViewRegistry()->registerView('basicPage', $view);
 
         // Register built in commands.

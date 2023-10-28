@@ -11,16 +11,16 @@ namespace Framework\View;
 use Framework\View\ViewInterface;
 
 class View implements ViewInterface {
-    protected mixed $content = '';
+    protected string $viewFile = '';
 
     /**
      * Set view contents.
      *
-     * @param string $view
+     * @param string $viewFile
      * @return ViewInterface
      */
-    public function setView(string $view): ViewInterface {
-        $this->content = $view;
+    public function setView(string $viewFile): ViewInterface {
+        $this->viewFile = $viewFile;
         return $this;
     }
 
@@ -31,13 +31,13 @@ class View implements ViewInterface {
      * @return string
      */
     public function getView(array $variables = []): string {
-        if (!$this->content) {
+        if (!$this->viewFile) {
             return '';
         }
 
         ob_start();
         extract($variables);
-        eval('?>' . $this->content . '<?php');
+        include $this->viewFile;
         return ob_get_clean();
     }
 }
