@@ -44,6 +44,6 @@ If you'd like to contribute, you can do the following:
 + [Submit an issue or feature request](https://github.com/elarike12/PHP_Framework/issues)
 
 # TO DO list
-+ Unit tests
++ Unit tests - In progress
 + Better CLI
 + XML and YML configuration support
