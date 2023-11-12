@@ -8,3 +8,4 @@ var
 config
 composer.lock
 config.json
+config_test.json

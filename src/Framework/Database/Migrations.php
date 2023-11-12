@@ -32,13 +32,13 @@ class Migrations {
         foreach ($modulesList as $module) {
             $modulePath = $module->getPath();
 
-            if (!file_exists($modulePath . '/Setup/Migrations')) {
+            if (!file_exists($modulePath . '/Migrations')) {
                 continue;
             }
 
-            $moduleMigrations = array_diff(scandir($modulePath . '/Setup/Migrations'), ['..', '.']);
+            $moduleMigrations = array_diff(scandir($modulePath . '/Migrations'), ['..', '.']);
             foreach ($moduleMigrations as $moduleMigration) {
-                $migrationPath = $module->getName() . '\\Setup\\Migrations\\' . $moduleMigration;
+                $migrationPath = $module->getName() . '\\Migrations\\' . $moduleMigration;
                 $name = str_replace('.php', '', $migrationPath);
 
                 $migration = $this->classContainer->get($name, singleton: false);
@@ -47,10 +47,10 @@ class Migrations {
         }
 
         // Framework internal migrations
-        $intermalMigrations = array_diff(scandir(BASE_PATH . '/src/Framework/Database/Setup/Migrations'), ['..', '.']);
+        $intermalMigrations = array_diff(scandir(BASE_PATH . '/src/Framework/Database/Migrations'), ['..', '.']);
         foreach ($intermalMigrations as $internalMigration) {
             $internalMigration = str_replace('.php', '', $internalMigration);
-            $migrationPath = 'Framework\\Database\\Setup\\Migrations\\' . $internalMigration;
+            $migrationPath = 'Framework\\Database\\Migrations\\' . $internalMigration;
 
             $migration = $this->classContainer->get($migrationPath, singleton: false);
             $this->migrations['framework'][$migration->version()][$internalMigration] = $migration;

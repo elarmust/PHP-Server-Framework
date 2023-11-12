@@ -17,18 +17,20 @@
         "psr/http-message": "^1.0",
         "psr/http-server-handler": "^1.0@dev",
         "psr/http-server-middleware": "^1.0@dev",
-        "psr/event-dispatcher": "^1.0@dev"
+        "psr/event-dispatcher": "^1.0@dev",
+        "phpunit/phpunit": "^9.6",
+        "php-webdriver/webdriver": "^1.15"
     },
     "autoload": {
         "psr-4": {
             "": [
-              "src/",
-              "modules/",
-              "vendor/"
+                "src/",
+                "modules/",
+                "vendor/"
             ]
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require-dev": {
         "squizlabs/php_codesniffer": "4.0.x-dev"
     }

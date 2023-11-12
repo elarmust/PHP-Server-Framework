@@ -4,7 +4,7 @@
  * Copyright @ WW Byte OÜ.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
@@ -31,4 +31,5 @@ spl_autoload_register(function ($class) {
 require_once BASE_PATH . '/vendor/autoload.php';
 
 use Framework\Framework;
-$server = new Framework();
+
+new Framework();

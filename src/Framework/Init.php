@@ -9,12 +9,13 @@
 namespace Framework;
 
 use Framework\Layout\Controllers\BasicPage;
+use Framework\Database\Commands\Migrate;
 use Framework\Cli\Commands\Maintenance;
-use Framework\Cli\Commands\Stop;
+use Framework\Tests\Commands\Test;
 use Framework\Cron\Commands\Cron;
+use Framework\Cli\Commands\Stop;
 use Framework\ClI\HttpStart;
 use Framework\Cron\HttpStart as CronStart;
-use Framework\Database\Commands\Migrate;
 use Framework\Event\Events\HttpStartEvent;
 use Framework\Http\Route;
 use Framework\Http\Session\Cron\SessionCleanup;
@@ -54,6 +55,7 @@ class Init {
         $cli->registerCommandHandler('maintenance', $classContainer->get(Maintenance::class, singleton: false));
         $cli->registerCommandHandler('cron', $classContainer->get(Cron::class, singleton: false));
         $cli->registerCommandHandler('migrate', $classContainer->get(Migrate::class, singleton: false));
+        $cli->registerCommandHandler('test', $classContainer->get(Test::class, singleton: false));
 
         // Register built in cron job.
         $this->framework->getCron()->registerCronJob($classContainer->get(SessionCleanup::class, singleton: false));
@@ -75,6 +77,7 @@ class Init {
         $cli->unregisterCommand('stop');
         $cli->unregisterCommand('cron');
         $cli->unregisterCommand('migrate');
+        $cli->unregisterCommand('test');
         $this->framework->getCron()->unregisterCronJob('session_cleanup');
         $this->framework->getEventListenerProvider()->unregisterEventListener(HttpStartEvent::class, HttpStart::class);
         $this->framework->getEventListenerProvider()->unregisterEventListener(HttpStartEvent::class, CronStart::class);
