@@ -75,6 +75,8 @@ class Configuration {
 
             return false;
         }
+
+        return false;
     }
 
     /*

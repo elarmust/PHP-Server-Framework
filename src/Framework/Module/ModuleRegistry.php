@@ -47,7 +47,7 @@ class ModuleRegistry {
                     $moduleName = $vendor . '\\' . $module;
                     $moduleClass = $moduleName . '\\' . $module;
                     if (!class_exists($moduleClass) || !in_array(ModuleInterface::class, class_implements($moduleClass))) {
-                        throw new RuntimeException($moduleName . '\\' . $module . ' must implement ' . ModuleInterface::class . '!');
+                        continue;
                     }
 
                     if (isset($modulesFound[$moduleName])) {

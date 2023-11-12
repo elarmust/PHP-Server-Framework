@@ -3,9 +3,9 @@
         "main": {
             "host": "localhost",
             "port": 3306,
-            "database": "mysql",
-            "username": "mysql",
-            "password": "mysql",
+            "database": "mysql_test",
+            "username": "mysql_test",
+            "password": "mysql_test",
             "charset": "utf8mb4"
         }
     },
@@ -19,7 +19,10 @@
         "cert": "",
         "key": ""
     },
-    "testing": false,
+    "testing": {
+        "seleniumUrl": "http://selenium-hub",
+        "seleniumPort": 4444
+    },
     "sessionExpirationSeconds": 259200,
     "hostName": "localhost",
     "defaultCsrfTokenExpirationSeconds": 86400

@@ -4,16 +4,15 @@
  * Copyright @ WW Byte OÜ.
  */
 
-namespace Framework\Database\Setup\Migrations;
+namespace Framework\Database\Migrations;
 
+use Framework\Database\MigrationInterface;
 use Framework\Container\ClassContainer;
 use Framework\Database\Database;
-use Framework\Configuration\Configuration;
-use Framework\Database\MigrationInterface;
+use Framework\Framework;
 
-class M1685553948_CreateEntityTypesTable implements MigrationInterface {
-    public function __construct(private ClassContainer $classContainer, private Configuration $configuration) {
-        $configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
+class M1685553948CreateEntityTypesTable implements MigrationInterface {
+    public function __construct(private ClassContainer $classContainer, private Framework $framework) {
     }
 
     public function up(Database $database) {
@@ -40,7 +39,7 @@ class M1685553948_CreateEntityTypesTable implements MigrationInterface {
     }
 
     public function getDatabases(): array {
-        $databaseInfo = $this->configuration->getConfig('databases.main');
+        $databaseInfo = $this->framework->getConfiguration()->getConfig('databases.main');
         $database = $this->classContainer->get(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password']], singleton: false);
         return [$database];
     }

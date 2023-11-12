@@ -16,9 +16,9 @@ use Framework\Configuration\Configuration;
 use Framework\WebSocket\WebSocketRegistry;
 use Framework\Event\Events\HttpStartEvent;
 use Framework\Event\EventListenerProvider;
+use Framework\Container\ClassContainer;
 use Framework\Module\ModuleRegistry;
 use Framework\Event\EventDispatcher;
-use Framework\Container\ClassContainer;
 use Framework\Database\Migrations;
 use Framework\Http\RouteRegistry;
 use Framework\Task\TaskScheduler;
@@ -36,6 +36,7 @@ use OpenSwoole\Http\Response;
 use OpenSwoole\Http\Request;
 use OpenSwoole\Coroutine;
 use OpenSwoole\Constant;
+use OpenSwoole\Runtime;
 use OpenSwoole\Timer;
 use OpenSwoole\Util;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -60,6 +61,7 @@ class Framework {
     private int $port;
 
     public function __construct() {
+        define('FRAMEWORK', $this);
         $serverOptions = [
             'enable_coroutine' => true,
             'pid_file' => BASE_PATH . '/var/server.pid',
@@ -79,6 +81,11 @@ class Framework {
         $this->logger->log(LogLevel::INFO, 'Loading configuration...', identifier: 'framework');
         $this->configuration = $this->classContainer->get(Configuration::class);
         $this->configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
+        if ($this->configuration->getConfig('testing')) {
+            $this->logger->log(LogLevel::NOTICE, 'Using test configuration.', identifier: 'framework');
+            $this->configuration->loadConfiguration(BASE_PATH . '/config_test.json', 'json');
+        }
+
         $this->ip = $this->configuration->getConfig('ip');
         $this->port = $this->configuration->getConfig('port');
 
@@ -93,7 +100,6 @@ class Framework {
             $serverOptions['ssl_cert_file'] = $this->configuration->getConfig('cert.cert');
             $serverOptions['ssl_key_file'] = $this->configuration->getConfig('cert.key');
         }
-
 
         $this->logger->log(LogLevel::INFO, 'Initializing database...', identifier: 'framework');
         $databaseInfo = $this->configuration->getConfig('databases.main');
@@ -114,8 +120,11 @@ class Framework {
             $this->webSocketRegistry = $this->classContainer->get(WebSocketRegistry::class);
         }
 
+
         $this->logger->log(LogLevel::INFO, 'Initializing module registry...', identifier: 'framework');
         $this->moduleRegistry = $this->classContainer->get(ModuleRegistry::class);
+
+        Coroutine::set(['hook_flags' => Runtime::HOOK_ALL]);
         Coroutine::run(function () {
             $this->init = new Init($this);
             $this->init->start();
