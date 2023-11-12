@@ -61,7 +61,12 @@ class HtmlEditor {
 
             foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $node) {
                 foreach ($childNodes as $childNode) {
-                    $element = $this->dom->ownerDocument->importNode($childNode, true);
+                    if ($this->dom->ownerDocument) {
+                        $element = $this->dom->ownerDocument->importNode($childNode, true);
+                    } else {
+                        $element = $this->dom->importNode($childNode, true);
+                    }
+
                     if ($innerHtml) {
                         $node->appendChild($element);
                     } else {
@@ -97,7 +102,12 @@ class HtmlEditor {
 
             foreach ($this->xPath->query($this->generateAbsoluteXpath() . $pathQuery) as $node) {
                 foreach ($childNodes as $childNode) {
-                    $element = $this->dom->ownerDocument->importNode($childNode, true);
+                    if ($this->dom->ownerDocument) {
+                        $element = $this->dom->ownerDocument->importNode($childNode, true);
+                    } else {
+                        $element = $this->dom->importNode($childNode, true);
+                    }
+
                     if ($innerHtml) {
                         $node->insertBefore($element, $node->firstChild);
                     } else {
