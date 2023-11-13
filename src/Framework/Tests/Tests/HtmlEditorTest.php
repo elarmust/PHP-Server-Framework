@@ -46,4 +46,12 @@ class HtmlEditorTest extends TestCase {
         $this->assertSame('<div>Test 4</div>', trim($this->htmlEditor->getPreviousSiblings('//body')[0]->getHtmlContent()));
         $this->assertSame('<div>Test 3</div>', trim($this->htmlEditor->getPreviousSiblings('//body')[1]->getHtmlContent()));
     }
+
+    public function testReplace() {
+        $this->htmlEditor->append('<div>Test 1</div>', '//body', true);
+        $this->htmlEditor->append('<div>Test 2</div>', '//body', true);
+        $this->htmlEditor->getChildren('//body')[0]->replace('<div>Test 3</div>');
+        $this->assertSame('<div>Test 3</div>', trim($this->htmlEditor->getChildren('//body')[0]->getHtmlContent()));
+        $this->assertSame('<div>Test 2</div>', trim($this->htmlEditor->getChildren('//body')[1]->getHtmlContent()));
+    }
 }

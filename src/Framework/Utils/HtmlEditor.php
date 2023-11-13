@@ -517,11 +517,12 @@ class HtmlEditor {
                 if ($previous instanceof DOMElement && $previous->localName === $elem->localName) {
                     $siblings++;
                 }
+
                 $previous = $previous->previousSibling;
             }
 
             // Append the position among siblings if there are multiple
-            if ($siblings > 1) {
+            if ($siblings > 1 || ($siblings == 1 && $elem->nextSibling !== null)) {
                 $elementXPath .= '[' . $siblings . ']';
             }
 
