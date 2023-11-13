@@ -14,7 +14,7 @@ use Framework\Cli\Commands\Maintenance;
 use Framework\Tests\Commands\Test;
 use Framework\Cron\Commands\Cron;
 use Framework\Cli\Commands\Stop;
-use Framework\ClI\HttpStart;
+use Framework\Cli\HttpStart;
 use Framework\Cron\HttpStart as CronStart;
 use Framework\Event\Events\HttpStartEvent;
 use Framework\Http\Route;
