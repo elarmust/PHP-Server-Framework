@@ -2,7 +2,7 @@
     "name": "wwbyte/framework",
     "description": "Lightweight PHP framework based on OpenSwoole.",
     "type": "project",
-    "license": "MPL 2.0",
+    "license": "MPL-2.0",
     "authors": [
         {
             "name": "WW Byte OÜ"
