@@ -1,0 +1,39 @@
+{
+    "name": "wwbyte/framework",
+    "description": "Lightweight PHP framework based on OpenSwoole.",
+    "type": "project",
+    "license": "MPL-2.0",
+    "authors": [
+        {
+            "name": "Elar Must",
+            "email": "elarmust98@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "dragonmantank/cron-expression": "^3.3",
+        "psr/container": "^2.0",
+        "psr/log": "^3.0@dev",
+        "openswoole/ide-helper": "dev-master",
+        "openswoole/core": "dev-master",
+        "psr/http-message": "^1.0",
+        "psr/http-server-handler": "^1.0@dev",
+        "psr/http-server-middleware": "^1.0@dev",
+        "psr/event-dispatcher": "^1.0@dev",
+        "phpunit/phpunit": "^9.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Framework\\": "src/Framework",
+            "": [
+                "modules/",
+                "vendor/"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "require-dev": {
+        "squizlabs/php_codesniffer": "4.0.x-dev",
+        "php-webdriver/webdriver": "^1.15"
+    }
+}

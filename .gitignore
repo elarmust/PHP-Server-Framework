@@ -1,0 +1,13 @@
+docker/*
+!docker/.gitkeep
+modules/*
+!modules/.gitkeep
+vendor/*
+!vendor/.gitkeep
+certs/*
+!certs/.gitkeep
+var
+config
+composer.lock
+config.json
+config_test.json

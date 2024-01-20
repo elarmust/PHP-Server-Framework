@@ -1,0 +1,31 @@
+{
+    "databases": {
+        "main": {
+            "host": "localhost",
+            "port": 3306,
+            "database": "mysql_test",
+            "username": "mysql_test",
+            "password": "mysql_test",
+            "charset": "utf8mb4"
+        }
+    },
+    "port": 443,
+    "ip": "::",
+    "displayPHPErrors": true,
+    "defaultTimeZone": "UTC",
+    "websocket": {
+        "enabled": true,
+        "timeoutSeconds": 600
+    },
+    "cert": {
+        "cert": "",
+        "key": ""
+    },
+    "testing": {
+        "seleniumUrl": "http://selenium-hub",
+        "seleniumPort": 4444
+    },
+    "sessionExpirationSeconds": 259200,
+    "hostName": "localhost",
+    "defaultCsrfTokenExpirationSeconds": 86400
+}
