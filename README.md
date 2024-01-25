@@ -32,7 +32,7 @@ Before the Docker container is started, please rename config-example.json to con
 You can start the framework server with
 
 ```
-docker start -ai docker-framework-1
+docker start -ai framework-framework-1
 ```
 
 # Contributing
