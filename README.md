@@ -24,6 +24,10 @@ Feel free to explore and contribute, but be aware that the codebase is subject t
 
 Copy docker-examples to docker and modify the docker-compose.yml according to your needs.
 ```
+cp docker-examples/* docker/
+```
+
+```
 cd docker
 docker compose build framework
 docker compose create framework
