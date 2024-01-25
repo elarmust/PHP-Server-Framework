@@ -21,6 +21,8 @@ Feel free to explore and contribute, but be aware that the codebase is subject t
 + WSL is required when running on Windows
 
 # Installation via Docker
+
+Copy docker-examples to docker and modify the docker-compose.yml according to your needs.
 ```
 cd docker
 docker-compose build framework
