@@ -17,7 +17,7 @@ use Framework\Framework;
 class ModuleRegistry {
     private array $modules = [];
     private array $loadedModules = [];
-    public const MODULE_PATHS = ['Modules', 'Vendor'];
+    public const MODULE_PATHS = ['Modules', 'vendor'];
 
     public function __construct(private Framework $framework) {
 
