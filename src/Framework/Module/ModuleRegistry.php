@@ -40,13 +40,8 @@ class ModuleRegistry {
                 $modules = array_diff(scandir(BASE_PATH . '/' . $path . '/' . $vendor), ['..', '.']);
                 foreach ($modules as $module) {
                     $modulePath = BASE_PATH . '/' . $path . '/' . $vendor . '/' . $module;
-                    // Ignore folders with no module configuration file or load file.
-                    if (!file_exists($modulePath . '/' . ucfirst($module) . '.php')) {
-                        continue;
-                    }
-
                     $moduleName = $vendor . '\\' . $module;
-                    $moduleClass = $vendor . '\\' . $module . '\\' . ucfirst($module);
+                    $moduleClass = ucfirst($vendor) . '\\' . ucfirst($module) . '\\' . ucfirst($module);
 
                     if (!class_exists($moduleClass) || !in_array(ModuleInterface::class, class_implements($moduleClass))) {
                         continue;
