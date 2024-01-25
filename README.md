@@ -25,8 +25,8 @@ Feel free to explore and contribute, but be aware that the codebase is subject t
 Copy docker-examples to docker and modify the docker-compose.yml according to your needs.
 ```
 cd docker
-docker-compose build framework
-docker-compose create framework
+docker compose build framework
+docker compose create framework
 ```
 Before the Docker container is started, please rename config-example.json to config.json and edit config.json with valid MySQL connection information.
 You can start the framework server with
