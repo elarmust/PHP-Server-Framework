@@ -41,12 +41,13 @@ class ModuleRegistry {
                 foreach ($modules as $module) {
                     $modulePath = BASE_PATH . '/' . $path . '/' . $vendor . '/' . $module;
                     // Ignore folders with no module configuration file or load file.
-                    if (!file_exists($modulePath . '/' . $module . '.php')) {
+                    if (!file_exists($modulePath . '/' . ucfirst($module) . '.php')) {
                         continue;
                     }
 
                     $moduleName = $vendor . '\\' . $module;
-                    $moduleClass = $moduleName . '\\' . $module;
+                    $moduleClass = $vendor . '\\' . $module . '\\' . ucfirst($module);
+
                     if (!class_exists($moduleClass) || !in_array(ModuleInterface::class, class_implements($moduleClass))) {
                         continue;
                     }
