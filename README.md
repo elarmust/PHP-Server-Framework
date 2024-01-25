@@ -15,10 +15,6 @@ Feel free to explore and contribute, but be aware that the codebase is subject t
 + Logging
 + Configuration system
 
-# Documentation
-[Wiki page](https://github.com/elarike12/PHP_Framework/wiki)
-
-
 # General requirements
 + MySQL database
 + Docker
