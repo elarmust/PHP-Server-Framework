@@ -7,6 +7,9 @@ services:
         working_dir: /var/www/
         restart: unless-stopped
         stdin_open: true
+        ports:
+            - "80:80"
+            - "443:443"
         volumes:
             - "../:/var/www"
         networks:
