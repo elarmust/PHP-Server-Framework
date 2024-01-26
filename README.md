@@ -27,16 +27,14 @@ Copy docker-examples to docker and modify the docker-compose.yml according to yo
 cp docker-examples/* docker/
 ```
 
-```
-cd docker
-docker compose build framework
-docker compose create framework
-```
-Before the Docker container is started, please rename config-example.json to config.json and edit config.json with valid MySQL connection information.
-You can start the framework server with
+Before the Docker container is started, rename config-example.json to config.json and edit config.json with valid MySQL connection information.
+You can start the framework server and run basic migrations with
 
 ```
-docker start -ai framework-framework-1
+cd docker
+docker compose up -d
+docker attach framework-framework-1
+migrate run up all
 ```
 
 # Contributing
