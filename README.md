@@ -34,7 +34,8 @@ cp docker-examples/* docker/
 ```
 
 Before the Docker container is started, rename config-example.json to config.json and edit config.json with valid MySQL connection information.
-You can start the framework server and run basic migrations with
+If you've renamed any of the containers, be sure to reflect these changes in the following commands.
+Start the Docker containers and run basic migrations with
 
 ```
 cd docker
