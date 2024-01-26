@@ -11,6 +11,21 @@ services:
             - "../:/var/www"
         networks:
             - backend
+        depends_on:
+            - mysql
+            - selenium-hub
+    mysql:
+        image: mysql:8.0
+        restart: unless-stopped
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+            MYSQL_ROOT_PASSWORD: "root"
+            MYSQL_PASSWORD: "root"
+            MYSQL_DATABASE: 'root'
+        volumes:
+            - "./mysql/mysql_data:/var/lib/mysql"
+        networks:
+            - backend
     selenium:
         image: selenium/node-chrome:115.0-chromedriver-115.0
         shm_size: 2g

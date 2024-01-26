@@ -1,15 +1,15 @@
 {
     "databases": {
         "main": {
-            "host": "localhost",
+            "host": "mysql",
             "port": 3306,
-            "database": "mysql",
-            "username": "mysql",
-            "password": "mysql",
+            "database": "root",
+            "username": "root",
+            "password": "root",
             "charset": "utf8mb4"
         }
     },
-    "port": 443,
+    "port": 80,
     "ip": "::",
     "displayPHPErrors": true,
     "defaultTimeZone": "UTC",
@@ -23,6 +23,6 @@
     },
     "testing": false,
     "sessionExpirationSeconds": 259200,
-    "hostName": "localhost",
+    "hostName": "framework",
     "defaultCsrfTokenExpirationSeconds": 86400
 }
