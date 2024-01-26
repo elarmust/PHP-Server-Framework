@@ -22,6 +22,12 @@ Feel free to explore and contribute, but be aware that the codebase is subject t
 
 # Installation via Docker
 
+Start by cloning the project with
+
+```
+git clone https://github.com/elarmust/PHP-Server-Framework.git
+```
+
 Copy docker-examples to docker and modify the docker-compose.yml according to your needs.
 ```
 cp docker-examples/* docker/
@@ -36,6 +42,11 @@ docker compose up -d
 docker attach framework-framework-1
 migrate run up all
 ```
+
+```
+docker attach framework-framework-1
+```
+Can be used to access the built-in CLI tool.
 
 # Contributing
 If you'd like to contribute, you can do the following:
