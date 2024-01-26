@@ -43,10 +43,10 @@ docker attach framework-framework-1
 migrate run up all
 ```
 
+You can access the built-in CLI tool with
 ```
 docker attach framework-framework-1
 ```
-Can be used to access the built-in CLI tool.
 
 # Contributing
 If you'd like to contribute, you can do the following:
