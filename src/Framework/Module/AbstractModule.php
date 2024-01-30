@@ -52,16 +52,6 @@ abstract class AbstractModule implements ModuleInterface {
     }
 
     /**
-     * Custom constructor for module.
-     * This method will be called when module is loaded.
-     * This should contain code needed to set up module functionalities,
-     * similar to a regular constructor.
-     *
-     * @return void
-     */
-    abstract public function _construct();
-
-    /**
      * This method will be called when module is loaded.
      * This should contain code needed to set up module functionalities.
      */

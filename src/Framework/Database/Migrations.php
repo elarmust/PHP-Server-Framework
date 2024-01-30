@@ -123,8 +123,7 @@ class Migrations {
                 try {
                     $migration->up($database);
                 } catch (Throwable $e) {
-                    $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
-                    $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                    $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
                 }
 
                 $database->insert('migrations', ['migration' => $migration::class, 'version' => $migration->version()]);
@@ -138,8 +137,7 @@ class Migrations {
             try {
                 $migration->down($database);
             } catch (Throwable $e) {
-                $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
-                $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
             }
 
             $database->delete('migrations', ['migration' => $migration::class, 'version' => $migration->version()]);

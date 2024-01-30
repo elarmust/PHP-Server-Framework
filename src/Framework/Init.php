@@ -17,9 +17,21 @@ use Framework\Cli\Commands\Stop;
 use Framework\Cli\HttpStart;
 use Framework\Cron\HttpStart as CronStart;
 use Framework\Event\Events\HttpStartEvent;
-use Framework\Http\Route;
 use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Http\Session\SessionMiddleware;
+use Framework\Http\Route;
+use Framework\Model\EventListeners\ModelCreate;
+use Framework\Model\EventListeners\ModelDelete;
+use Framework\Model\EventListeners\ModelLoad;
+use Framework\Model\EventListeners\ModelRestore;
+use Framework\Model\EventListeners\ModelSave;
+use Framework\Model\EventListeners\ModelSet;
+use Framework\Model\Events\ModelRestoreEvent;
+use Framework\Model\Events\ModelDeleteEvent;
+use Framework\Model\Events\ModelSaveEvent;
+use Framework\Model\Events\ModelSetEvent;
+use Framework\Model\Events\ModelLoadEvent;
+use Framework\Model\Events\ModelCreateEvent;
 use Framework\View\View;
 use OpenSwoole\Event;
 
@@ -63,6 +75,13 @@ class Init {
         // Register built in event listeners.
         $this->framework->getEventListenerProvider()->registerEventListener(HttpStartEvent::class, $classContainer->get(HttpStart::class, useCache: false));
         $this->framework->getEventListenerProvider()->registerEventListener(HttpStartEvent::class, $classContainer->get(CronStart::class, useCache: false));
+
+        $this->framework->getEventListenerProvider()->registerEventListener(ModelCreateEvent::class, $classContainer->get(ModelCreate::class, useCache: false));
+        $this->framework->getEventListenerProvider()->registerEventListener(ModelLoadEvent::class, $classContainer->get(ModelLoad::class, useCache: false));
+        $this->framework->getEventListenerProvider()->registerEventListener(ModelSetEvent::class, $classContainer->get(ModelSet::class, useCache: false));
+        $this->framework->getEventListenerProvider()->registerEventListener(ModelSaveEvent::class, $classContainer->get(ModelSave::class, useCache: false));
+        $this->framework->getEventListenerProvider()->registerEventListener(ModelDeleteEvent::class, $classContainer->get(ModelDelete::class, useCache: false));
+        $this->framework->getEventListenerProvider()->registerEventListener(ModelRestoreEvent::class, $classContainer->get(ModelRestore::class, useCache: false));
     }
 
     /**

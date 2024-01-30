@@ -62,8 +62,7 @@ class HttpRouter {
                 $requestHandler = $this->classContainer->get($route->getRequestHandler(), [$route], useCache: false);
                 $response = $requestHandler->handle($request);
             } catch (Throwable $e) {
-                $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
-                $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
             }
         }
 

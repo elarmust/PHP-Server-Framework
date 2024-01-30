@@ -58,7 +58,10 @@ class ModuleRegistry {
                         $newModule = $this->framework->getClassContainer()->get($definedClassName, [$this->framework, $moduleName, $modulePath]);
 
                         // Call custom constructor
-                        $newModule->_construct(...$this->framework->getClassContainer()->prepareFunctionArguments($definedClassName, '_construct'));
+                        if ($reflection->hasMethod('_construct')) {
+                            $newModule->_construct(...$this->framework->getClassContainer()->prepareFunctionArguments($definedClassName, '_construct'));
+                        }
+        
                         $modulesFound[$newModule->getName()] = $newModule;
                         $graph[$newModule->getName()] = [$newModule->loadBefore(), $newModule->loadAfter()];
                     } catch (Throwable $e) {

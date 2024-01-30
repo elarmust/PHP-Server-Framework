@@ -47,8 +47,7 @@ class CronManager {
             try {
                 $cronJob->run();
             } catch (Throwable $e) {
-                $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
-                $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
             }
 
             if ($insertId) {

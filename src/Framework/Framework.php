@@ -9,7 +9,10 @@
 
 namespace Framework;
 
+use Framework\Exception\ExceptionHandlerInterface;
 use Framework\Logger\LogAdapters\DefaultLogAdapter;
+use Framework\Exception\ErrorHandler;
+use Framework\Exception\ExceptionHandler;
 use Framework\Event\Events\WebSocketCloseEvent;
 use Framework\Event\Events\WebSocketOpenEvent;
 use Framework\Configuration\Configuration;
@@ -28,6 +31,7 @@ use Framework\Cron\CronManager;
 use Framework\Http\HttpRouter;
 use Framework\Logger\Logger;
 use Framework\Cli\Cli;
+use Framework\Exception\ErrorHandlerInterface;
 use Framework\Init;
 use OpenSwoole\Core\Psr\ServerRequest;
 use OpenSwoole\WebSocket\Server;
@@ -50,10 +54,12 @@ class Framework {
     private HttpRouter $router;
     private Logger $logger;
     private Server $server;
-    private EventDispatcher $EventDispatcher;
+    private EventDispatcher $eventDispatcher;
     private WebSocketRegistry $webSocketRegistry;
     private Database $database;
     private Init $init;
+    private ExceptionHandlerInterface $exceptionHandler;
+    private ErrorHandlerInterface $errorHandler;
     private bool $maintenance = false;
     private bool $ssl = false;
     private float $startTime;
@@ -77,6 +83,9 @@ class Framework {
         $this->logger = $this->classContainer->get(Logger::class, [$this->classContainer->get(DefaultLogAdapter::class)]);
         $this->logger->log(LogLevel::INFO, 'Starting Framework server...', identifier: 'framework');
 
+        // Set error and exception handlers.
+        $this->addExceptionHandler($this->classContainer->get(ExceptionHandler::class));
+        $this->addErrorHandler($this->classContainer->get(ErrorHandler::class));
 
         $this->logger->log(LogLevel::INFO, 'Loading configuration...', identifier: 'framework');
         $this->configuration = $this->classContainer->get(Configuration::class);
@@ -86,9 +95,10 @@ class Framework {
             $this->configuration->loadConfiguration(BASE_PATH . '/config_test.json', 'json');
         }
 
-        $errorReporting = (bool) $this->configuration->getConfig('displayPHPErrors') ?: true;
-        $this->logger->log(LogLevel::INFO, 'PHP error reporting: ' . ($errorReporting ? 'true' : 'false'), identifier: 'framework');
-        ini_set('display_errors', $errorReporting);
+        error_reporting(-1);
+        $displayErrors = (bool) $this->configuration->getConfig('displayPHPErrors') ?: true;
+        $this->logger->log(LogLevel::INFO, 'PHP error displaying: ' . ($displayErrors ? 'true' : 'false'), identifier: 'framework');
+        ini_set('display_errors', $displayErrors);
         $timeZone = $this->configuration->getConfig('defaultTimeZone') ?: 'UTC';
         $this->logger->log(LogLevel::INFO, 'Default timezone: ' . $timeZone, identifier: 'framework');
         date_default_timezone_set($timeZone);
@@ -115,7 +125,7 @@ class Framework {
 
 
         $this->logger->log(LogLevel::INFO, 'Initializing event dispatcher...', identifier: 'framework');
-        $this->EventDispatcher = $this->classContainer->get(EventDispatcher::class, [$this->classContainer->get(EventListenerProvider::class)]);
+        $this->eventDispatcher = $this->classContainer->get(EventDispatcher::class, [$this->classContainer->get(EventListenerProvider::class)]);
 
 
         $this->logger->log(LogLevel::INFO, 'Initializing HTTP router...', identifier: 'framework');
@@ -126,7 +136,6 @@ class Framework {
             $this->logger->log(LogLevel::INFO, 'Initializing websocket...', identifier: 'framework');
             $this->webSocketRegistry = $this->classContainer->get(WebSocketRegistry::class);
         }
-
 
         $this->logger->log(LogLevel::INFO, 'Initializing module registry...', identifier: 'framework');
         $this->moduleRegistry = $this->classContainer->get(ModuleRegistry::class);
@@ -142,8 +151,7 @@ class Framework {
                 try {
                     $this->moduleRegistry->loadModule($module);
                 } catch (Throwable $e) {
-                    $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
-                    $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                    $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
                 }
             }
         });
@@ -161,7 +169,7 @@ class Framework {
         });
 
         $this->server->on('open', function (Server $server, Request $request) {
-            $event = $this->EventDispatcher->dispatch(new WebSocketOpenEvent($server, $request));
+            $event = $this->eventDispatcher->dispatch(new WebSocketOpenEvent($server, $request));
             if ($event->isPropagationStopped()) {
                 $server->close($request->fd);
                 return;
@@ -176,11 +184,11 @@ class Framework {
         });
 
         $this->server->on('close', function (Server $server, int $fd) {
-            $this->EventDispatcher->dispatch(new WebSocketCloseEvent($server, $fd));
+            $this->eventDispatcher->dispatch(new WebSocketCloseEvent($server, $fd));
         });
 
         $this->server->on('Start', function () {
-            $this->EventDispatcher->dispatch(new HttpStartEvent($this));
+            $this->eventDispatcher->dispatch(new HttpStartEvent($this));
             $this->logger->log(LogLevel::INFO, 'Framework server is ready. Listening on: ' . $this->ip . ' ' . $this->port . ', Load time: ' . round(microtime(true) - $this->startTime, 2) . 's', identifier: 'framework');
         });
 
@@ -242,6 +250,26 @@ class Framework {
         $this->server->shutdown();
     }
 
+    public function addExceptionHandler(ExceptionHandlerInterface $exceptionHandler): void {
+        $this->exceptionHandler = $exceptionHandler;
+
+        set_exception_handler([$this->exceptionHandler, 'handle']);
+    }
+
+    public function getExcetpionHandler(): ExceptionHandlerInterface {
+        return $this->exceptionHandler;
+    }
+
+    public function addErrorHandler(ErrorHandlerInterface $errorHandler): void {
+        $this->errorHandler = $errorHandler;
+
+        set_error_handler([$this->errorHandler, 'handle']);
+    }
+
+    public function getErrorHandler(): ErrorHandlerInterface {
+        return $this->errorHandler;
+    }
+
     public function getServer(): Server {
         return $this->server;
     }
@@ -255,7 +283,7 @@ class Framework {
     }
 
     public function getEventDispatcher(): EventDispatcherInterface {
-        return $this->EventDispatcher;
+        return $this->eventDispatcher;
     }
 
     public function getEventListenerProvider(): EventListenerProvider {
