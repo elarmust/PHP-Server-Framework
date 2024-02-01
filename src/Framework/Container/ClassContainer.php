@@ -19,6 +19,7 @@ class ClassContainer implements ContainerInterface {
 
     /**
      * Get and instantiate classes
+     * Returns a reference to the object instance.
      *
      * @param string $className Class path.
      * @param array $args Parameters to pass to the class.

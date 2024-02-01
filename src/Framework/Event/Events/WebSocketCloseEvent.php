@@ -6,17 +6,17 @@
 
 namespace Framework\Event\Events;
 
-use OpenSwoole\WebSocket\Server;
+use Framework\Framework;
 use Psr\EventDispatcher\StoppableEventInterface;
 
 class WebSocketCloseEvent implements StoppableEventInterface {
     private bool $stopped = false;
 
-    public function __construct(private Server $server, private int $connectionId) {
+    public function __construct(private Framework $framework, private int $connectionId) {
     }
 
-    public function getServer(): Server {
-        return $this->server;
+    public function getServer(): Framework {
+        return $this->framework;
     }
 
     public function getConnectionId(): int {

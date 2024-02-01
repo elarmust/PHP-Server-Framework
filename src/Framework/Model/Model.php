@@ -12,9 +12,9 @@ use Framework\Model\Exception\ModelException;
 use Framework\Model\Events\ModelRestoreEvent;
 use Framework\Model\Events\ModelCreateEvent;
 use Framework\Model\Events\ModelDeleteEvent;
-use Framework\Model\Events\ModelSetEvent;
 use Framework\Model\Events\ModelLoadEvent;
 use Framework\Model\Events\ModelSaveEvent;
+use Framework\Model\Events\ModelSetEvent;
 use Framework\Event\EventDispatcher;
 use Framework\Database\Database;
 use Framework\Logger\Logger;
@@ -67,13 +67,13 @@ abstract class Model implements ModelInterface {
      * @return ModelInterface Newly created model instance.
      */
     public function create(array $data = []): ModelInterface {
-        $modelInstance = clone $this;
+        $model = clone $this;
 
         // Set the data on the model.
-        $modelInstance->data = $modelInstance->eventDispatcher->dispatch(new ModelSetEvent($modelInstance, $data))->getData();
+        $model->data = $model->eventDispatcher->dispatch(new ModelSetEvent($model, $data))->getData();
 
         // Create the model.
-        return $modelInstance->eventDispatcher->dispatch(new ModelCreateEvent($modelInstance, $modelInstance->getData()))->getModel();
+        return $model->eventDispatcher->dispatch(new ModelCreateEvent($model, $model->getData()))->getModel();
     }
 
     /**
@@ -316,7 +316,7 @@ abstract class Model implements ModelInterface {
      * @return string Associated DB table name.
      */
     public function getTableName(): string {
-        $className = substr(strrchr(get_called_class(), '\\'), 1);
+        $className = strtolower(substr(strrchr(get_called_class(), '\\'), 1));
 
         return strtolower(($this->tableName ?? 'models_' . $className));
     }

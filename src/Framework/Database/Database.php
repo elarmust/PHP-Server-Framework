@@ -186,9 +186,9 @@ class Database {
             }
         } catch (Throwable $e) {
             $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
+        } finally {
+            $this->pool->put($pdo);
         }
-
-        $this->pool->put($pdo);
 
         return $return;
     }

@@ -23,16 +23,6 @@ interface ModuleInterface {
     );
 
     /**
-     * Load the module.
-     */
-    public function load();
-
-    /**
-     * Unload the module.
-     */
-    public function unload();
-
-    /**
      * Get the Framework instance.
      *
      * @return Framework Framework instance.

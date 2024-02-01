@@ -57,11 +57,6 @@ class ModuleRegistry {
                         // Create new module instance
                         $newModule = $this->framework->getClassContainer()->get($definedClassName, [$this->framework, $moduleName, $modulePath]);
 
-                        // Call custom constructor
-                        if ($reflection->hasMethod('_construct')) {
-                            $newModule->_construct(...$this->framework->getClassContainer()->prepareFunctionArguments($definedClassName, '_construct'));
-                        }
-        
                         $modulesFound[$newModule->getName()] = $newModule;
                         $graph[$newModule->getName()] = [$newModule->loadBefore(), $newModule->loadAfter()];
                     } catch (Throwable $e) {
@@ -77,15 +72,42 @@ class ModuleRegistry {
         }
     }
 
-    public function loadModule(ModuleInterface $module): ModuleInterface {
-        $module->load();
+    public function loadModule(Framework $framework, ModuleInterface $module): ModuleInterface {
+        if (method_exists($module::class, 'onLoad')) {
+            $module->onLoad(...$this->framework->getClassContainer()->prepareFunctionArguments($module::class, 'onLoad'));
+        }
+
+        if ($framework->isTaskWorker()){
+            if (method_exists($module::class, 'onTaskWorkerStart')) {
+                $module->onTaskWorkerStart(...$this->framework->getClassContainer()->prepareFunctionArguments($module::class, 'onTaskWorkerStart'));
+            }
+        } else {
+            if (method_exists($module::class, 'onWorkerStart')) {
+                $module->onWorkerStart(...$this->framework->getClassContainer()->prepareFunctionArguments($module::class, 'onWorkerStart'));
+            }
+        }
+
         $this->loadedModules[$module->getName()] = $module;
         return $module;
     }
 
-    public function unloadModule(ModuleInterface $module): void {
-        $module->unload();
+    public function unloadModule(Framework $framework, ModuleInterface $module): ModuleInterface {
+        if (method_exists($module::class, 'onUnload')) {
+            $module->onUnload(...$this->framework->getClassContainer()->prepareFunctionArguments($module::class, 'onUnload'));
+        }
+
+        if ($framework->isTaskWorker()){
+            if (method_exists($module::class, 'onTaskWorkerStop')) {
+                $module->onTaskWorkerStop(...$this->framework->getClassContainer()->prepareFunctionArguments($module::class, 'onTaskWorkerStop'));
+            }
+        } else {
+            if (method_exists($module::class, 'onWorkerStop')) {
+                $module->onWorkerStop(...$this->framework->getClassContainer()->prepareFunctionArguments($module::class, 'onWorkerStop'));
+            }
+        }
+
         unset($this->loadedModules[$module->getName()]);
+        return $module;
     }
 
     public function getModules(): array {

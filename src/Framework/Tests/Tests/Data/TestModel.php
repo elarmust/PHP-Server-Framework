@@ -2,13 +2,11 @@
 
 namespace Framework\Tests\Tests\Data;
 
-use Framework\Event\EventDispatcher;
-use Framework\Database\Database;
-use Framework\Logger\Logger;
 use Framework\Model\Model;
+use Framework\Container\ClassContainer;
 
 class TestModel extends Model {
-    public function __construct (Database $database, Logger $logger, EventDispatcher $eventDispatcher) {
-        parent::__construct($database, $logger, $eventDispatcher);
+    public function __construct (ClassContainer $classContainer) {
+        parent::__construct(...$classContainer->prepareFunctionArguments(parent::class));
     }
 }

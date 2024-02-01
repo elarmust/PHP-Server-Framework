@@ -12,13 +12,22 @@ use PHPUnit\TextUI\TestRunner;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\TestSuite;
 use Framework\Cli\CommandInterface;
+use Framework\Framework;
 use Framework\Module\ModuleRegistry;
 
 class Test implements CommandInterface {
-    public function __construct(private ModuleRegistry $moduleRegistry, private Logger $logger) {
+    public function __construct(
+        private ModuleRegistry $moduleRegistry,
+        private Logger $logger,
+        private Framework $framework) {
     }
 
     public function run(array $commandArgs): null|string {
+        if (!$this->framework->isTestingEnvironment()) {
+            $this->logger->log(LogLevel::WARNING, 'Tests can only be run in test invironment! You can enable it in config.json.', identifier: 'framework');
+            return null;
+        }
+
         foreach ($this->getTests() as $module) {
             $testRunner = new TestRunner();
             $suite = new TestSuite();

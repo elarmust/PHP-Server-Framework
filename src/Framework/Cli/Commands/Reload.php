@@ -10,17 +10,17 @@ use Framework\Framework;
 use Framework\Container\ClassContainer;
 use Framework\Cli\CommandInterface;
 
-class Stop implements CommandInterface {
+class Reload implements CommandInterface {
     public function __construct(private ClassContainer $classContainer) {
     }
 
     public function run(array $commandArgs): string {
         $server = $this->classContainer->get(Framework::class);
-        $server->shutdown();
+        $server->reload();
         return '';
     }
 
     public function getDescription(?array $commandArgs = null): string {
-        return 'Stop the server process.';
+        return 'Reload server workers.';
     }
 }

@@ -52,18 +52,6 @@ abstract class AbstractModule implements ModuleInterface {
     }
 
     /**
-     * This method will be called when module is loaded.
-     * This should contain code needed to set up module functionalities.
-     */
-    abstract public function load();
-
-    /**
-     * This method will be called when module is unloaded.
-     * This should contain code needed to disable module functionalities.
-     */
-    abstract public function unload();
-
-    /**
      * Returns the framework instance associated with this module.
      *
      * @return Framework The framework instance.

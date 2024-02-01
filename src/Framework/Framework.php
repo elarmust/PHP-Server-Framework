@@ -9,17 +9,18 @@
 
 namespace Framework;
 
-use Framework\Exception\ExceptionHandlerInterface;
 use Framework\Logger\LogAdapters\DefaultLogAdapter;
-use Framework\Exception\ErrorHandler;
-use Framework\Exception\ExceptionHandler;
+use Framework\Exception\ExceptionHandlerInterface;
 use Framework\Event\Events\WebSocketCloseEvent;
+use Framework\Exception\ErrorHandlerInterface;
 use Framework\Event\Events\WebSocketOpenEvent;
+use Framework\Event\Events\ServerReadyEvent;
 use Framework\Configuration\Configuration;
 use Framework\WebSocket\WebSocketRegistry;
-use Framework\Event\Events\HttpStartEvent;
 use Framework\Event\EventListenerProvider;
+use Framework\Exception\ExceptionHandler;
 use Framework\Container\ClassContainer;
+use Framework\Exception\ErrorHandler;
 use Framework\Module\ModuleRegistry;
 use Framework\Event\EventDispatcher;
 use Framework\Database\Migrations;
@@ -31,78 +32,95 @@ use Framework\Cron\CronManager;
 use Framework\Http\HttpRouter;
 use Framework\Logger\Logger;
 use Framework\Cli\Cli;
-use Framework\Exception\ErrorHandlerInterface;
 use Framework\Init;
 use OpenSwoole\Core\Psr\ServerRequest;
 use OpenSwoole\WebSocket\Server;
 use OpenSwoole\WebSocket\Frame;
 use OpenSwoole\Http\Response;
 use OpenSwoole\Http\Request;
+use OpenSwoole\Server\Task;
 use OpenSwoole\Coroutine;
 use OpenSwoole\Constant;
 use OpenSwoole\Runtime;
+use OpenSwoole\Atomic;
 use OpenSwoole\Timer;
-use OpenSwoole\Util;
+use OpenSwoole\Lock;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LogLevel;
 use Throwable;
 
-class Framework {
+class Framework extends Server {
+    private readonly Atomic $workersStarted;
+    private readonly Lock $lock;
     private ModuleRegistry $moduleRegistry;
     private ClassContainer $classContainer;
     private Configuration $configuration;
     private HttpRouter $router;
     private Logger $logger;
-    private Server $server;
     private EventDispatcher $eventDispatcher;
     private WebSocketRegistry $webSocketRegistry;
     private Database $database;
     private Init $init;
     private ExceptionHandlerInterface $exceptionHandler;
     private ErrorHandlerInterface $errorHandler;
+    private bool $isTestingEnvironment = false;
     private bool $maintenance = false;
     private bool $ssl = false;
     private float $startTime;
     private string $ip;
-    private int $port;
 
     public function __construct() {
         define('FRAMEWORK', $this);
-        $serverOptions = [
-            'enable_coroutine' => true,
-            'pid_file' => BASE_PATH . '/var/server.pid',
-            'worker_num' => 2 * Util::getCPUNum(),
-            'max_coroutine' => 3000,
-            'open_http2_protocol' => true
-        ];
+        Coroutine::set(['hook_flags' => Runtime::HOOK_ALL]);
+        $this->workersStarted = new Atomic();
+        $this->lock = new Lock();
 
         $this->startTime = microtime(true);
         $this->classContainer = new ClassContainer();
         $this->classContainer->set($this);
         $this->classContainer->set($this->classContainer);
         $this->logger = $this->classContainer->get(Logger::class, [$this->classContainer->get(DefaultLogAdapter::class)]);
-        $this->logger->log(LogLevel::INFO, 'Starting Framework server...', identifier: 'framework');
+        $this->logger->info('Starting Framework server...', identifier: 'framework');
 
         // Set error and exception handlers.
         $this->addExceptionHandler($this->classContainer->get(ExceptionHandler::class));
         $this->addErrorHandler($this->classContainer->get(ErrorHandler::class));
 
-        $this->logger->log(LogLevel::INFO, 'Loading configuration...', identifier: 'framework');
+        $this->logger->info('Loading configuration...', identifier: 'framework');
         $this->configuration = $this->classContainer->get(Configuration::class);
         $this->configuration->loadConfiguration(BASE_PATH . '/config.json', 'json');
         if ($this->configuration->getConfig('testing')) {
+            $this->isTestingEnvironment = true;
             $this->logger->log(LogLevel::NOTICE, 'Using test configuration.', identifier: 'framework');
             $this->configuration->loadConfiguration(BASE_PATH . '/config_test.json', 'json');
         }
 
         error_reporting(-1);
         $displayErrors = (bool) $this->configuration->getConfig('displayPHPErrors') ?: true;
-        $this->logger->log(LogLevel::INFO, 'PHP error displaying: ' . ($displayErrors ? 'true' : 'false'), identifier: 'framework');
+        $this->logger->info('PHP error displaying: ' . ($displayErrors ? 'true' : 'false'), identifier: 'framework');
         ini_set('display_errors', $displayErrors);
         $timeZone = $this->configuration->getConfig('defaultTimeZone') ?: 'UTC';
-        $this->logger->log(LogLevel::INFO, 'Default timezone: ' . $timeZone, identifier: 'framework');
+        $this->logger->info('Default timezone: ' . $timeZone, identifier: 'framework');
         date_default_timezone_set($timeZone);
 
+        $this->logger->info('Initializing event dispatcher...', identifier: 'framework');
+        $this->eventDispatcher = $this->classContainer->get(EventDispatcher::class, [$this->classContainer->get(EventListenerProvider::class)]);
+
+
+        $this->logger->info('Initializing HTTP router...', identifier: 'framework');
+        $this->router = $this->classContainer->get(HttpRouter::class);
+
+
+        if ($this->configuration->getConfig('websocket.enabled') === true) {
+            $this->logger->info('Initializing websocket...', identifier: 'framework');
+            $this->webSocketRegistry = $this->classContainer->get(WebSocketRegistry::class);
+        }
+
+        $this->logger->info('Initializing module registry...', identifier: 'framework');
+        $this->moduleRegistry = $this->classContainer->get(ModuleRegistry::class);
+
+
+        $this->logger->info('Preparing HTTP server...', identifier: 'framework');
         $this->ip = $this->configuration->getConfig('ip');
         $this->port = $this->configuration->getConfig('port');
 
@@ -113,86 +131,157 @@ class Framework {
             $swooleSock = Constant::SOCK_TCP;
         }
 
-        if ($this->ssl) {
-            $serverOptions['ssl_cert_file'] = $this->configuration->getConfig('cert.cert');
-            $serverOptions['ssl_key_file'] = $this->configuration->getConfig('cert.key');
-        }
+        $workerNum = $this->configuration->getConfig('workerNum') ?: 8;
+        $workerNum = is_int($workerNum) && $workerNum > 0 ? $workerNum : 8;
 
-        $this->logger->log(LogLevel::INFO, 'Initializing database...', identifier: 'framework');
-        $databaseInfo = $this->configuration->getConfig('databases.main');
-        $databaseParams = $this->classContainer->prepareFunctionArguments(Database::class, parameters: [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password'], $databaseInfo['charset'], 100]);
-        $this->database = $this->classContainer->get(Database::class, $databaseParams);
+        $taskWorkerNum = $this->configuration->getConfig('taskWorkerNum') ?: 1;
+        $taskWorkerNum = is_int($taskWorkerNum) && $taskWorkerNum > 0 ? $taskWorkerNum : 1;
 
+        $coroutineNum = $this->configuration->getConfig('maxCoroutines') ?: 4096;
+        $coroutineNum = is_int($coroutineNum) && $coroutineNum > 0 ? $coroutineNum : 4096;
 
-        $this->logger->log(LogLevel::INFO, 'Initializing event dispatcher...', identifier: 'framework');
-        $this->eventDispatcher = $this->classContainer->get(EventDispatcher::class, [$this->classContainer->get(EventListenerProvider::class)]);
+        $serverOptions = [
+            'enable_coroutine' => true,
+            'task_enable_coroutine' => true,
+            'pid_file' => BASE_PATH . '/var/server.pid',
+            'worker_num' => $workerNum,
+            'task_worker_num' => $taskWorkerNum,
+            'max_wait_time' => 10,
+            'max_coroutine' => $coroutineNum,
+            'open_http2_protocol' => true,
+            'ssl_cert_file' => $this->configuration->getConfig('cert.cert') ?: '',
+            'ssl_key_file' => $this->configuration->getConfig('cert.key') ?: ''
+        ];
+        parent::__construct(...$this->classContainer->prepareFunctionArguments(parent::class, parameters: [$this->ip, $this->port, Server::POOL_MODE, $swooleSock]));
+        $this->set($serverOptions);
 
+        $this->on('workerStart', $this->onWorkerStart(...));
+        $this->on('request', $this->onRequest(...));
+        $this->on('message', $this->onMessage(...));
+        $this->on('open', $this->onConnectionOpen(...));
+        $this->on('close', $this->onConnectionClose(...));
+        $this->on('start', $this->onServerStart(...));
+        $this->on('workerStart', $this->onWorkerStart(...));
+        $this->on('workerStop', $this->onWorkerStop(...));
+        $this->on('workerExit', $this->onWorkerExit(...));
+        $this->on('task', $this->onTask(...));
+        $this->start();
+    }
 
-        $this->logger->log(LogLevel::INFO, 'Initializing HTTP router...', identifier: 'framework');
-        $this->router = $this->classContainer->get(HttpRouter::class);
+    private function onWorkerStart(Framework $framework, int $workerId): void {
+        // Start workers one by one.
+        if ($this->lock->lock()) {
+            $workerType = $framework->isTaskWorker() ? 'task ' : '';
+            $this->logger->info('Starting ' . $workerType . 'worker ' . $workerId . '.', identifier: 'framework');
+            $this->logger->info('Initializing database for ' . $workerType . 'worker ' . $workerId, identifier: 'framework');
+            $databaseInfo = $this->configuration->getConfig('databases.main');
+            $this->database = $this->classContainer->get(Database::class, $this->classContainer->prepareFunctionArguments(Database::class, parameters: [
+                $databaseInfo['host'],
+                $databaseInfo['port'],
+                $databaseInfo['database'],
+                $databaseInfo['username'],
+                $databaseInfo['password'],
+                $databaseInfo['charset'],
+                $databaseInfo['poolSize']
+            ]));
 
-
-        if (($this->configuration->getConfig('websocket.enabled') ?? false) == true) {
-            $this->logger->log(LogLevel::INFO, 'Initializing websocket...', identifier: 'framework');
-            $this->webSocketRegistry = $this->classContainer->get(WebSocketRegistry::class);
-        }
-
-        $this->logger->log(LogLevel::INFO, 'Initializing module registry...', identifier: 'framework');
-        $this->moduleRegistry = $this->classContainer->get(ModuleRegistry::class);
-
-        Coroutine::set(['hook_flags' => Runtime::HOOK_ALL]);
-        Coroutine::run(function () {
+            // Initialize built in features.
             $this->init = new Init($this);
-            $this->init->start();
+            $this->init->onLoad();
+            if ($this->isTaskWorker()) {
+                $this->init->onTaskWorkerStart();
+            } else {
+                $this->init->onWorkerStart();
+            }
 
             // Load modules.
             foreach ($this->moduleRegistry->getAllModules() as $module) {
-                $this->logger->log(LogLevel::INFO, 'Loading module \'' . $module->getName() . '\'...', identifier: 'framework');
+                $this->logger->info('Loading module \'' . $module->getName() . '\'...', identifier: 'framework');
                 try {
-                    $this->moduleRegistry->loadModule($module);
+                    $this->moduleRegistry->loadModule($this, $module);
                 } catch (Throwable $e) {
                     $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
                 }
             }
-        });
 
-        // Reset database object.
-        $this->classContainer->set($this->classContainer->get(Database::class, $databaseParams, useCache: false));
-
-
-        $this->logger->log(LogLevel::INFO, 'Starting HTTP server...', identifier: 'framework');
-        $this->server = $this->classContainer->get(Server::class, [$this->ip, $this->port, Server::POOL_MODE, $swooleSock]);
-        $this->server->set($serverOptions);
-
-        $this->server->on('request', function (Request $request, Response $response) {
-            \OpenSwoole\Core\Psr\Response::emit($response, $this->router->process(ServerRequest::from($request)));
-        });
-
-        $this->server->on('open', function (Server $server, Request $request) {
-            $event = $this->eventDispatcher->dispatch(new WebSocketOpenEvent($server, $request));
-            if ($event->isPropagationStopped()) {
-                $server->close($request->fd);
-                return;
+            $this->logger->info(ucfirst($workerType . 'worker ') . $workerId . ' is ready.', identifier: 'framework');
+            $this->workersStarted->add(1);
+            if ($this->workersStarted->get() === $this->setting['worker_num'] + $this->setting['task_worker_num']) {
+                $this->eventDispatcher->dispatch(new ServerReadyEvent($this));
+                $this->logger->info('Framework server is ready. Listening on: ' . $this->ip . ' ' . $this->port . ', Load time: ' . round(microtime(true) - $this->startTime, 2) . 's', identifier: 'framework');
             }
-        });
 
-        $this->server->on('message', function (Server $server, Frame $frame) {
-            if (($this->configuration->getConfig('websocket.enabled') ?? false) == true) {
-                $frame = $this->webSocketRegistry->getMessageHandler()->handle($server, $frame);
-                $server->push($frame->fd, $frame->data, $frame->opcode);
+            $this->lock->unlock();
+        }
+    }
+
+    private function onWorkerStop(Framework $framework, int $workerId): void {
+        // Stop workers one by one.
+        if ($this->lock->lock()) {
+            $this->logger->info('Stopping worker ' . $workerId . '.', identifier: 'framework');
+
+            // Unload built in features.
+            $this->init->onUnload();
+            if ($this->isTaskWorker()) {
+                $this->init->onTaskWorkerStop();
+            } else {
+                $this->init->onWorkerStop();
             }
-        });
 
-        $this->server->on('close', function (Server $server, int $fd) {
-            $this->eventDispatcher->dispatch(new WebSocketCloseEvent($server, $fd));
-        });
+            // Unload modules
+            foreach ($this->moduleRegistry->getAllModules() as $module) {
+                $this->logger->info('Unloading module \'' . $module->getName() . '\'...', identifier: 'framework');
+                try {
+                    $this->moduleRegistry->unloadModule($this, $module);
+                } catch (Throwable $e) {
+                    $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
+                }
+            }
 
-        $this->server->on('Start', function () {
-            $this->eventDispatcher->dispatch(new HttpStartEvent($this));
-            $this->logger->log(LogLevel::INFO, 'Framework server is ready. Listening on: ' . $this->ip . ' ' . $this->port . ', Load time: ' . round(microtime(true) - $this->startTime, 2) . 's', identifier: 'framework');
-        });
+            $this->logger->info('Worker ' . $workerId . ' has stopped.', identifier: 'framework');
+            $this->workersStarted->sub(1);
+            if ($this->workersStarted->get() === 0) {
+                $this->logger->info('Server stopped!', identifier: 'framework');
+            }
 
-        $this->server->start();
+            $this->lock->unlock();
+        }
+    }
+
+    private function onWorkerExit(Framework $framework, int $workerId): void {
+        // Clear all timers.
+        Timer::clearAll();
+    }
+
+    private function onServerStart(): void {
+        $this->logger->info('Starting server workers...', identifier: 'framework');
+    }
+
+    private function onMessage(Framework $framework, Frame $frame): void {
+        if ($this->configuration->getConfig('websocket.enabled') === true) {
+            $frame = $this->webSocketRegistry->getMessageHandler()->handle($framework, $frame);
+            $framework->push($frame->fd, $frame->data, $frame->opcode);
+        }
+    }
+
+    private function onConnectionOpen(Framework $framework, Request $request): void {
+        $event = $this->eventDispatcher->dispatch(new WebSocketOpenEvent($framework, $request));
+        if ($event->isPropagationStopped()) {
+            $framework->close($request->fd);
+            return;
+        }
+    }
+
+    private function onConnectionClose(Framework $framework, int $fd): void {
+        $this->eventDispatcher->dispatch(new WebSocketCloseEvent($framework, $fd));
+    }
+
+    private function onRequest(Request $request, Response $response): void {
+        \OpenSwoole\Core\Psr\Response::emit($response, $this->router->process(ServerRequest::from($request)));
+    }
+
+    public function onTask(Framework $framework, Task $serverTask): void {
+        //
     }
 
     /**
@@ -204,11 +293,12 @@ class Framework {
      */
     public function maintenance(bool $state): void {
         if ($state) {
-            $this->logger->log(LogLevel::INFO, 'Pausing server activities...', identifier: 'framework');
+            $this->logger->info('Pausing server activities...', identifier: 'framework');
         } else {
-            $this->logger->log(LogLevel::INFO, 'Resuming server activity...', identifier: 'framework');
+            $this->logger->info('Resuming server activity...', identifier: 'framework');
         }
 
+        // TODO: pause request and task processing
         $this->maintenance = $state;
     }
 
@@ -226,28 +316,9 @@ class Framework {
      *
      * @return void
      */
-    public function stop(): void {
-        $this->logger->log(LogLevel::INFO, 'Stopping server...', identifier: 'framework');
-
-        // Cancel all timers
-        foreach (Timer::list() as $timer) {
-            Timer::clear($timer);
-        }
-
-        // Cancel all coroutines.
-        foreach (Coroutine::list() as $cid) {
-            Coroutine::cancel($cid);
-        }
-
-        foreach (array_reverse($this->moduleRegistry->getModules()) as $module) {
-            $this->logger->log(LogLevel::INFO, 'Unloading module \'' . $module->getName() . '\'...', identifier: 'framework');
-            $this->moduleRegistry->unloadModule($module);
-        }
-
-        $this->logger->log(LogLevel::INFO, 'Server stopped!', identifier: 'framework');
-        $this->init->stop();
-
-        $this->server->shutdown();
+    public function shutdown(): bool {
+        $this->logger->info('Stopping server...', identifier: 'framework');
+        return parent::shutdown();
     }
 
     public function addExceptionHandler(ExceptionHandlerInterface $exceptionHandler): void {
@@ -266,12 +337,15 @@ class Framework {
         set_error_handler([$this->errorHandler, 'handle']);
     }
 
-    public function getErrorHandler(): ErrorHandlerInterface {
-        return $this->errorHandler;
+    public function reload(): bool {
+        $this->logger->info('Reloading server workers...', identifier: 'framework');
+        $return = parent::reload();
+        $this->logger->info('Server workers have been reloaded!', identifier: 'framework');
+        return $return;
     }
 
-    public function getServer(): Server {
-        return $this->server;
+    public function getErrorHandler(): ErrorHandlerInterface {
+        return $this->errorHandler;
     }
 
     public function getDatabase(): Database {
@@ -344,5 +418,15 @@ class Framework {
 
     public function sslEnabled(): bool {
         return $this->ssl;
+    }
+
+    public function isTaskWorker(): bool {
+        # Workers which are serving http requests have ID lower than worker_num
+        # @see https://openswoole.com/docs/modules/swoole-server-on-workerstart
+        return $this->getWorkerId() >= $this->setting['worker_num'];
+    }
+
+    public function isTestingEnvironment(): bool {
+        return $this->isTestingEnvironment;
     }
 }

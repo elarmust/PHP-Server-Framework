@@ -6,7 +6,8 @@
             "database": "root",
             "username": "root",
             "password": "root",
-            "charset": "utf8mb4"
+            "charset": "utf8mb4",
+            "poolSize": 25
         }
     },
     "port": 80,
@@ -25,6 +26,9 @@
         "seleniumUrl": "http://selenium-hub",
         "seleniumPort": 4444
     },
+    "workerNum": 8,
+    "taskWorkerNum": 1,
+    "maxCoroutines": 4096,
     "sessionExpirationSeconds": 259200,
     "hostName": "framework",
     "defaultCsrfTokenExpirationSeconds": 86400

@@ -6,18 +6,18 @@
 
 namespace Framework\Event\Events;
 
+use Framework\Framework;
 use OpenSwoole\Http\Request;
-use OpenSwoole\WebSocket\Server;
 use Psr\EventDispatcher\StoppableEventInterface;
 
 class WebSocketOpenEvent implements StoppableEventInterface {
     private bool $stopped = false;
 
-    public function __construct(private Server $server, private Request $request) {
+    public function __construct(private Framework $framework, private Request $request) {
     }
 
-    public function getServer(): Server {
-        return $this->server;
+    public function getServer(): Framework {
+        return $this->framework;
     }
 
     public function getRequest(): Request {
