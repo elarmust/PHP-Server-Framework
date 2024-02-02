@@ -14,8 +14,10 @@ class ModelLoadEvent implements StoppableEventInterface {
 
     /**
      * @param ModelInterface $model The model associated with the event.
+     * @param string|int $id The ID associated with the event.
+     * @param bool $includeArchived Whether to include archived models.
      */
-    public function __construct(private ModelInterface $model, private int $id, private bool $includeArchived) {
+    public function __construct(private ModelInterface $model, private string|int $id, private bool $includeArchived) {
     }
 
     /**
@@ -61,20 +63,20 @@ class ModelLoadEvent implements StoppableEventInterface {
     /**
      * Get the ID associated with the event.
      *
-     * @return int The ID associated with the event.
+     * @return string|int The ID associated with the event.
      */
-    public function getId(): int {
+    public function getId(): string|int {
         return $this->id;
     }
 
     /**
      * Set the ID associated with the event.
      *
-     * @param int $id The ID to set.
+     * @param string|int $id The ID to set.
      *
      * @return void
      */
-    public function setId(int $id): void {
+    public function setId(string|int $id): void {
         $this->id = $id;
     }
 

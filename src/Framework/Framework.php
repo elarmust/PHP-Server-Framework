@@ -60,7 +60,6 @@ class Framework extends Server {
     private EventDispatcher $eventDispatcher;
     private WebSocketRegistry $webSocketRegistry;
     private Database $database;
-    private Init $init;
     private ExceptionHandlerInterface $exceptionHandler;
     private ErrorHandlerInterface $errorHandler;
     private bool $isTestingEnvironment = false;
@@ -155,6 +154,19 @@ class Framework extends Server {
         parent::__construct(...$this->classContainer->prepareFunctionArguments(parent::class, parameters: [$this->ip, $this->port, Server::POOL_MODE, $swooleSock]));
         $this->set($serverOptions);
 
+        // Initialize built in features.
+        Init::beforeWorkers($this);
+
+        // Perform module initialization.
+        foreach ($this->moduleRegistry->getAllModules() as $module) {
+            $this->logger->info('Initializing module \'' . $module->getName() . '\'...', identifier: 'framework');
+            try {
+                $this->moduleRegistry->initModule($this, $module);
+            } catch (Throwable $e) {
+                $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
+            }
+        }
+
         $this->on('workerStart', $this->onWorkerStart(...));
         $this->on('request', $this->onRequest(...));
         $this->on('message', $this->onMessage(...));
@@ -174,7 +186,7 @@ class Framework extends Server {
             $workerType = $framework->isTaskWorker() ? 'task ' : '';
             $this->logger->info('Starting ' . $workerType . 'worker ' . $workerId . '.', identifier: 'framework');
             $this->logger->info('Initializing database for ' . $workerType . 'worker ' . $workerId, identifier: 'framework');
-            $databaseInfo = $this->configuration->getConfig('databases.main');
+            $databaseInfo = $this->configuration->getConfig('databases.default');
             $this->database = $this->classContainer->get(Database::class, $this->classContainer->prepareFunctionArguments(Database::class, parameters: [
                 $databaseInfo['host'],
                 $databaseInfo['port'],
@@ -185,18 +197,12 @@ class Framework extends Server {
                 $databaseInfo['poolSize']
             ]));
 
-            // Initialize built in features.
-            $this->init = new Init($this);
-            $this->init->onLoad();
-            if ($this->isTaskWorker()) {
-                $this->init->onTaskWorkerStart();
-            } else {
-                $this->init->onWorkerStart();
-            }
+            // Enable built in features.
+            Init::onWorkerStart($framework);
 
             // Load modules.
             foreach ($this->moduleRegistry->getAllModules() as $module) {
-                $this->logger->info('Loading module \'' . $module->getName() . '\'...', identifier: 'framework');
+                $this->logger->info('Enableing module \'' . $module->getName() . '\'...', identifier: 'framework');
                 try {
                     $this->moduleRegistry->loadModule($this, $module);
                 } catch (Throwable $e) {
@@ -221,16 +227,11 @@ class Framework extends Server {
             $this->logger->info('Stopping worker ' . $workerId . '.', identifier: 'framework');
 
             // Unload built in features.
-            $this->init->onUnload();
-            if ($this->isTaskWorker()) {
-                $this->init->onTaskWorkerStop();
-            } else {
-                $this->init->onWorkerStop();
-            }
+            Init::onWorkerStop($framework);
 
             // Unload modules
             foreach ($this->moduleRegistry->getAllModules() as $module) {
-                $this->logger->info('Unloading module \'' . $module->getName() . '\'...', identifier: 'framework');
+                $this->logger->info('Disableing module \'' . $module->getName() . '\'...', identifier: 'framework');
                 try {
                     $this->moduleRegistry->unloadModule($this, $module);
                 } catch (Throwable $e) {

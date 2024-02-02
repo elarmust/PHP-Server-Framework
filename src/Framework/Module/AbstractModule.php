@@ -52,6 +52,37 @@ abstract class AbstractModule implements ModuleInterface {
     }
 
     /**
+     * Initialize module before workers start.
+     * This is called only once when server starts.
+     * This should be used to initialize data shared between workers.
+     * 
+     * Not mandatory to implement.
+     *
+     * @param Framework $framework Framework instance.
+     */
+    public function beforeWorkers(Framework $framework): void {
+    }
+
+    /**
+     * Initialize module when worker starts.
+     * This is called once for every worker.
+     *
+     * @param Framework $framework Framework instance unique to the worker.
+     */
+    abstract public function onWorkerStart(Framework $framework): void;
+
+    /**
+     * Perform cleanup when regular worker stops.
+     * This is called once for every worker.
+     * 
+     * Not mandatory to implement.
+     *
+     * @param Framework $framework Framework instance unique to the worker.
+     */
+    public function onWorkerStop(Framework $framework): void {
+    }
+
+    /**
      * Returns the framework instance associated with this module.
      *
      * @return Framework The framework instance.

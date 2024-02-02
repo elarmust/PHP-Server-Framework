@@ -8,15 +8,20 @@
 
 namespace Framework\Http\Session;
 
-class Session {
-    private int $timestamp;
+use OpenSwoole\Coroutine;
 
+class Session {
     /**
      * @param string $sessionId
      * @param array $data = []
      */
-    public function __construct(private string $sessionId, private array $sessionData = []) {
-        $this->timestamp = time();
+    public function __construct(
+        private SessionManager $sessionManager,
+        private SessionModel $sessionModel,
+        private string $sessionId,
+        private array $sessionData,
+        private int $timestamp
+    ) {
     }
 
     /**
@@ -63,5 +68,21 @@ class Session {
      */
     public function setData(array $data): void {
         $this->sessionData = $data;
+    }
+
+    public function save(): void {
+        $serializedData = serialize($this->getData());
+        $this->sessionManager->getSessionTable()->set($this->getId(), [
+            'data' => $serializedData,
+            'timestamp' => $this->getTimestamp()
+        ]);
+
+        $id = $this->getId();
+        go (function() use ($serializedData, $id) {
+            $this->sessionModel->load($id)->setData([
+                'data' => $serializedData,
+                'timestamp' => $this->getTimestamp()
+            ])->save();
+        });
     }
 }

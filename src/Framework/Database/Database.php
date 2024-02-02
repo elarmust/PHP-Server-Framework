@@ -25,7 +25,7 @@ class Database {
         private string $username,
         private string $password,
         private string $charset = 'utf8mb4',
-        private int $maxPoolSize = 50
+        private int $maxPoolSize = 25
     ) {
         $mysqlConfig = new PDOConfig();
         $mysqlConfig->withHost($this->host);

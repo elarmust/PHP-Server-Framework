@@ -9,6 +9,8 @@
 namespace Framework;
 
 use Framework\Model\EventListeners\ModelRestore;
+use Framework\Http\Session\Task\SessionGCTask;
+
 use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Model\EventListeners\ModelCreate;
 use Framework\Model\EventListeners\ModelDelete;
@@ -22,6 +24,7 @@ use Framework\Model\Events\ModelCreateEvent;
 use Framework\Layout\Controllers\BasicPage;
 use Framework\Model\Events\ModelSaveEvent;
 use Framework\Model\Events\ModelLoadEvent;
+use Framework\Http\Session\SessionManager;
 use Framework\Model\Events\ModelSetEvent;
 use Framework\Database\Commands\Migrate;
 use Framework\Cli\Commands\Maintenance;
@@ -31,51 +34,62 @@ use Framework\Tests\Commands\Test;
 use Framework\Cron\Commands\Cron;
 use Framework\Cli\Commands\Stop;
 use Framework\Utils\TimeUtils;
+use Framework\Vault\Vault;
 use Framework\Http\Route;
 use Framework\View\View;
 use OpenSwoole\Event as SwooleEvent;
 use DateTime;
+use Framework\Vault\Table;
 
 class Init {
-    /**
-     * @param Framework $framework
-     */
-    public function __construct(private Framework $framework) {
+    public static function beforeWorkers(Framework $framework): void {
+        if ($framework->getConfiguration()->getConfig('session.enabled') == true) {
+            $rowCount = $framework->getConfiguration()->getConfig('sessionCacheRowCount') ?: 1024;
+            $rowCount = is_int($rowCount) && $rowCount >= 1024 ? $rowCount : 1024;
+            $dataLength = $framework->getConfiguration()->getConfig('sessionCacheDataLengthBytes') ?: 4096;
+            $dataLength = is_int($rowCount) && $rowCount >= 4096 ? $rowCount : 4096;
+            // Add session table to the vault.
+            $table = new Table('session', $rowCount);
+            $table->column('data', Table::TYPE_STRING, $dataLength);
+            $table->column('timestamp', Table::TYPE_INT, 4);
+            $table->create();
+            Vault::addTable($table);
+        }
     }
 
-    public function onLoad() {
-        $classContainer = $this->framework->getClassContainer();
-        $this->framework->getEventListenerProvider()->registerEventListener(ModelCreateEvent::class, $classContainer->get(ModelCreate::class, useCache: false));
-        $this->framework->getEventListenerProvider()->registerEventListener(ModelLoadEvent::class, $classContainer->get(ModelLoad::class, useCache: false));
-        $this->framework->getEventListenerProvider()->registerEventListener(ModelSetEvent::class, $classContainer->get(ModelSet::class, useCache: false));
-        $this->framework->getEventListenerProvider()->registerEventListener(ModelSaveEvent::class, $classContainer->get(ModelSave::class, useCache: false));
-        $this->framework->getEventListenerProvider()->registerEventListener(ModelDeleteEvent::class, $classContainer->get(ModelDelete::class, useCache: false));
-        $this->framework->getEventListenerProvider()->registerEventListener(ModelRestoreEvent::class, $classContainer->get(ModelRestore::class, useCache: false));
-    }
+    public static function onWorkerStart(Framework $framework): void {
+        $classContainer = $framework->getClassContainer();
 
-    /**
-     * Register necessary Container features.
-     *
-     * @return void
-     */
-    public function onWorkerStart() {
-        // Register / root path.
-        $route = new Route('/');
-        $route->setControllerStack([BasicPage::class]);
-        $route->addMiddlewares([SessionMiddleware::class]);
-        $this->framework->getRouteRegistry()->registerRoute($route);
+        $sessionEnabled = $framework->getConfiguration()->getConfig('session.enabled') == true;
+        // Set up session manager.
+        if ($sessionEnabled) {
+            $classContainer->get(SessionManager::class);
+        }
 
-        // Create a new default page view.
-        $view = new View();
-        $view->setView(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php');
-        $this->framework->getViewRegistry()->registerView('basicPage', $view);
-    }
+        // Register model events.
+        $framework->getEventListenerProvider()->registerEventListener(ModelCreateEvent::class, $classContainer->get(ModelCreate::class, useCache: false));
+        $framework->getEventListenerProvider()->registerEventListener(ModelLoadEvent::class, $classContainer->get(ModelLoad::class, useCache: false));
+        $framework->getEventListenerProvider()->registerEventListener(ModelSetEvent::class, $classContainer->get(ModelSet::class, useCache: false));
+        $framework->getEventListenerProvider()->registerEventListener(ModelSaveEvent::class, $classContainer->get(ModelSave::class, useCache: false));
+        $framework->getEventListenerProvider()->registerEventListener(ModelDeleteEvent::class, $classContainer->get(ModelDelete::class, useCache: false));
+        $framework->getEventListenerProvider()->registerEventListener(ModelRestoreEvent::class, $classContainer->get(ModelRestore::class, useCache: false));
 
-    public function onTaskWorkerStart() {
-        $classContainer = $this->framework->getClassContainer();
+        if (!$framework->isTaskWorker()) {
+            // Register / root path.
+            $route = new Route('/');
+            $route->setControllerStack([BasicPage::class]);
+            $route->addMiddlewares([SessionMiddleware::class]);
+            $framework->getRouteRegistry()->registerRoute($route);
+    
+            // Create a new default page view.
+            $view = new View();
+            $view->setView(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php');
+            $framework->getViewRegistry()->registerView('basicPage', $view);
+            return;
+        }
 
         // Register built in commands.
-        $cli = $this->framework->getCli();
+        $cli = $framework->getCli();
         $cli->registerCommandHandler('stop', $classContainer->get(Stop::class, useCache: false));
         $cli->registerCommandHandler('reload', $classContainer->get(Reload::class, useCache: false));
         $cli->registerCommandHandler('maintenance', $classContainer->get(Maintenance::class, useCache: false));
@@ -99,27 +113,30 @@ class Init {
         $nextMinute->modify('+1 minute');
         $nextMinute->setTime($nextMinute->format('H'), $nextMinute->format('i'), 0);
         $cronTaskDelay = $classContainer->get(CronTaskDelay::class);
-        $this->framework->getTaskScheduler()->schedule($cronTaskDelay, TimeUtils::getMillisecondsToDateTime($nextMinute));
+        $framework->getTaskScheduler()->schedule($cronTaskDelay, TimeUtils::getMillisecondsToDateTime($nextMinute));
 
-        // Register built in cron job.
-        $this->framework->getCron()->registerCronJob($classContainer->get(SessionCleanup::class, useCache: false));
+        if ($sessionEnabled) {
+            // Register built in session GC task.
+            $gcMillis = $framework->getConfiguration()->getConfig('session.sessionGCMilliSeconds') ?: 60000;
+            $gcMillis = is_int($gcMillis) && $gcMillis >= 1000 ? $gcMillis : 1000;
+
+            $framework->getTaskScheduler()->scheduleRecurring($classContainer->get(SessionGCTask::class, useCache: false), TimeUtils::getMillisecondsToDateTime($nextMinute));
+        }
     }
 
-    public function onUnload() {
-    }
+    public static function onWorkerStop(Framework $framework): void {
+        if (!$framework->isTaskWorker()) {
+            $framework->getRouteRegistry()->unregisterRoute('/');
+            $framework->getViewRegistry()->unregisterView('basicPage');
+            return;
+        }
 
-    public function onWorkerStop() {
-        $this->framework->getRouteRegistry()->unregisterRoute('/');
-        $this->framework->getViewRegistry()->unregisterView('basicPage');
-    }
-
-    public function onTaskWorkerStop() {
-        $cli = $this->framework->getCli();
+        $cli = $framework->getCli();
         $cli->unregisterCommand('stop');
         $cli->unregisterCommand('reload');
         $cli->unregisterCommand('cron');
         $cli->unregisterCommand('migrate');
         $cli->unregisterCommand('test');
-        $this->framework->getCron()->unregisterCronJob('session_cleanup');
+        $framework->getCron()->unregisterCronJob('session_cleanup');
     }
 }

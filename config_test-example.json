@@ -1,6 +1,6 @@
 {
     "databases": {
-        "main": {
+        "default": {
             "host": "mysql",
             "port": 3306,
             "database": "root",
@@ -30,6 +30,7 @@
     "taskWorkerNum": 1,
     "maxCoroutines": 4096,
     "sessionExpirationSeconds": 259200,
+    "sessionCacheRowCount": 4096,
     "hostName": "framework",
     "defaultCsrfTokenExpirationSeconds": 86400
 }

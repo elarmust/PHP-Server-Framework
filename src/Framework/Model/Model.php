@@ -49,12 +49,12 @@ abstract class Model implements ModelInterface {
     /**
      * Load the model by its ID.
      *
-     * @param int $modelId The ID of the model to load.
+     * @param string|int $modelId The ID of the model to load.
      * @param bool $includeArchived Whether or not to include archived entries.
      *
      * @return ModelInterface
      */
-    public function load(int $modelId, bool $includeArchived = false): ModelInterface {
+    public function load(string|int $modelId, bool $includeArchived = false): ModelInterface {
         $modelInstance = $this->withData([]);
         return $this->eventDispatcher->dispatch(new ModelLoadEvent($modelInstance, $modelId, $includeArchived))->getModel();
     }
@@ -139,11 +139,25 @@ abstract class Model implements ModelInterface {
     }
 
     /**
+     * Checks if a record with the given ID exists in the database.
+     *
+     * @param int|string $id The ID of the record to check.
+     * @return bool True if the record exists, false otherwise.
+     */
+    public function exists(int|string $id): bool {
+        if ($this->database->select($this->getTableName(), ['id'], ['id' => $id])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Get the ID of the model.
      *
-     * @return int|null The ID of the model, or null if it hasn't been assigned an ID yet.
+     * @return null|string|int The ID of the model, or null if it hasn't been assigned an ID yet.
      */
-    public function id(): ?int {
+    public function id(): null|string|int {
         return $this->data['id'];
     }
 

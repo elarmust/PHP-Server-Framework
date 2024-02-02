@@ -23,6 +23,33 @@ interface ModuleInterface {
     );
 
     /**
+     * Initialize module before workers start.
+     * This is called only once when server starts.
+     * This should be used to initialize data shared between workers.
+     * Use resources like database connections with caution here,
+     * as they will be copied to every worker and will cause conflicts.
+     *
+     * @param Framework $framework Framework instance.
+     */
+    public function beforeWorkers(Framework $framework): void;
+
+    /**
+     * Initialize module when worker starts.
+     * This is called once for every worker.
+     *
+     * @param Framework $framework Framework instance unique to the worker.
+     */
+    public function onWorkerStart(Framework $framework): void;
+
+    /**
+     * Perform cleanup when regular worker stops.
+     * This is called once for every worker.
+     *
+     * @param Framework $framework Framework instance unique to the worker.
+     */
+    public function onWorkerStop(Framework $framework): void;
+
+    /**
      * Get the Framework instance.
      *
      * @return Framework Framework instance.

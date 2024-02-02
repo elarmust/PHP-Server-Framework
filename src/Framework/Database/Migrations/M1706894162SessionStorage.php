@@ -10,23 +10,24 @@ use Framework\Database\MigrationInterface;
 use Framework\Container\ClassContainer;
 use Framework\Database\Database;
 use Framework\Framework;
+use Framework\Http\Session\SessionModel;
 
-class M1685553947CreateMigrationTable implements MigrationInterface {
-    public function __construct(private ClassContainer $classContainer, private Framework $framework) {
+class M1706894162SessionStorage implements MigrationInterface {
+    public function __construct(private ClassContainer $classContainer, private Framework $framework, private SessionModel $sessionModel) {
     }
 
     public function up(Database $database) {
         $database->query('
-            CREATE TABLE `migrations` (
-                `id` int NOT NULL PRIMARY KEY AUTO_INCREMENT,
-                `migration` VARCHAR(256) NOT NULL,
-                `version` VARCHAR(32) NOT NULL
+            CREATE TABLE `' . $this->sessionModel->getTableName() . '` (
+                `id` VARCHAR(32) PRIMARY KEY,
+                `data` TEXT NOT NULL,
+                `timestamp` INT NOT NULL
             )
         ');
     }
 
     public function down(Database $database) {
-        $database->query('DROP TABLE `migrations`');
+        $database->query('DROP TABLE `' . $this->sessionModel->getTableName() . '`');
     }
 
     public function version(): string {
@@ -34,7 +35,8 @@ class M1685553947CreateMigrationTable implements MigrationInterface {
     }
 
     public function getDatabases(): array {
-        $databaseInfo = $this->framework->getConfiguration()->getConfig('databases.default');
+        $dbName = $this->framework->getConfiguration()->getConfig('session.sessionColdStorage.mysqlDb') ?: 'default';
+        $databaseInfo = $this->framework->getConfiguration()->getConfig('databases.' . $dbName);
         $database = $this->classContainer->get(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password']], useCache: false);
         return [$database];
     }

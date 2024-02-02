@@ -12,11 +12,11 @@ interface ModelInterface {
     /**
      * Load data for the model from the database.
      *
-     * @param int $modelId The ID of the model to load.
+     * @param string|int $modelId The ID of the model to load.
      *
      * @return ModelInterface
      */
-    public function load(int $modelId): ModelInterface;
+    public function load(string|int $modelId): ModelInterface;
 
     /**
      * Save the model's data to the database.
@@ -60,7 +60,7 @@ interface ModelInterface {
     /**
      * Returns the ID of the model.
      *
-     * @return int|null The ID of the model, or null if it doesn't have an ID.
+     * @return null|string|int The ID of the model, or null if it doesn't have an ID.
      */
-    public function id(): null|int;
+    public function id(): null|string|int;
 }
