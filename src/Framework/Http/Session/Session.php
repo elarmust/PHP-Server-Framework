@@ -8,66 +8,44 @@
 
 namespace Framework\Http\Session;
 
-use OpenSwoole\Coroutine;
+use Framework\Model\Model;
+use Framework\Database\Database;
+use RuntimeException;
+use Framework\Framework;
 
-class Session {
-    /**
-     * @param string $sessionId
-     * @param array $data = []
-     */
-    public function __construct(
-        private SessionManager $sessionManager,
-        private SessionModel $sessionModel,
-        private string $sessionId,
-        private array $sessionData,
-        private int $timestamp
-    ) {
+class Session extends Model {
+    protected array $properties = [
+        'data',
+        'timestamp'
+    ];
+
+    public function __construct (Framework $framework) {
+        $dbName = $this->framework->getConfiguration()->getConfig('session.sessionColdStorage.mysqlDb') ?: 'default';
+        $databaseInfo = $this->framework->getConfiguration()->getConfig('databases.' . $dbName);
+
+        if (!$databaseInfo) {
+            throw new RuntimeException('Database ' . $dbName . ' does not exist.');
+        }
+
+        $database = $this->framework->getClassContainer()->get(Database::class, [
+            $databaseInfo['host'],
+            $databaseInfo['port'],
+            $databaseInfo['database'],
+            $databaseInfo['username'],
+            $databaseInfo['password']
+        ], $dbName);
+
+        parent::__construct(...$framework->getClassContainer()->prepareFunctionArguments(parent::class, parameters: [$database]));
     }
 
-    /**
-     * Get Session ID.
-     *
-     * @return string
-     */
-    public function getId(): string {
-        return $this->sessionId;
-    }
+    public function load(string|int $modelId, bool $includeArchived = false): Session {
+        // Load from memory storage.
+        $session = parent::load($modelId);
 
-    /**
-     * Get Session Data.
-     *
-     * @return array
-     */
-    public function getData(): array {
-        return $this->sessionData;
-    }
+        // TODO: if tiemstamp is expired, then return a new session.
 
-    /**
-     * Get Session timestamp.
-     *
-     * @return int
-     */
-    public function getTimestamp(): int {
-        return $this->timestamp;
-    }
-
-    /**
-     * Update session timestamp.
-     *
-     * @return void
-     */
-    public function updateTimestamp(): void {
-        $this->timestamp = time();
-    }
-
-    /**
-     * Set Session data.
-     *
-     * @param array $data
-     * @return void
-     */
-    public function setData(array $data): void {
-        $this->sessionData = $data;
+        $session->timestamp = time();
+        return $session;
     }
 
     public function save(): void {

@@ -55,11 +55,17 @@ class SessionManager {
      * @return Session
      */
     public function getSession(?string $sessionId = null): Session {
+        if (!$sessionId) {
+            $session = new Session($this, $this->sessionModel, $this->generateSessionId(), [], time());
+            $session->save();
+            return $session;
+        }
+
         $storageLocation = $this->whereIsSessionStored($sessionId);
         if ($storageLocation !== false) {
             $session = $this->loadSessionFromStorage($sessionId, $storageLocation);
 
-            // Check session expiration
+            // If session is expired, generate a new one.
             if ((time() - $session->getTimestamp()) > $this->expiration) {
                 $this->deleteSession($sessionId);
                 $newId = $this->generateSessionId();
@@ -68,16 +74,15 @@ class SessionManager {
                 $session->save();
                 return $session;
             }
-        } else {
-            $newId = $this->generateSessionId();
-            $session = new Session($this, $this->sessionModel, $newId, [], time());
-            $session->save();
+
+            // Update session timestamp
+            $session->updateTimestamp();
             return $session;
         }
 
-        // Update session timestamp
-        $session = $this->sessions[$sessionId];
-        $session->updateTimestamp();
+        $newId = $this->generateSessionId();
+        $session = new Session($this, $this->sessionModel, $newId, [], time());
+        $session->save();
         return $session;
     }
 
@@ -133,7 +138,7 @@ class SessionManager {
         try {
             $this->sessionModel->delete($sessionId);
         } catch (ModelException) {
-            // Probably does not exist in cold storage.
+            // Does not exist in cold storage.
         }
     }
 
@@ -143,34 +148,6 @@ class SessionManager {
 
     public function setExpirationSeconds(int $seconds): void {
         $this->expiration = $seconds;
-    }
-
-    /**
-     * Get database for session cold storage.
-     * 
-     * @throws RuntimeException If database does not exist or cannot be created.
-     * @return Database
-     */
-    public function getSessionDatabase(): Database {
-        if (isset($this->database)) {
-            return $this->database;
-        }
-
-        $dbName = $this->framework->getConfiguration()->getConfig('session.sessionColdStorage.mysqlDb') ?: 'default';
-        $databaseInfo = $this->framework->getConfiguration()->getConfig('databases.' . $dbName);
-
-        if (!$databaseInfo) {
-            throw new RuntimeException('Database ' . $dbName . ' does not exist.');
-        }
-
-        $this->database = $this->framework->getClassContainer()->get(Database::class, [
-            $databaseInfo['host'],
-            $databaseInfo['port'],
-            $databaseInfo['database'],
-            $databaseInfo['username'],
-            $databaseInfo['password']
-        ], $dbName);
-        return $this->database;
     }
 
     public function getSessionTable(): Table {

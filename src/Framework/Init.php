@@ -9,11 +9,9 @@
 namespace Framework;
 
 use Framework\Model\EventListeners\ModelRestore;
-use Framework\Http\Session\Task\SessionGCTask;
-
-use Framework\Http\Session\Cron\SessionCleanup;
 use Framework\Model\EventListeners\ModelCreate;
 use Framework\Model\EventListeners\ModelDelete;
+use Framework\Http\Session\Task\SessionGCTask;
 use Framework\Http\Session\SessionMiddleware;
 use Framework\Model\EventListeners\ModelLoad;
 use Framework\Model\EventListeners\ModelSave;
@@ -52,6 +50,7 @@ class Init {
             $table = new Table('session', $rowCount);
             $table->column('data', Table::TYPE_STRING, $dataLength);
             $table->column('timestamp', Table::TYPE_INT, 4);
+            $table->column('existsInColdStorage', Table::TYPE_INT, 1);
             $table->create();
             Vault::addTable($table);
         }
