@@ -4,21 +4,21 @@ namespace Framework\Tests\Tests;
 
 use OpenSwoole\Coroutine;
 use PHPUnit\Framework\TestCase;
-use Framework\Database\Database;
-use Framework\Tests\Tests\Data\TestModel;
+use Framework\Event\EventDispatcher;
+use Framework\Tests\Tests\Data\TestEventModel;
 use Framework\Model\Exception\ModelException;
 
-class ModelTest extends TestCase {
-    private TestModel $model;
+class EventModelTest extends TestCase {
+    private TestEventModel $model;
 
     static function tearDownAfterClass(): void {
-        $model = FRAMEWORK->getClassContainer()->get(TestModel::class, useCache: false);
-        $model->getDatabase()->query('DROP TABLE IF EXISTS models_testmodel');
+        $model = FRAMEWORK->getClassContainer()->get(TestEventModel::class, useCache: false);
+        $model->getDatabase()->query('DROP TABLE IF EXISTS models_testeventmodel');
     }
 
     protected function setUp(): void {
-        $this->model = FRAMEWORK->getClassContainer()->get(TestModel::class, useCache: false);
-        $this->model->getDatabase()->query('DROP TABLE IF EXISTS models_testmodel');
+        $this->model = FRAMEWORK->getClassContainer()->get(TestEventModel::class, useCache: false);
+        $this->model->getDatabase()->query('DROP TABLE IF EXISTS models_testeventmodel');
         $this->model->getDatabase()->query('
             CREATE TABLE IF NOT EXISTS
                 ' . $this->model->getTableName() . ' (
@@ -29,90 +29,9 @@ class ModelTest extends TestCase {
         ');
     }
 
-    public function testTableNameReturnsDefault() {
-        $tableName = $this->model->getTableName();
-        $this->assertEquals('models_testmodel', $tableName);
-    }
-
-    public function testGetDatabase() {
-        $database = $this->model->getDatabase();
-        $this->assertInstanceOf(Database::class, $database);
-    }
-
-    public function testGetProperties() {
-        $properties = $this->model->getProperties();
-        $this->assertIsArray($properties);
-    }
-
-    public function testIsDataProperty() {
-        $this->model->modifyProperties([
-            'name',
-            'age',
-            'nonDataProperty' => [
-                'notData' => true
-            ]
-        ]);
-
-        $this->assertTrue($this->model->isDataProperty('name'));
-        $this->assertTrue($this->model->isDataProperty('age'));
-        $this->assertFalse($this->model->isDataProperty('notDataProperty'));
-        $this->assertFalse($this->model->isDataProperty('doesNotExist'));
-    }
-
-    public function testGetDefaultValue() {
-        $this->model->modifyProperties([
-            'name' => [
-                'default' => 'test name'
-            ],
-            'age' => [
-                'default' => 30
-            ],
-            'test'
-        ]);
-
-        $this->assertEquals('test name', $this->model->getDefaultValue('name'));
-        $this->assertEquals(30, $this->model->getDefaultValue('age'));
-        $this->assertEquals(null, $this->model->getDefaultValue('test'));
-        $this->assertEquals(null, $this->model->getDefaultValue('doesNotExist'));
-    }
-
-    public function testIsPropertyPersistent() {
-        $this->model->modifyProperties([
-            'name' => [
-                'default' => 'test name'
-            ],
-            'age' => [
-                'default' => 30
-            ],
-            'nonPersistent' => [
-                'persistent' => false
-            ],
-            'test'
-        ]);
-
-        $this->assertTrue($this->model->isPropertyPersistent('name'));
-        $this->assertTrue($this->model->isPropertyPersistent('age'));
-        $this->assertFalse($this->model->isPropertyPersistent('nonPersistent'));
-        $this->assertTrue($this->model->isPropertyPersistent('test'));
-        $this->assertFalse($this->model->isPropertyPersistent('doesNotExist'));
-    }
-
-    public function testIsPropertyReadonly() {
-        $this->model->modifyProperties([
-            'name' => [
-                'default' => 'test name',
-                'readonly' => true
-            ],
-            'age' => [
-                'default' => 30
-            ],
-            'test'
-        ]);
-
-        $this->assertTrue($this->model->isPropertyReadonly('name'));
-        $this->assertFalse($this->model->isPropertyReadonly('age'));
-        $this->assertFalse($this->model->isPropertyReadonly('test'));
-        $this->assertFalse($this->model->isPropertyReadonly('doesNotExist'));
+    public function testGetEventDispatcher() {
+        $eventDispatcher = $this->model->getEventDispatcher();
+        $this->assertInstanceOf(EventDispatcher::class, $eventDispatcher);
     }
 
     public function testClonedModelWithNewData() {
@@ -126,70 +45,6 @@ class ModelTest extends TestCase {
 
         // Check that the properties are not changed.
         $this->assertEquals($currentProperties, $model->getProperties());
-    }
-
-    public function testProperties() {
-        $currentProperties = $this->model->getProperties();
-        $properties = [
-            'name' => [
-                'default' => 'test name',
-                'customProperty' => 'test value',
-                'anotherCustomProperty' => 'test value 2'
-            ],
-            'age' => [
-                'default' => 30
-            ]
-        ];
-        $this->model->modifyProperties($properties);
-
-        $retrievedProperties = $this->model->getProperties();
-        $this->assertEquals(array_merge($properties, $currentProperties), $retrievedProperties);
-    }
-
-    public function testRemoveProperties() {
-        $properties = [
-            'name' => [
-                'readonly' => false
-            ],
-            'age' => [
-                'key' => [
-                    'value' => 'test',
-                    'value2' => 'test2',
-                    'value3' => 'test3'
-                ]
-            ],
-        ];
-
-        $this->model->modifyProperties($properties);
-        $this->model->removeProperties([
-            'name', // Remove name
-            'age' => [
-                'key' => ['value2', 'value3'] // From age->key remove value2 and value3
-            ]
-        ]);
-
-        $retrievedProperties = $this->model->getProperties();
-        $this->assertArrayNotHasKey('name', $retrievedProperties);
-        $this->assertArrayHasKey('age', $retrievedProperties);
-        $this->assertArrayHasKey('key', $retrievedProperties['age']);
-        $this->assertArrayHasKey('value', $retrievedProperties['age']['key']);
-        $this->assertArrayNotHasKey('value2', $retrievedProperties['age']['key']);
-        $this->assertArrayNotHasKey('value3', $retrievedProperties['age']['key']);
-    }
-
-    public function testDefaultDataValues() {
-        $properties = [
-            'name' => [
-                'default' => 'test name'
-            ],
-            'age' => [
-                'default' => 30
-            ]
-        ];
-        $this->model->modifyProperties($properties);
-
-        $this->assertEquals('test name', $this->model->name);
-        $this->assertEquals(30, $this->model->age);
     }
 
     public function testCreateAndLoadSimpleData(): void {
@@ -215,7 +70,7 @@ class ModelTest extends TestCase {
     }
 
     public function testCreatedAt() {
-        $this->model->getDatabase()->query('ALTER TABLE models_testmodel ADD created_at DATETIME NULL DEFAULT NULL');
+        $this->model->getDatabase()->query('ALTER TABLE models_testeventmodel ADD created_at DATETIME NULL DEFAULT NULL');
         $this->model->modifyProperties(['created_at']);
 
         $model = $this->model->create();
@@ -223,7 +78,7 @@ class ModelTest extends TestCase {
     }
 
     public function testUpdatedAt() {
-        $this->model->getDatabase()->query('ALTER TABLE models_testmodel ADD saved_at DATETIME NULL DEFAULT NULL');
+        $this->model->getDatabase()->query('ALTER TABLE models_testeventmodel ADD saved_at DATETIME NULL DEFAULT NULL');
         $this->model->modifyProperties(['saved_at']);
 
         $model = $this->model->create();
@@ -265,7 +120,7 @@ class ModelTest extends TestCase {
     }
 
     public function testRestore(): void {
-        $this->model->getDatabase()->query('ALTER TABLE models_testmodel ADD deleted_at DATETIME DEFAULT NULL');
+        $this->model->getDatabase()->query('ALTER TABLE models_testeventmodel ADD deleted_at DATETIME DEFAULT NULL');
         $this->model->modifyProperties(['name', 'deleted_at']);
         $model = $this->model->create(['name' => 'test']);
         $this->assertEquals('test', $model->name);
@@ -336,10 +191,10 @@ class ModelTest extends TestCase {
     }
 
     public function testMultiplePropertiesAndData() {
-        $this->model->getDatabase()->query('ALTER TABLE models_testmodel ADD email VARCHAR(255) DEFAULT NULL');
-        $this->model->getDatabase()->query('ALTER TABLE models_testmodel ADD created_at DATETIME NULL DEFAULT NULL');
-        $this->model->getDatabase()->query('ALTER TABLE models_testmodel ADD saved_at DATETIME NULL DEFAULT NULL');
-        $this->model->getDatabase()->query('ALTER TABLE models_testmodel ADD deleted_at DATETIME NULL DEFAULT NULL');
+        $this->model->getDatabase()->query('ALTER TABLE models_testeventmodel ADD email VARCHAR(255) DEFAULT NULL');
+        $this->model->getDatabase()->query('ALTER TABLE models_testeventmodel ADD created_at DATETIME NULL DEFAULT NULL');
+        $this->model->getDatabase()->query('ALTER TABLE models_testeventmodel ADD saved_at DATETIME NULL DEFAULT NULL');
+        $this->model->getDatabase()->query('ALTER TABLE models_testeventmodel ADD deleted_at DATETIME NULL DEFAULT NULL');
         $properties = [
             'name' => [
                 'default' => 'Test Name'
@@ -409,9 +264,9 @@ class ModelTest extends TestCase {
         $this->assertNull($model->deleted_at);
 
         // Remove timestamp properties and check that these properties are not present.
-        $model->getDatabase()->query('ALTER TABLE models_testmodel DROP COLUMN created_at');
-        $model->getDatabase()->query('ALTER TABLE models_testmodel DROP COLUMN saved_at');
-        $model->getDatabase()->query('ALTER TABLE models_testmodel DROP COLUMN deleted_at');
+        $model->getDatabase()->query('ALTER TABLE models_testeventmodel DROP COLUMN created_at');
+        $model->getDatabase()->query('ALTER TABLE models_testeventmodel DROP COLUMN saved_at');
+        $model->getDatabase()->query('ALTER TABLE models_testeventmodel DROP COLUMN deleted_at');
         $model->removeProperties(['created_at', 'saved_at', 'deleted_at']);
         $properties = $model->getProperties();
         $this->assertArrayNotHasKey('created_at', $properties);

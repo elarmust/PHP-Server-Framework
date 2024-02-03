@@ -40,6 +40,16 @@ class Vault {
     }
 
     /**
+     * Checks if a table exists in the vault.
+     *
+     * @param string $name The name of the table to check.
+     * @return bool Returns true if the table exists, false otherwise.
+     */
+    public static function tableExists(string $name): bool {
+        return isset(self::$tables[$name]);
+    }
+
+    /**
      * Destroy a table.
      *
      * @param string $name The name of the table to destroy.

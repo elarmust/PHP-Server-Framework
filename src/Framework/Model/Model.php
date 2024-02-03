@@ -9,13 +9,6 @@
 namespace Framework\Model;
 
 use Framework\Model\Exception\ModelException;
-use Framework\Model\Events\ModelRestoreEvent;
-use Framework\Model\Events\ModelCreateEvent;
-use Framework\Model\Events\ModelDeleteEvent;
-use Framework\Model\Events\ModelLoadEvent;
-use Framework\Model\Events\ModelSaveEvent;
-use Framework\Model\Events\ModelSetEvent;
-use Framework\Event\EventDispatcher;
 use Framework\Database\Database;
 use Framework\Logger\Logger;
 
@@ -33,12 +26,10 @@ abstract class Model implements ModelInterface {
     /**
      * @param Database $database
      * @param Logger $logger
-     * @param EventDispatcher $eventDispatcher
      */
     public function __construct(
         private Database $database,
-        private Logger $logger,
-        private EventDispatcher $eventDispatcher
+        private Logger $logger
     ) {
         // Set properties = defaultProperties + properties.
         $this->properties = array_replace($this->defaultProperties, $this->properties);
@@ -55,8 +46,23 @@ abstract class Model implements ModelInterface {
      * @return ModelInterface
      */
     public function load(string|int $modelId, bool $includeArchived = false): ModelInterface {
-        $modelInstance = $this->withData([]);
-        return $this->eventDispatcher->dispatch(new ModelLoadEvent($modelInstance, $modelId, $includeArchived))->getModel();
+        $model = clone $this;
+
+        // Load the model from database.
+        if ($model->getProperties(['deleted_at']) && !$includeArchived) {
+            // If the model has archival functionality enabled and the includeArchived flag is set to false, retrieve only the non-archived model.
+            $data = $model->getDatabase()->query('SELECT * FROM ' . $model->getTableName() . ' WHERE id = ? AND deleted_at IS NULL', [$modelId]);
+        } else {
+            // If the model has archival functionality disabled or the includeArchived flag is set to true, retrieve the model without any restrictions.
+            $data = $model->getDatabase()->select($model->getTableName(), where: ['id' => $modelId]);
+        }
+
+        // Throw an exception if the model was not found.
+        if (!$data) {
+            throw new ModelException('Model with id ' . $modelId . ' not found');
+        }
+
+        return $model->withData($data[0]);
     }
 
     /**
@@ -67,13 +73,28 @@ abstract class Model implements ModelInterface {
      * @return ModelInterface Newly created model instance.
      */
     public function create(array $data = []): ModelInterface {
-        $model = clone $this;
+        $model = $this->withData([]);
+        $properties = $model->getProperties();
 
-        // Set the data on the model.
-        $model->data = $model->eventDispatcher->dispatch(new ModelSetEvent($model, $data))->getData();
+        // Initialize the data array with the default data.
+        $createData = [];
+        foreach ($properties as $key => $value) {
+            if ($key === 'created_at') {
+                $data['created_at'] = date('Y-m-d H:i:s');
+                $createData[$key] = $data['created_at'];
+            } elseif ($model->isPropertyPersistent($key)) {
+                $createData[$key] = $data[$key] ?? $model->getDefaultValue($key);
+            }
+        }
 
-        // Create the model.
-        return $model->eventDispatcher->dispatch(new ModelCreateEvent($model, $model->getData()))->getModel();
+        // Insert data to database and get the id.
+        $data['id'] = $model->getDatabase()->insert($model->getTableName(), $createData);
+        if ($data['id'] === false) {
+            throw new ModelException('Failed to create model in database!');
+        }
+
+        // Set the model to new model with the data.
+        return $model->withData($data);
     }
 
     /**
@@ -85,11 +106,14 @@ abstract class Model implements ModelInterface {
      * @return ModelInterface
      */
     public function setData(array $data): ModelInterface {
-        if ($this->id() === null) {
-            throw new ModelException('Cannot save non-instanciated model.');
+        foreach ($data as $key => $value) {
+            // Readonly values cannot be set on existing models.
+            if ($this->isPropertyReadonly($key) && $this->id() !== null) {
+                throw new ModelException('Cannot set readonly key: ' . $key);
+            }
         }
 
-        $this->data = $this->eventDispatcher->dispatch(new ModelSetEvent($this, $data))->getData();
+        $this->data = array_merge($this->getData(), $data);
         return $this;
     }
 
@@ -104,7 +128,27 @@ abstract class Model implements ModelInterface {
             throw new ModelException('Cannot save non-instanciated model.');
         }
 
-        $this->eventDispatcher->dispatch(new ModelSaveEvent($this));
+        // Set saved_at, if it has a default value.
+        if ($this->getProperties(['saved_at'])) {
+            $this->saved_at = date('Y-m-d H:i:s');
+        }
+
+        $save = [];
+        $modelData = $this->getData();
+        foreach ($this->getProperties() as $key => $value) {
+            // Save persistent data.
+            if ($this->isPropertyPersistent($key)) {
+                $save[$key] = $modelData[$key] ?? $this->getDefaultValue($key);
+            }
+        }
+
+        if ($save) {
+            $status = $this->getDatabase()->update($this->getTableName(), $save, ['id' => $this->id()]);
+            if (!$status) {
+                throw new ModelException('Failed to save model to database!');
+            }
+        }
+
         return $this;
     }
 
@@ -119,7 +163,17 @@ abstract class Model implements ModelInterface {
             throw new ModelException('Cannot delete non-instanciated model.');
         }
 
-        $this->eventDispatcher->dispatch(new ModelDeleteEvent($this));
+        if ($this->getProperties(['deleted_at'])) {
+            $deleteDate = date('Y-m-d H:i:s');
+            $this->deleted_at = $deleteDate;
+            $this->getDatabase()->update($this->getTableName(), ['deleted_at' => $deleteDate], ['id' => $this->id()]);
+        } else {
+            $status = $this->getDatabase()->delete($this->getTableName(), ['id' => $this->id()]);
+            if (!$status) {
+                throw new ModelException('Failed to delete model from database!');
+            }
+        }
+
         return $this;
     }
 
@@ -134,7 +188,17 @@ abstract class Model implements ModelInterface {
             throw new ModelException('Cannot restore non-instanciated model.');
         }
 
-        $this->eventDispatcher->dispatch(new ModelRestoreEvent($this));
+        if (!in_array('deleted_at', $this->getDataKeys())) {
+            return $this;
+        }
+
+        $status = $this->getDatabase()->update($this->getTableName(), ['deleted_at' => null], ['id' => $this->id()]);
+        if (!$status) {
+            throw new ModelException('Failed to restore model from database!');
+        }
+
+        $this->deleted_at = null;
+
         return $this;
     }
 
@@ -241,7 +305,7 @@ abstract class Model implements ModelInterface {
      *
      * @return array The modified array with removed keys.
      */
-    private function arrayRemoveRecursive(array $array1, array $array2): array {
+    protected function arrayRemoveRecursive(array $array1, array $array2): array {
         foreach ($array1 as $removeKey => $subRemoveKeys) {
             if (is_array($subRemoveKeys)) {
                 $array2[$removeKey] = $this->arrayRemoveRecursive($subRemoveKeys, $array2[$removeKey]);
@@ -261,7 +325,7 @@ abstract class Model implements ModelInterface {
      *
      * @return void
      */
-    private function cleanupPropertiesAndData(): void {
+    protected function cleanupPropertiesAndData(): void {
         foreach ($this->getProperties() as $key => $values) {
             // If the key is numeric, then property name is it's value and its values are empty.
             if (is_numeric($key) && is_string($values)) {
@@ -293,6 +357,12 @@ abstract class Model implements ModelInterface {
         return true;
     }
 
+    /**
+     * Checks if a property is persistent.
+     *
+     * @param string $propertyName The name of the property.
+     * @return bool Returns true if the property is persistent, false otherwise.
+     */
     public function isPropertyPersistent(string $propertyName): bool {
         if (!$this->isDataProperty($propertyName)) {
             return false;
@@ -306,6 +376,12 @@ abstract class Model implements ModelInterface {
         return true;
     }
 
+    /**
+     * Checks if a property is readonly.
+     *
+     * @param string $propertyName The name of the property to check.
+     * @return bool Returns true if the property is readonly, false otherwise.
+     */
     public function isPropertyReadonly(string $propertyName): bool {
         $properties = $this->getProperties([$propertyName]);
         if (!$properties) {
@@ -320,6 +396,13 @@ abstract class Model implements ModelInterface {
         return true;
     }
 
+    /**
+     * Retrieves the default value for a given property.
+     *
+     * @param string $propertyName The name of the property.
+     *
+     * @return mixed The default value of the property, or null if not found.
+     */
     public function getDefaultValue(string $propertyName): mixed {
         return $this->getProperties([$propertyName])[$propertyName]['default'] ?? null;
     }
@@ -346,16 +429,6 @@ abstract class Model implements ModelInterface {
     }
 
     /**
-     * Returns the event dispatcher associated with the model.
-     * Allows to extend the model with custom event listeners.
-     *
-     * @return EventDispatcher The event dispatcher.
-     */
-    public function getEventDispatcher(): EventDispatcher {
-        return $this->eventDispatcher;
-    }
-
-    /**
      * Creates a new instance of the model with the given data.
      * The new instance will be a clone of the current instance with the updated data.
      *
@@ -378,11 +451,7 @@ abstract class Model implements ModelInterface {
      * @return mixed The value of the property.
      */
     public function __get($name) {
-        if (!array_key_exists($name, $this->data)) {
-            throw new ModelException('Invalid key: ' . $name);
-        }
-
-        return $this->data[$name];
+        return $this->getData([$name]);
     }
 
     /**

@@ -25,7 +25,16 @@
     "workerNum": 8,
     "taskWorkerNum": 1,
     "maxCoroutines": 4096,
-    "testing": false,
+    "session": {
+        "enabled": true,
+        "sessionExpirationSeconds": 259200,
+        "sessionRuntimeCacheRowCount": 4096,
+        "sessionRunetimeCacheDataLengthBytes": 4096,
+        "sessionGCMilliSeconds": 60000,
+        "sessionColdStorage": {
+            "mysqlDb": "default"
+        }
+    },
     "sessionExpirationSeconds": 259200,
     "hostName": "framework",
     "defaultCsrfTokenExpirationSeconds": 86400

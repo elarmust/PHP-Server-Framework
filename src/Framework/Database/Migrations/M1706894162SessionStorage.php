@@ -6,19 +6,19 @@
 
 namespace Framework\Database\Migrations;
 
-use Framework\Database\MigrationInterface;
-use Framework\Container\ClassContainer;
-use Framework\Database\Database;
 use Framework\Framework;
-use Framework\Http\Session\SessionModel;
+use Framework\Database\Database;
+use Framework\Http\Session\Session;
+use Framework\Container\ClassContainer;
+use Framework\Database\MigrationInterface;
 
 class M1706894162SessionStorage implements MigrationInterface {
-    public function __construct(private ClassContainer $classContainer, private Framework $framework, private SessionModel $sessionModel) {
+    public function __construct(private ClassContainer $classContainer, private Framework $framework, private Session $session) {
     }
 
     public function up(Database $database) {
         $database->query('
-            CREATE TABLE `' . $this->sessionModel->getTableName() . '` (
+            CREATE TABLE `' . Session::getTableName() . '` (
                 `id` VARCHAR(32) PRIMARY KEY,
                 `data` TEXT NOT NULL,
                 `timestamp` INT NOT NULL
@@ -27,7 +27,7 @@ class M1706894162SessionStorage implements MigrationInterface {
     }
 
     public function down(Database $database) {
-        $database->query('DROP TABLE `' . $this->sessionModel->getTableName() . '`');
+        $database->query('DROP TABLE `' . Session::getTableName() . '`');
     }
 
     public function version(): string {
@@ -35,9 +35,6 @@ class M1706894162SessionStorage implements MigrationInterface {
     }
 
     public function getDatabases(): array {
-        $dbName = $this->framework->getConfiguration()->getConfig('session.sessionColdStorage.mysqlDb') ?: 'default';
-        $databaseInfo = $this->framework->getConfiguration()->getConfig('databases.' . $dbName);
-        $database = $this->classContainer->get(Database::class, [$databaseInfo['host'], $databaseInfo['port'], $databaseInfo['database'], $databaseInfo['username'], $databaseInfo['password']], useCache: false);
-        return [$database];
+        return [$this->session->getDatabase()];
     }
 }

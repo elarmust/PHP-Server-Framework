@@ -8,15 +8,16 @@
 
 namespace Framework\Http\Session\Task;
 
-use Framework\Http\Session\SessionManager;
+use Framework\Vault\Vault;
+use Framework\Logger\Logger;
 use Framework\Task\TaskInterface;
+use Framework\Http\Session\Session;
 
 class SessionGCTask implements TaskInterface {
-
     /**
-     * @param SessionManager $sessionManager
+     * @param Session $session
      */
-    public function __construct(private SessionManager $sessionManager) {
+    public function __construct(private Session $session, private Logger $logger) {
     }
 
     /**
@@ -25,12 +26,20 @@ class SessionGCTask implements TaskInterface {
      * @return void
      */
     public function execute(): void {
-        foreach ($this->sessionManager->getSessionIds() as $sessionId) {
-            //$session = $this->sessionManager->loadSession($sessionId);
-            //if ((time() - $session->getTimestamp()) > $this->sessionManager->getExpirationSeconds()) {
-            //    $this->sessionManager->deleteSession($sessionId);
-            //}
+        $this->logger->debug('Running session garbage collection task.');
+        $table = Vault::getTable($this->session::getTableName());
+        foreach ($table as $sessionId => $sessionData) {
+            $session = $this->session->load($sessionId);
+            if ((time() - $sessionData['timestamp']) > $this->session->getExpirationSeconds()) {
+                $session->delete($sessionId);
+            }
         }
+
+        // Delete expired sessions from the database.
+        $this->session->getDatabase()->query('
+            DELETE FROM ' . $this->session::getTableName() . ' WHERE timestamp < ?
+        ', [time() - $this->session->getExpirationSeconds()]
+        );
     }
 
     /**

@@ -22,22 +22,24 @@ use Framework\Model\Events\ModelCreateEvent;
 use Framework\Layout\Controllers\BasicPage;
 use Framework\Model\Events\ModelSaveEvent;
 use Framework\Model\Events\ModelLoadEvent;
-use Framework\Http\Session\SessionManager;
 use Framework\Model\Events\ModelSetEvent;
 use Framework\Database\Commands\Migrate;
 use Framework\Cli\Commands\Maintenance;
 use Framework\Cron\Task\CronTaskDelay;
+use Framework\Http\Session\Session;
 use Framework\Cli\Commands\Reload;
 use Framework\Tests\Commands\Test;
 use Framework\Cron\Commands\Cron;
 use Framework\Cli\Commands\Stop;
+use Framework\Database\Database;
 use Framework\Utils\TimeUtils;
 use Framework\Vault\Vault;
+use Framework\Vault\Table;
 use Framework\Http\Route;
 use Framework\View\View;
 use OpenSwoole\Event as SwooleEvent;
+use RuntimeException;
 use DateTime;
-use Framework\Vault\Table;
 
 class Init {
     public static function beforeWorkers(Framework $framework): void {
@@ -47,7 +49,7 @@ class Init {
             $dataLength = $framework->getConfiguration()->getConfig('sessionCacheDataLengthBytes') ?: 4096;
             $dataLength = is_int($rowCount) && $rowCount >= 4096 ? $rowCount : 4096;
             // Add session table to the vault.
-            $table = new Table('session', $rowCount);
+            $table = new Table(Session::getTableName(), $rowCount);
             $table->column('data', Table::TYPE_STRING, $dataLength);
             $table->column('timestamp', Table::TYPE_INT, 4);
             $table->column('existsInColdStorage', Table::TYPE_INT, 1);
@@ -60,9 +62,23 @@ class Init {
         $classContainer = $framework->getClassContainer();
 
         $sessionEnabled = $framework->getConfiguration()->getConfig('session.enabled') == true;
-        // Set up session manager.
+        // Initialize Session object.
         if ($sessionEnabled) {
-            $classContainer->get(SessionManager::class);
+            $dbName = $framework->getConfiguration()->getConfig('session.sessionColdStorage.mysqlDb') ?: 'default';
+            $databaseInfo = $framework->getConfiguration()->getConfig('databases.' . $dbName);
+    
+            if (!$databaseInfo) {
+                throw new RuntimeException('Database ' . $dbName . ' does not exist.');
+            }
+    
+            $database = $framework->getClassContainer()->get(Database::class, [
+                $databaseInfo['host'],
+                $databaseInfo['port'],
+                $databaseInfo['database'],
+                $databaseInfo['username'],
+                $databaseInfo['password']
+            ], $dbName);
+            $classContainer->get(Session::class, [$database]);
         }
 
         // Register model events.
