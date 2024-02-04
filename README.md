@@ -57,12 +57,9 @@ If you'd like to contribute, you can do the following:
 + Create a fork and submit a pull request or
 + [Submit an issue or feature request](https://github.com/elarike12/PHP_Framework/issues)
 
-# IN PROGRESS
-+ Major code refactoring. models, workers, cron/task, etc.
-
 # TO DO list
++ Add localization feature.
++ Cron improvement
 + Add command arguments to unit tests and fix some errors
 + Better CLI and fix an error thrown, when invalid command is used.
 + XML and YML configuration support maybe.
-+ Add localization feature.
-+ Make session data persistent.
