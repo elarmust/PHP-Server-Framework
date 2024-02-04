@@ -11,13 +11,14 @@ use Framework\Logger\Logger;
 use Framework\Cache\Cache;
 use Framework\Framework;
 use RuntimeException;
+use Generator;
 use Throwable;
 
 class Session {
     private array $data = [];
     private ?string $id = null;
     private ?int $timeStamp = null;
-    private int $expiration;
+    private ?int $expiration = null;
     private bool $httpOnly = false;
     private bool $secure = false;
     private string $sessionPath = '/';
@@ -33,10 +34,12 @@ class Session {
      * If the session ID is not provided, a new session will be created.
      * If the session ID does not exist, a new session will be created.
      *
-     * @param string $sessionId The session ID.
-     * @return Session The loaded session.
+     * @param string|null $sessionId Session ID.
+     *
+     * @return Session Session object.
      */
     public function getSession(string|null $sessionId = null): Session {
+        // If the session ID is not provided, then create a new session.
         if ($sessionId === null) {
             return $this->create();
         }
@@ -59,11 +62,13 @@ class Session {
         }
 
         $session->setTimeStamp($timeStamp);
+        // Update the timestamp in the cache and database if it has changed.
         if ($timeStamp != $data['timestamp']) {
             if ($inCache !== false) {
                 $this->setCached($sessionId, $session->getData(), $timeStamp);
             }
 
+            // In coroutine to do it async.
             go(function () use ($sessionId, $timeStamp) {
                 $this->getDatabase()->update(self::getTableName(), ['timestamp' => $timeStamp], where: ['id' => $sessionId]);
             });
@@ -75,8 +80,9 @@ class Session {
     /**
      * Creates a new session with the given data and stores it in the database.
      *
-     * @param array $data The data to be stored in the session.
-     * @return Session The newly created session.
+     * @param array $data Session data.
+     *
+     * @return Session New session.
      * @throws RuntimeException If the session creation in the database fails.
      */
     public function create(array $data = []): Session {
@@ -100,8 +106,8 @@ class Session {
     /**
      * Saves the session data to the database.
      *
-     * @return Session The updated session object.
      * @throws RuntimeException If the session is not instantiated or fails to save to the database.
+     * @return Session Updated session object.
      */
     public function save(): Session {
         if ($this->id() === null) {
@@ -143,18 +149,19 @@ class Session {
     /**
      * Sets the data for the session.
      *
-     * @param array $data The data to be set for the session.
+     * @param array $data Data to be set for the session.
+     * @param bool $merge = false Whether to replace existing or merge.
      *
      * @throws RuntimeException If the session is not instantiated.
-     * @return Session Returns the updated session object.
+     * @return Session Updated session object.
      */
-    public function setData(array $data): Session {
+    public function setData(array $data, bool $merge = true): Session {
         if ($this->id() === null) {
             throw new RuntimeException('Cannot set non-instantiated session.');
         }
 
         $this->setTimeStamp(time());
-        $this->data = array_merge($this->data, $data);
+        $this->data = $merge ? array_replace_recursive($this->data, $data) : $data;
 
         // We might as well delete it, if data is empty.
         if ($this->getData() === []) {
@@ -171,7 +178,7 @@ class Session {
      * Deletes the session from the database and removes it from the session cache.
      *
      * @throws RuntimeException If the session fails to be deleted from the database.
-     * @return Session The updated session object.
+     * @return Session Deleted session.
      */
     public function delete(): Session {
         $status = $this->getDatabase()->delete(self::getTableName(), ['id' => $this->id()]);
@@ -251,7 +258,7 @@ class Session {
      * @param array $keys An optional array of keys to retrieve. If not provided, all data will be returned.
      *
      * @throws RuntimeException If any of the provided keys are invalid.
-     * @return array The retrieved data.
+     * @return array Retrieved data.
      */
     public function getData(array $keys = []): array {
         if (!$keys) {
@@ -277,7 +284,7 @@ class Session {
 
     /**
      * Returns Session::STORAGE_MEMORY, if session is stored in memory,
-     * Session::STORAGE_COLD if session is stored in cold storage,
+     * Session::STORAGE_COLD if session is stored in databse only,
      * false if session does not exist.
      *
      * @param string $sessionId Session ID.
@@ -308,16 +315,16 @@ class Session {
     /**
      * Returns the expiration time of the session in seconds.
      *
-     * @return int The expiration time in seconds.
+     * @return int|null Session expiration time in seconds or null, if not set.
      */
-    public function getExpirationSeconds(): int {
+    public function getExpirationSeconds(): int|null {
         return $this->expiration;
     }
 
     /**
      * Sets the expiration time for the session in seconds.
      *
-     * @param int $seconds The number of seconds until the session expires.
+     * @param int $seconds Session expiration time in seconds.
      *
      * @return void
      */
@@ -327,9 +334,9 @@ class Session {
 
     /**
      * Returns the name of the table used for storing session data
-     * for cold and cache storage.
+     * for database and cache storage.
      *
-     * @return string The table name.
+     * @return string Table name used to cache and database storage
      */
     public static function getTableName(): string {
         return 'sessions';
@@ -338,7 +345,7 @@ class Session {
     /**
      * Retrieves the database object associated with the session.
      *
-     * @return Database Database used for session cold storage.
+     * @return Database Database used for session storage.
      */
     public function getDatabase(): Database {
         return $this->database;
@@ -356,7 +363,7 @@ class Session {
     /**
      * Set the timestamp for the session.
      *
-     * @param int $timeStamp The timestamp to set.
+     * @param int $timeStamp Timestamp to set.
      *
      * @throws RuntimeException If the timestamp is invalid.
      * @return Session
@@ -433,20 +440,31 @@ class Session {
     /**
      * Get the value of the data key.
      *
-     * @param string $name The name of the data key.
+     * @param string $name Data key name.
      *
-     * @throws RuntimeException If the property does not exist.
-     * @return mixed The value of the property.
+     * @throws RuntimeException If the data key does not exist.
+     * @return mixed Data value.
      */
     public function __get($name) {
         return $this->getData([$name]);
     }
 
     /**
+     * Retrieves the cached session IDs.
+     *
+     * @return Generator Generator that yields the session IDs.
+     */
+    public function getCachedIds(): Generator {
+        foreach (Cache::getTable(self::getTableName()) as $id => $row) {
+            yield $id;
+        }
+    }
+
+    /**
      * Sets the value of a model data key.
      *
-     * @param string $name The name of the data key.
-     * @param mixed $value The value to be set.
+     * @param string $name Data key name.
+     * @param mixed $value Value to be set.
      *
      * @return void
      */
@@ -457,7 +475,7 @@ class Session {
     /**
      * Checks if a data key is set.
      *
-     * @param string $name The name of the data key to check.
+     * @param string $name Data key to check.
      *
      * @return bool Returns true if the data key is set, false otherwise.
      */
@@ -468,7 +486,7 @@ class Session {
     /**
      * Unsets a model's data key.
      *
-     * @param string $name The name of the data key to unset.
+     * @param string $name Data key to unset.
      *
      * @return void
      */
@@ -479,16 +497,16 @@ class Session {
     /**
      * Retursn mode's data array.
      *
-     * @return array The model data as an array.
+     * @return array Session data array.
      */
     public function __toArray(): array {
         return $this->getData();
     }
 
     /**
-     * Returns a JSON representation of the model data.
+     * Returns a JSON representation of session data.
      *
-     * @return string The JSON representation of the model data.
+     * @return string JSON representation of session data.
      */
     public function __toString(): string {
         return json_encode($this->data);

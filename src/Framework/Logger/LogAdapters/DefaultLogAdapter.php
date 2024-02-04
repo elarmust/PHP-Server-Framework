@@ -21,14 +21,23 @@ class DefaultLogAdapter extends AbstractLogger {
 
     public function log($level, string|\Stringable $message, array $context = [], $identifier = ''): void {
         $message = $this->getValue('format')->format($level, $message, $context, $identifier);
-        $fileNameFull = $this->getValue('logPath') . $this->getValue('fileName');
-        if (file_exists($fileNameFull) && filesize($fileNameFull) >= $this->getValue('fileSize')) {
-            $this->rotateLogFile();
+        $logPath = $this->getValue('logPath');
+        $fileNameFull = $logPath . $this->getValue('fileName');
+        if (!file_exists($logPath)) {
+            mkdir($logPath, 0666, true);
+        }
+
+        if (file_exists($fileNameFull)) {
+            if (filesize($fileNameFull) >= $this->getValue('fileSize')) {
+                $this->rotateLogFile();
+            }
+        } else {
+            touch($fileNameFull);
         }
 
         file_put_contents($fileNameFull, preg_replace("/\x1b\[[0-9;]*m/", '', $message) . "\n", FILE_APPEND);
         clearstatcache();
-        echo $message . "\n";
+        fwrite(STDOUT, $message . "\n");
     }
 
     protected function rotateLogFile() {

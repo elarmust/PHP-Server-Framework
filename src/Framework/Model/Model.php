@@ -451,7 +451,7 @@ abstract class Model implements ModelInterface {
      * @return mixed The value of the property.
      */
     public function __get($name) {
-        return $this->getData([$name]);
+        return $this->getData([$name])[$name];
     }
 
     /**
