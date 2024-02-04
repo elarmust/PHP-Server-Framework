@@ -28,8 +28,7 @@ class Cli {
             try {
                 $result = $handlerClass->run($commandArgs);
             } catch (Throwable $e) {
-                $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
-                $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+                $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
             }
 
             if (is_string($result)) {

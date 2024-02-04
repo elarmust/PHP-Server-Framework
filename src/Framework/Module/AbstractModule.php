@@ -52,26 +52,35 @@ abstract class AbstractModule implements ModuleInterface {
     }
 
     /**
-     * Custom constructor for module.
-     * This method will be called when module is loaded.
-     * This should contain code needed to set up module functionalities,
-     * similar to a regular constructor.
+     * Initialize module before workers start.
+     * This is called only once when server starts.
+     * This should be used to initialize data shared between workers.
+     * 
+     * Not mandatory to implement.
      *
-     * @return void
+     * @param Framework $framework Framework instance.
      */
-    abstract public function _construct();
+    public function beforeWorkers(Framework $framework): void {
+    }
 
     /**
-     * This method will be called when module is loaded.
-     * This should contain code needed to set up module functionalities.
+     * Initialize module when worker starts.
+     * This is called once for every worker.
+     *
+     * @param Framework $framework Framework instance unique to the worker.
      */
-    abstract public function load();
+    abstract public function onWorkerStart(Framework $framework): void;
 
     /**
-     * This method will be called when module is unloaded.
-     * This should contain code needed to disable module functionalities.
+     * Perform cleanup when regular worker stops.
+     * This is called once for every worker.
+     * 
+     * Not mandatory to implement.
+     *
+     * @param Framework $framework Framework instance unique to the worker.
      */
-    abstract public function unload();
+    public function onWorkerStop(Framework $framework): void {
+    }
 
     /**
      * Returns the framework instance associated with this module.

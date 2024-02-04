@@ -57,8 +57,6 @@ class ModuleRegistry {
                         // Create new module instance
                         $newModule = $this->framework->getClassContainer()->get($definedClassName, [$this->framework, $moduleName, $modulePath]);
 
-                        // Call custom constructor
-                        $newModule->_construct(...$this->framework->getClassContainer()->prepareFunctionArguments($definedClassName, '_construct'));
                         $modulesFound[$newModule->getName()] = $newModule;
                         $graph[$newModule->getName()] = [$newModule->loadBefore(), $newModule->loadAfter()];
                     } catch (Throwable $e) {
@@ -74,15 +72,44 @@ class ModuleRegistry {
         }
     }
 
-    public function loadModule(ModuleInterface $module): ModuleInterface {
-        $module->load();
-        $this->loadedModules[$module->getName()] = $module;
+    /**
+     * Performs initialization before workers are started.
+     * This is called only once per module when the server starts.
+     * This should be used to initialize data shared between workers.
+     *
+     * @param Framework $framework The framework instance.
+     * @param ModuleInterface $module The module to be initialized.
+     *
+     * @return ModuleInterface The initialized module.
+     */
+    public function initModule(Framework $framework, ModuleInterface $module): ModuleInterface {
+        $module->beforeWorkers($framework);
         return $module;
     }
 
-    public function unloadModule(ModuleInterface $module): void {
-        $module->unload();
+    /**
+     * Loads a module into the framework and calls the onWorkerStart method of the module.
+     *
+     * @param Framework $framework The framework instance.
+     * @param ModuleInterface $module The module to be loaded.
+     * @return ModuleInterface The loaded module.
+     */
+    public function loadModule(Framework $framework, ModuleInterface $module): ModuleInterface {
+        $module->onWorkerStart($framework);
+        return $module;
+    }
+
+    /**
+     * Unloads a module from the framework and calls the onWorkerStop method of the module.
+     *
+     * @param Framework $framework The framework instance.
+     * @param ModuleInterface $module The module to unload.
+     * @return ModuleInterface The unloaded module.
+     */
+    public function unloadModule(Framework $framework, ModuleInterface $module): ModuleInterface {
+        $module->onWorkerStop($framework);
         unset($this->loadedModules[$module->getName()]);
+        return $module;
     }
 
     public function getModules(): array {

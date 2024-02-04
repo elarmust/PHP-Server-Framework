@@ -6,6 +6,7 @@ use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 use Psr\Log\LoggerInterface;
 use Psr\Log\InvalidArgumentException;
+use Throwable;
 
 class Logger extends AbstractLogger {
     protected array $loggerAdapters = [];
@@ -22,43 +23,47 @@ class Logger extends AbstractLogger {
      * @param array $context = []
      * @param string $identifier = '' Optional log identifier.
      */
-    public function log($level, string|\Stringable $message, array $context = [], string $identifier = ''): void {
+    public function log($level, string|\Stringable|Throwable $message, array $context = [], string $identifier = ''): void {
         if (!defined(LogLevel::class . '::' . strtoupper($level))) {
             throw new InvalidArgumentException('Invalid log level \'' . $level . '\'');
+        }
+
+        if ($message instanceof Throwable) {
+            $message = get_class($message) . ': ' . $message->getMessage() . PHP_EOL . 'In ' . $message->getFile() . ' on line ' . $message->getLine() . PHP_EOL . $message->getTraceAsString();
         }
 
         $this->loggerAdapters['default']->log($level, $message, $context, $identifier);
     }
 
-    public function debug(string|\Stringable $message, array $context = [], string $identifier = ''): void {
+    public function debug(string|\Stringable|Throwable $message, array $context = [], string $identifier = ''): void {
         $this->log(LogLevel::DEBUG, $message, $context, $identifier);
     }
 
-    public function info(string|\Stringable $message, array $context = [], string $identifier = ''): void {
+    public function info(string|\Stringable|Throwable $message, array $context = [], string $identifier = ''): void {
         $this->log(LogLevel::INFO, $message, $context, $identifier);
     }
 
-    public function notice(string|\Stringable $message, array $context = [], string $identifier = ''): void {
+    public function notice(string|\Stringable|Throwable $message, array $context = [], string $identifier = ''): void {
         $this->log(LogLevel::NOTICE, $message, $context, $identifier);
     }
 
-    public function warning(string|\Stringable $message, array $context = [], string $identifier = ''): void {
+    public function warning(string|\Stringable|Throwable $message, array $context = [], string $identifier = ''): void {
         $this->log(LogLevel::WARNING, $message, $context, $identifier);
     }
 
-    public function error(string|\Stringable $message, array $context = [], string $identifier = ''): void {
+    public function error(string|\Stringable|Throwable $message, array $context = [], string $identifier = ''): void {
         $this->log(LogLevel::ERROR, $message, $context, $identifier);
     }
 
-    public function critical(string|\Stringable $message, array $context = [], string $identifier = ''): void {
+    public function critical(string|\Stringable|Throwable $message, array $context = [], string $identifier = ''): void {
         $this->log(LogLevel::CRITICAL, $message, $context, $identifier);
     }
 
-    public function alert(string|\Stringable $message, array $context = [], string $identifier = ''): void {
+    public function alert(string|\Stringable|Throwable $message, array $context = [], string $identifier = ''): void {
         $this->log(LogLevel::ALERT, $message, $context, $identifier);
     }
 
-    public function emergency(string|\Stringable $message, array $context = [], string $identifier = ''): void {
+    public function emergency(string|\Stringable|Throwable $message, array $context = [], string $identifier = ''): void {
         $this->log(LogLevel::EMERGENCY, $message, $context, $identifier);
     }
 

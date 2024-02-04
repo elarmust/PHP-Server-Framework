@@ -25,7 +25,7 @@ class Database {
         private string $username,
         private string $password,
         private string $charset = 'utf8mb4',
-        private int $maxPoolSize = 50
+        private int $maxPoolSize = 25
     ) {
         $mysqlConfig = new PDOConfig();
         $mysqlConfig->withHost($this->host);
@@ -109,7 +109,8 @@ class Database {
         $query = '
         INSERT INTO
             ' . $table . ' (' . $fieldsString . ')
-        VALUES (' . implode(', ', $sqlValues) . ')';
+        VALUES (' . implode(', ', $sqlValues) . ');
+        SELECT LAST_INSERT_ID()';
 
         return [
             $query,
@@ -128,7 +129,7 @@ class Database {
         return $this->query($insert[0], $insert[1]);
     }
 
-    public function update(string $table, array $data, array $where = null) {
+    public function update(string $table, array $data, array $where = null): bool {
         $whereFields = '';
         $values = [];
 
@@ -150,10 +151,10 @@ class Database {
 
         $query = 'UPDATE ' . $table . ' SET ' . implode(',', $fields) . ' WHERE ' . $whereFields;
 
-        $this->query($query, $values);
+        return $this->query($query, $values);
     }
 
-    public function delete(string $table, array $where) {
+    public function delete(string $table, array $where): bool {
         $whereFields = [];
         $values = [];
         if (is_array($where)) {
@@ -163,7 +164,7 @@ class Database {
         }
 
         $query = 'DELETE FROM ' . $table . ' WHERE ' . $whereFields;
-        $this->query($query, $values);
+        return $this->query($query, $values);
     }
 
     /**
@@ -171,23 +172,24 @@ class Database {
      *
      * @param array $query SQL query to process.
      * @param array $params List of parameters to prepare.
+     *
+     * @return bool|array Returns bool or an array of results.
      */
-    public function query(string $query, array $params = null) {
+    public function query(string $query, array $params = null): bool|array {
         $return = false;
         $pdo = $this->pool->get();
         $sql = $pdo->prepare($query);
         try {
             $return = $sql->execute($params);
+            if ($sql->columnCount()) {
+                $return = $sql->fetchAll(PDO::FETCH_ASSOC);
+            }
         } catch (Throwable $e) {
-            $this->logger->log(LogLevel::ERROR, $e->getMessage(), identifier: 'framework');
-            $this->logger->log(LogLevel::ERROR, $e->getTraceAsString(), identifier: 'framework');
+            $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
+        } finally {
+            $this->pool->put($pdo);
         }
 
-        if ($sql->columnCount()) {
-            $return = $sql->fetchAll(PDO::FETCH_ASSOC);
-        }
-
-        $this->pool->put($pdo);
         return $return;
     }
 

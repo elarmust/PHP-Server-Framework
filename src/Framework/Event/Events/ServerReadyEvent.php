@@ -8,7 +8,7 @@ namespace Framework\Event\Events;
 
 use Framework\Framework;
 
-class HttpStartEvent {
+class ServerReadyEvent {
     public function __construct(private Framework $framework) {
     }
 

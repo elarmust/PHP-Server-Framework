@@ -6,20 +6,33 @@
 
 namespace Framework\Tests\Commands;
 
-use Framework\Module\ModuleRegistry;
-use Framework\Cli\CommandInterface;
-use PHPUnit\Framework\TestSuite;
+use Psr\Log\LogLevel;
+use Framework\Logger\Logger;
 use PHPUnit\TextUI\TestRunner;
+use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\TestSuite;
+use Framework\Cli\CommandInterface;
+use Framework\Framework;
+use Framework\Module\ModuleRegistry;
 
 class Test implements CommandInterface {
-    public function __construct(private ModuleRegistry $moduleRegistry) {
+    public function __construct(
+        private ModuleRegistry $moduleRegistry,
+        private Logger $logger,
+        private Framework $framework) {
     }
 
     public function run(array $commandArgs): null|string {
+        if (!$this->framework->isTestingEnvironment()) {
+            $this->logger->log(LogLevel::WARNING, 'Tests can only be run in test invironment! You can enable it in config.json.', identifier: 'framework');
+            return null;
+        }
+
         foreach ($this->getTests() as $module) {
             $testRunner = new TestRunner();
             $suite = new TestSuite();
             foreach ($module as $test) {
+                $this->logger->log(LogLevel::INFO, 'Running test: ' . $test);
                 $suite->addTestSuite($test);
             }
 
@@ -35,8 +48,16 @@ class Test implements CommandInterface {
         // Framework internal tests.
         $intermalTests = array_diff(scandir(BASE_PATH . '/src/Framework/Tests/Tests'), ['..', '.']);
         foreach ($intermalTests as $internalTest) {
-            $internalTest = 'Framework\\Tests\\Tests\\' . $internalTest;
-            $tests['framework'][] = str_replace('.php', '', $internalTest);
+            if (!is_file(BASE_PATH . '/src/Framework/Tests/Tests/' . $internalTest)) {
+                continue;
+            }
+
+            $internalTest = 'Framework\\Tests\\Tests\\' . str_replace('.php', '', $internalTest);
+            if (!class_exists($internalTest) || !is_subclass_of($internalTest, TestCase::class)) {
+                continue;
+            }
+
+            $tests['framework'][] = $internalTest;
         }
 
         // Module tests.
@@ -49,8 +70,17 @@ class Test implements CommandInterface {
 
             $moduleTests = array_diff(scandir($modulePath . '/Tests'), ['..', '.']);
             foreach ($moduleTests as $moduleTest) {
-                $testClassPath = $module->getName() . '\\Tests\\' . $moduleTest;
-                $tests[$module->getName()][] = str_replace('.php', '', $testClassPath);
+                // If it is not a file, then continue
+                if (!is_file($modulePath . '/Tests/' . $moduleTest)) {
+                    continue;
+                }
+
+                $testClassPath = $module->getName() . '\\Tests\\' . str_replace('.php', '', $moduleTest);
+                if (!class_exists($testClassPath) || !is_subclass_of($testClassPath, TestCase::class)) {
+                    continue;
+                }
+
+                $tests[$module->getName()][] = $testClassPath;
             }
         }
 
