@@ -26,10 +26,8 @@ class SessionGCTask implements TaskInterface {
      * @return void
      */
     public function execute(): void {
-        $this->logger->debug('Running session garbage collection task.');
         $minTimestamp = time() - $this->session->getExpirationSeconds();
         $table = Cache::getTable($this->session::getTableName());
-        echo $table->count() . PHP_EOL;
         foreach ($table as $sessionId => $sessionData) {
             if ($sessionData['timestamp'] < $minTimestamp) {
                 $session = $this->session->getSession($sessionId);
