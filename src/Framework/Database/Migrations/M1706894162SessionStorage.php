@@ -6,14 +6,12 @@
 
 namespace Framework\Database\Migrations;
 
-use Framework\Framework;
-use Framework\Database\Database;
-use Framework\Http\Session\Session;
-use Framework\Container\ClassContainer;
 use Framework\Database\MigrationInterface;
+use Framework\Http\Session\Session;
+use Framework\Database\Database;
 
 class M1706894162SessionStorage implements MigrationInterface {
-    public function __construct(private ClassContainer $classContainer, private Framework $framework, private Session $session) {
+    public function __construct(private Session $session) {
     }
 
     public function up(Database $database) {

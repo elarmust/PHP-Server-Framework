@@ -25,6 +25,7 @@
     "workerNum": 8,
     "taskWorkerNum": 1,
     "maxCoroutines": 4096,
+    "logDebug": false,
     "session": {
         "enabled": true,
         "expirationSeconds": 86400,

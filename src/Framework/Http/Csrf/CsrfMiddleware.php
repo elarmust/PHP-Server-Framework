@@ -29,7 +29,7 @@ class CsrfMiddleware implements MiddlewareInterface {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
         $existingCookies = $request->getCookieParams();
         $cookieSessionId = $existingCookies['PHPSESSID'] ?? null;
-        $session = $this->session->load($cookieSessionId);
+        $session = $this->session->getSession($cookieSessionId);
         $token = $request->getQueryParams()['token'] ?? null;
 
         // Check the validity of the token.

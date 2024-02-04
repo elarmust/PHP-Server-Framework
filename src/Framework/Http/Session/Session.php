@@ -9,6 +9,7 @@ namespace Framework\Http\Session;
 use Framework\Database\Database;
 use Framework\Logger\Logger;
 use Framework\Cache\Cache;
+use Framework\Cache\Table;
 use Framework\Framework;
 use RuntimeException;
 use Generator;
@@ -450,14 +451,12 @@ class Session {
     }
 
     /**
-     * Retrieves the cached session IDs.
+     * Retrieves the session cache table.
      *
-     * @return Generator Generator that yields the session IDs.
+     * @return Table Cache table containing session IDs.
      */
-    public function getCachedIds(): Generator {
-        foreach (Cache::getTable(self::getTableName()) as $id => $row) {
-            yield $id;
-        }
+    public function getCacheTable(): Table {
+        return Cache::getTable(self::getTableName());
     }
 
     /**

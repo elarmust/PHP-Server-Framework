@@ -8,7 +8,6 @@
 
 namespace Framework\Http\Session\Task;
 
-use Framework\Cache\Cache;
 use Framework\Logger\Logger;
 use Framework\Task\TaskInterface;
 use Framework\Http\Session\Session;
@@ -27,8 +26,7 @@ class SessionGCTask implements TaskInterface {
      */
     public function execute(): void {
         $minTimestamp = time() - $this->session->getExpirationSeconds();
-        $table = Cache::getTable($this->session::getTableName());
-        foreach ($table as $sessionId => $sessionData) {
+        foreach ($this->session->getCacheTable() as $sessionId => $sessionData) {
             if ($sessionData['timestamp'] < $minTimestamp) {
                 $session = $this->session->getSession($sessionId);
                 $session->delete($sessionId);

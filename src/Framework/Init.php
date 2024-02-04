@@ -43,14 +43,14 @@ use DateTime;
 
 class Init {
     public static function beforeWorkers(Framework $framework): void {
+        $framework->getLogger()->getLogger('default')->setValue('debug', boolval($framework->getConfiguration()->getConfig('logDebug')));
         if ($framework->getConfiguration()->getConfig('session.enabled') == true) {
             $rowCount = $framework->getConfiguration()->getConfig('session.sessionCacheRowCount') ?? 1024;
             $rowCount = max(1, (int)$rowCount);
-            $framework->getLogger()->info('Session cache row count: ' . $rowCount, identifier: 'framework');
+            $framework->getLogger()->debug('Session cache row count: ' . $rowCount, identifier: 'framework');
             $dataLength = $framework->getConfiguration()->getConfig('session.sessionCacheDataLengthBytes') ?? 4096;
             $dataLength = is_int($dataLength) && $dataLength >= 4096 ? $dataLength : 4096;
-            $dataLength = max(4096, (int)$dataLength);
-            $framework->getLogger()->info('Session cache row data length: ' . $dataLength . ' bytes.', identifier: 'framework');
+            $framework->getLogger()->debug('Session cache row data length: ' . $dataLength . ' bytes.', identifier: 'framework');
             // Add session table to the cache.
             $table = new Table(Session::getTableName(), $rowCount);
             $table->column('data', Table::TYPE_STRING, $dataLength);
@@ -146,7 +146,7 @@ class Init {
             $gcMillis = $framework->getConfiguration()->getConfig('session.sessionGCMilliSeconds') ?: 60000;
             $gcMillis = is_int($gcMillis) && $gcMillis >= 1000 ? $gcMillis : 1000;
 
-            $framework->getTaskScheduler()->scheduleRecurring($classContainer->get(SessionGCTask::class, useCache: false), TimeUtils::getMillisecondsToDateTime($nextMinute));
+            $framework->getTaskScheduler()->scheduleRecurring($classContainer->get(SessionGCTask::class, useCache: false), $gcMillis);
         }
     }
 
