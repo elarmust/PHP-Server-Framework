@@ -27,15 +27,17 @@
     "maxCoroutines": 4096,
     "session": {
         "enabled": true,
-        "sessionExpirationSeconds": 259200,
-        "sessionRuntimeCacheRowCount": 4096,
+        "expirationSeconds": 86400,
+        "sessionCacheRowCount": 4096,
         "sessionRunetimeCacheDataLengthBytes": 4096,
         "sessionGCMilliSeconds": 60000,
+        "httpOnly": false,
+        "secure": false,
+        "path": "/",
         "sessionColdStorage": {
             "mysqlDb": "default"
         }
     },
-    "sessionExpirationSeconds": 259200,
     "hostName": "framework",
     "defaultCsrfTokenExpirationSeconds": 86400
 }

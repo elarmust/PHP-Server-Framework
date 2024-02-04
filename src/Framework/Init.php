@@ -33,8 +33,8 @@ use Framework\Cron\Commands\Cron;
 use Framework\Cli\Commands\Stop;
 use Framework\Database\Database;
 use Framework\Utils\TimeUtils;
-use Framework\Vault\Vault;
-use Framework\Vault\Table;
+use Framework\Cache\Cache;
+use Framework\Cache\Table;
 use Framework\Http\Route;
 use Framework\View\View;
 use OpenSwoole\Event as SwooleEvent;
@@ -44,17 +44,19 @@ use DateTime;
 class Init {
     public static function beforeWorkers(Framework $framework): void {
         if ($framework->getConfiguration()->getConfig('session.enabled') == true) {
-            $rowCount = $framework->getConfiguration()->getConfig('sessionCacheRowCount') ?: 1024;
-            $rowCount = is_int($rowCount) && $rowCount >= 1024 ? $rowCount : 1024;
-            $dataLength = $framework->getConfiguration()->getConfig('sessionCacheDataLengthBytes') ?: 4096;
-            $dataLength = is_int($rowCount) && $rowCount >= 4096 ? $rowCount : 4096;
-            // Add session table to the vault.
+            $rowCount = $framework->getConfiguration()->getConfig('session.sessionCacheRowCount') ?? 1024;
+            $rowCount = max(1, (int)$rowCount);
+            $framework->getLogger()->info('Session cache row count: ' . $rowCount, identifier: 'framework');
+            $dataLength = $framework->getConfiguration()->getConfig('session.sessionCacheDataLengthBytes') ?? 4096;
+            $dataLength = is_int($dataLength) && $dataLength >= 4096 ? $dataLength : 4096;
+            $dataLength = max(4096, (int)$dataLength);
+            $framework->getLogger()->info('Session cache row data length: ' . $dataLength . ' bytes.', identifier: 'framework');
+            // Add session table to the cache.
             $table = new Table(Session::getTableName(), $rowCount);
             $table->column('data', Table::TYPE_STRING, $dataLength);
             $table->column('timestamp', Table::TYPE_INT, 4);
-            $table->column('existsInColdStorage', Table::TYPE_INT, 1);
             $table->create();
-            Vault::addTable($table);
+            Cache::addTable($table);
         }
     }
 
@@ -66,11 +68,17 @@ class Init {
         if ($sessionEnabled) {
             $dbName = $framework->getConfiguration()->getConfig('session.sessionColdStorage.mysqlDb') ?: 'default';
             $databaseInfo = $framework->getConfiguration()->getConfig('databases.' . $dbName);
-    
+
+            $httpOnly = $framework->getConfiguration()->getConfig('session.httpOnly') ?? true;
+            $secure = $framework->getConfiguration()->getConfig('session.secure') ?? true;
+            $path = $framework->getConfiguration()->getConfig('session.path') ?: '/';
+            $expirationSeconds = $framework->getConfiguration()->getConfig('session.expirationSeconds') ?? 86400;
+            $expirationSeconds = is_int($expirationSeconds) && $expirationSeconds >= 1 ? $expirationSeconds : 1;
+
             if (!$databaseInfo) {
                 throw new RuntimeException('Database ' . $dbName . ' does not exist.');
             }
-    
+
             $database = $framework->getClassContainer()->get(Database::class, [
                 $databaseInfo['host'],
                 $databaseInfo['port'],
@@ -78,7 +86,10 @@ class Init {
                 $databaseInfo['username'],
                 $databaseInfo['password']
             ], $dbName);
-            $classContainer->get(Session::class, [$database]);
+            $session = $classContainer->get(Session::class, [$database, $expirationSeconds]);
+            $session->setHttponly($httpOnly);
+            $session->setSecure($secure);
+            $session->setSessionPath($path);
         }
 
         // Register model events.

@@ -26,26 +26,28 @@ class SessionMiddleware implements MiddlewareInterface {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
         $existingCookies = $request->getCookieParams();
         $cookieSessionId = $existingCookies['PHPSESSID'] ?? null;
-        $session = $this->session->load($cookieSessionId);
+        $session = $this->session->getSession($cookieSessionId);
 
         // Send session cookie to user.
         if ($cookieSessionId !== $session->id()) {
-            $secure = $this->server->sslEnabled();
-
             $cookieParams = $request->getCookieParams();
             $cookieParams['PHPSESSID'] = $session->id();
             $request = $request->withCookieParams($cookieParams);
 
-            $expiration = time() + ($this->configuration->getConfig('sessionExpirationSeconds') ?? 259200);
+            $expiration = time() + $session->getExpirationSeconds();
             $expiresFormatted = gmdate('D, d M Y H:i:s T', $expiration);
 
             // Create a new cookie string with the specified attributes.
-            $cookieString = 'PHPSESSID=' . $session->id() . '; path=/;';
-            if ($secure) {
+            $cookieString = 'PHPSESSID=' . $session->id() . '; path=' . $session->getSessionPath() . ';';
+            if ($session->getSecure() === true) {
                 $cookieString .= ' secure;';
             }
 
-            $cookieString .= ' HttpOnly; expires=' . $expiresFormatted . '; domain=' . ($this->configuration->getConfig('hostName') ?? '') . ';';
+            if ($session->getHttpOnly() === true) {
+                $cookieString .= ' HttpOnly;';
+            }
+
+            $cookieString .= ' expires=' . $expiresFormatted . '; domain=' . ($this->configuration->getConfig('hostName') ?? '') . ';';
 
             $response = $handler->handle($request);
             $response = $response->withAddedHeader('Set-Cookie', $cookieString);

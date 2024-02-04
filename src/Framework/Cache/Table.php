@@ -1,6 +1,6 @@
 <?php
 
-namespace Framework\Vault;
+namespace Framework\Cache;
 
 use OpenSwoole\Table as SwooleTable;
 

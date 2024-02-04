@@ -1,18 +1,18 @@
 <?php
 
-namespace Framework\Vault;
+namespace Framework\Cache;
 
 use RuntimeException;
-use Framework\Vault\Table;
+use Framework\Cache\Table;
 
 /**
  * A central table storage.
  */
-class Vault {
+class Cache {
     private static array $tables = [];
 
     /**
-     * Add a new table to the vault.
+     * Add a new table to the cache.
      * 
      * @param string $name Table name
      * @param int $rowCount Row count
@@ -40,7 +40,7 @@ class Vault {
     }
 
     /**
-     * Checks if a table exists in the vault.
+     * Checks if a table exists in the cache.
      *
      * @param string $name The name of the table to check.
      * @return bool Returns true if the table exists, false otherwise.

@@ -8,7 +8,7 @@ namespace Framework\Http\Session;
 
 use Framework\Database\Database;
 use Framework\Logger\Logger;
-use Framework\Vault\Vault;
+use Framework\Cache\Cache;
 use Framework\Framework;
 use RuntimeException;
 use Throwable;
@@ -17,44 +17,50 @@ class Session {
     private array $data = [];
     private ?string $id = null;
     private ?int $timeStamp = null;
+    private int $expiration;
+    private bool $httpOnly = false;
+    private bool $secure = false;
+    private string $sessionPath = '/';
     public const STORAGE_MEMORY = 2;
     public const STORAGE_COLD = 1;
 
-    public function __construct (private Framework $framework, private Logger $logger, private Database $database, private int $expiration = 86400) {
+    public function __construct (private Framework $framework, private Logger $logger, private Database $database, int $expiration = 86400) {
+        $this->expiration = max(0, $expiration);
     }
 
     /**
-     * Loads a session with the given session ID.
+     * Returns a session.
+     * If the session ID is not provided, a new session will be created.
+     * If the session ID does not exist, a new session will be created.
      *
      * @param string $sessionId The session ID.
      * @return Session The loaded session.
      */
-    public function load(string $sessionId): Session {
-        $this->logger->debug('Loading session with id: ' . $sessionId);
-        $inCache = Vault::getTable(self::getTableName())->get($sessionId);
+    public function getSession(string|null $sessionId = null): Session {
+        if ($sessionId === null) {
+            return $this->create();
+        }
+
+        $inCache = Cache::getTable(self::getTableName())->get($sessionId);
         $data = $inCache ? $inCache : ($this->getDatabase()->select(self::getTableName(), where: ['id' => $sessionId])[0] ?? false);
 
         // Return a new session if the session does not exist.
         if (!$data) {
-            $this->logger->debug('Doesnt exist, creating a new');
             return $this->create();
         }
 
         $session = $this->clone($sessionId, unserialize($data['data']), $data['timestamp']);
-        $timeStamp = time();
+        $timeStamp = $session->getTimestamp();
 
         // If the session has expired, then return a new session.
         if (($timeStamp - $session->getTimestamp()) > $session->getExpirationSeconds()) {
-            $this->logger->debug('Expired');
             $session->delete();
             return $this->create();
         }
 
         $session->setTimeStamp($timeStamp);
         if ($timeStamp != $data['timestamp']) {
-            $this->logger->debug('Timestamp changed: ' . $timeStamp . ' ' . $data['timestamp']);
             if ($inCache !== false) {
-                $this->logger->debug('Saving to cache');
                 $this->setCached($sessionId, $session->getData(), $timeStamp);
             }
 
@@ -78,13 +84,16 @@ class Session {
         $sessionId = $this->generateSessionId();
         $session = $this->clone($sessionId, $data, $timeStamp);
 
-        $insertedId = $session->getDatabase()->insert(self::getTableName(), ['id' => $sessionId, 'data' => serialize($data), 'timestamp' => $timeStamp]);
-        if ($insertedId === false) {
-            throw new RuntimeException('Failed to create a session in database!');
+        // Save, if data is not empty.
+        if ($session->getData() !== []) {
+            $insertedId = $session->getDatabase()->insert(self::getTableName(), ['id' => $sessionId, 'data' => serialize($data), 'timestamp' => $timeStamp]);
+            if ($insertedId === false) {
+                throw new RuntimeException('Failed to save a session to database!');
+            }
+
+            $this->setCached($sessionId, $data, $timeStamp);
         }
 
-        $this->logger->debug('Saving to cache: ' . $sessionId);
-        $this->setCached($sessionId, $data, $timeStamp);
         return $session;
     }
 
@@ -99,16 +108,35 @@ class Session {
             throw new RuntimeException('Cannot save non-instanciated session.');
         }
 
-        $saveData = [
-            'data' => serialize($this->data),
-            'timestamp' => time()
-        ];
-        $status = $this->getDatabase()->update(self::getTableName(), $saveData, ['id' => $this->id()]);
-        if (!$status) {
-            throw new RuntimeException('Failed to save sesion to database!');
+        // There is no need to save an empty session.
+        if ($this->getData() === []) {
+            $this->delete();
+            return $this;
         }
 
-        $this->setCached($this->id(), $saveData, $this->getTimestamp());
+        $serializedData = serialize($this->data);
+        $timeStamp = time();
+        go(function () use ($serializedData, $timeStamp) {
+            $this->getDatabase()->query('
+                INSERT INTO
+                    ' . self::getTableName() . '
+                SET
+                    id = ?,
+                    data = ?,
+                    timestamp = ?
+                ON DUPLICATE KEY UPDATE
+                    data = ?,
+                    timestamp = ?
+            ', [
+                $this->id(),
+                $serializedData,
+                $timeStamp,
+                $serializedData,
+                $timeStamp
+            ]);
+        });
+
+        $this->setCached($this->id(), ['data' => $serializedData, 'timestamp' => $timeStamp], $this->getTimestamp());
         return $this;
     }
 
@@ -127,13 +155,20 @@ class Session {
 
         $this->setTimeStamp(time());
         $this->data = array_merge($this->data, $data);
+
+        // We might as well delete it, if data is empty.
+        if ($this->getData() === []) {
+            $this->delete();
+            return $this;
+        }
+
         $this->setCached($this->id(), $this->data, $this->getTimestamp());
 
         return $this;
     }
 
     /**
-     * Deletes the session from the database and removes it from the session vault.
+     * Deletes the session from the database and removes it from the session cache.
      *
      * @throws RuntimeException If the session fails to be deleted from the database.
      * @return Session The updated session object.
@@ -144,7 +179,7 @@ class Session {
             throw new RuntimeException('Failed to delete session from database!');
         }
 
-        Vault::getTable(self::getTableName())->del($this->id());
+        Cache::getTable(self::getTableName())->del($this->id());
 
         return $this;
     }
@@ -185,10 +220,10 @@ class Session {
      */
     private function setCached(string $sessionId, array $data, int $timeStamp): void {
         try {
-            $existingData = Vault::getTable(self::getTableName())->get($sessionId)['data'] ?? serialize([]);
-            Vault::getTable(self::getTableName())->set($sessionId, ['data' => serialize(array_replace_recursive(unserialize($existingData), $data)), 'timestamp' => $timeStamp]);
+            $existingData = Cache::getTable(self::getTableName())->get($sessionId)['data'] ?? serialize([]);
+            Cache::getTable(self::getTableName())->set($sessionId, ['data' => serialize(array_replace_recursive(unserialize($existingData), $data)), 'timestamp' => $timeStamp]);
         } catch (Throwable $e) {
-            $this->logger->debug('Unable to save session to cache.' . $e->getMessage(), identifier: 'framework');
+            $this->logger->debug('Unable to save session to cache!', identifier: 'framework');
             $this->logger->debug($e, identifier: 'framework');
         }
     }
@@ -250,7 +285,7 @@ class Session {
      * @return int
      */
     public function sessionStorageLocation(string $sessionId): int|bool {
-        if (Vault::getTable(self::getTableName())->exists($sessionId)) {
+        if (Cache::getTable(self::getTableName())->exists($sessionId)) {
             return $this::STORAGE_MEMORY;
         }
 
@@ -334,6 +369,65 @@ class Session {
 
         $this->timeStamp = $timeStamp;
         return $this;
+    }
+
+    /**
+     * Sets the flag indicating whether the session cookie should be accessible only through the HTTP protocol.
+     *
+     * @param bool $httpOnly Whether the session cookie should be accessible only through the HTTP protocol.
+     * @return void
+     */
+    public function setHttpOnly(bool $httpOnly): void {
+        $this->httpOnly = $httpOnly;
+    }
+
+    /**
+     * Returns whether the session cookie is HTTP only.
+     *
+     * @return bool True if the session cookie is HTTP only, false otherwise.
+     */
+    public function getHttpOnly(): bool {
+        return $this->httpOnly;
+    }
+
+    /**
+     * Sets the secure flag for the session.
+     *
+     * @param bool $secure Whether the session should be secure or not.
+     *
+     * @return void
+     */
+    public function setSecure(bool $secure): void {
+        $this->secure = $secure;
+    }
+
+    /**
+     * Get the value of the secure flag for the session.
+     *
+     * @return bool Value of secure flag.
+     */
+    public function getSecure(): bool {
+        return $this->secure;
+    }
+
+    /**
+     * Sets the session path.
+     *
+     * @param string $path Path to set for the session.
+     *
+     * @return void
+     */
+    public function setSessionPath(string $path): void {
+        $this->sessionPath = $path;
+    }
+
+    /**
+     * Returns the session path.
+     *
+     * @return string Session path.
+     */
+    public function getSessionPath(): string {
+        return $this->sessionPath;
     }
 
     /**

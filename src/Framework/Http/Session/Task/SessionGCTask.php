@@ -8,7 +8,7 @@
 
 namespace Framework\Http\Session\Task;
 
-use Framework\Vault\Vault;
+use Framework\Cache\Cache;
 use Framework\Logger\Logger;
 use Framework\Task\TaskInterface;
 use Framework\Http\Session\Session;
@@ -27,10 +27,12 @@ class SessionGCTask implements TaskInterface {
      */
     public function execute(): void {
         $this->logger->debug('Running session garbage collection task.');
-        $table = Vault::getTable($this->session::getTableName());
+        $minTimestamp = time() - $this->session->getExpirationSeconds();
+        $table = Cache::getTable($this->session::getTableName());
+        echo $table->count() . PHP_EOL;
         foreach ($table as $sessionId => $sessionData) {
-            $session = $this->session->load($sessionId);
-            if ((time() - $sessionData['timestamp']) > $this->session->getExpirationSeconds()) {
+            if ($sessionData['timestamp'] < $minTimestamp) {
+                $session = $this->session->getSession($sessionId);
                 $session->delete($sessionId);
             }
         }
@@ -38,7 +40,7 @@ class SessionGCTask implements TaskInterface {
         // Delete expired sessions from the database.
         $this->session->getDatabase()->query('
             DELETE FROM ' . $this->session::getTableName() . ' WHERE timestamp < ?
-        ', [time() - $this->session->getExpirationSeconds()]
+        ', [$minTimestamp]
         );
     }
 
