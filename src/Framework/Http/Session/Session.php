@@ -12,7 +12,6 @@ use Framework\Cache\Cache;
 use Framework\Cache\Table;
 use Framework\Framework;
 use RuntimeException;
-use Generator;
 use Throwable;
 
 class Session {
@@ -22,7 +21,8 @@ class Session {
     private ?int $expiration = null;
     private bool $httpOnly = false;
     private bool $secure = false;
-    private string $sessionPath = '/';
+    private ?string $sessionPath = '/';
+    private ?string $sessionDomain = null;
     public const STORAGE_MEMORY = 2;
     public const STORAGE_COLD = 1;
 
@@ -421,21 +421,41 @@ class Session {
     /**
      * Sets the session path.
      *
-     * @param string $path Path to set for the session.
+     * @param null|string $path Path to set for the session.
      *
      * @return void
      */
-    public function setSessionPath(string $path): void {
+    public function setSessionPath(null|string $path): void {
         $this->sessionPath = $path;
     }
 
     /**
      * Returns the session path.
      *
-     * @return string Session path.
+     * @return null|string Session path.
      */
-    public function getSessionPath(): string {
+    public function getSessionPath(): null|string {
         return $this->sessionPath;
+    }
+
+    /**
+     * Sets the session domain.
+     *
+     * @param null|string $domain Domain to set for the session.
+     *
+     * @return void
+     */
+    public function setSessionDomain(string|null $domain): void {
+        $this->sessionDomain = $domain;
+    }
+
+    /**
+     * Retrieves the session domain.
+     *
+     * @return null|string Domain for the session.
+     */
+    public function getSessionDomain(): null|string {
+        return $this->sessionDomain;
     }
 
     /**

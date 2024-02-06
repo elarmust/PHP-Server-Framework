@@ -47,7 +47,12 @@ class SessionMiddleware implements MiddlewareInterface {
                 $cookieString .= ' HttpOnly;';
             }
 
-            $cookieString .= ' expires=' . $expiresFormatted . '; domain=' . ($this->configuration->getConfig('hostName') ?? '') . ';';
+            $domain = $session->getSessionDomain();
+            if ($domain) {
+                $cookieString .= ' domain=' . $domain . ';';
+            }
+
+            $cookieString .= ' expires=' . $expiresFormatted . ';';
 
             $response = $handler->handle($request);
             $response = $response->withAddedHeader('Set-Cookie', $cookieString);

@@ -39,6 +39,7 @@
         "httpOnly": false,
         "secure": false,
         "path": "/",
+        "domain": "framework",
         "sessionColdStorage": {
             "mysqlDb": "default"
         }

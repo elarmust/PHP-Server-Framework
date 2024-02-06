@@ -72,6 +72,7 @@ class Init {
             $httpOnly = $framework->getConfiguration()->getConfig('session.httpOnly') ?? true;
             $secure = $framework->getConfiguration()->getConfig('session.secure') ?? true;
             $path = $framework->getConfiguration()->getConfig('session.path') ?: '/';
+            $sessionDomain = $framework->getConfiguration()->getConfig('session.domain') ?: null;
             $expirationSeconds = $framework->getConfiguration()->getConfig('session.expirationSeconds') ?? 86400;
             $expirationSeconds = is_int($expirationSeconds) && $expirationSeconds >= 1 ? $expirationSeconds : 1;
 
@@ -90,6 +91,7 @@ class Init {
             $session->setHttponly($httpOnly);
             $session->setSecure($secure);
             $session->setSessionPath($path);
+            $session->setSessionDomain($sessionDomain);
         }
 
         // Register model events.
