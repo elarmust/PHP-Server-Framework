@@ -64,7 +64,7 @@ class Init {
         $classContainer = $framework->getClassContainer();
 
         $sessionEnabled = $framework->getConfiguration()->getConfig('session.enabled') == true;
-        // Initialize Session object.
+        // Initialize Session object with settings from the configuration.
         if ($sessionEnabled) {
             $dbName = $framework->getConfiguration()->getConfig('session.sessionColdStorage.mysqlDb') ?: 'default';
             $databaseInfo = $framework->getConfiguration()->getConfig('databases.' . $dbName);
@@ -73,6 +73,7 @@ class Init {
             $secure = $framework->getConfiguration()->getConfig('session.secure') ?? true;
             $path = $framework->getConfiguration()->getConfig('session.path') ?: '/';
             $sessionDomain = $framework->getConfiguration()->getConfig('session.domain') ?: null;
+            $sessionCookieName = $framework->getConfiguration()->getConfig('session.cookieName') ?: 'PHPSESSID';
             $expirationSeconds = $framework->getConfiguration()->getConfig('session.expirationSeconds') ?? 86400;
             $expirationSeconds = is_int($expirationSeconds) && $expirationSeconds >= 1 ? $expirationSeconds : 1;
 
@@ -92,6 +93,7 @@ class Init {
             $session->setSecure($secure);
             $session->setSessionPath($path);
             $session->setSessionDomain($sessionDomain);
+            $session->setCookieName($sessionCookieName);
         }
 
         // Register model events.

@@ -24,21 +24,22 @@ class SessionMiddleware implements MiddlewareInterface {
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
+        $cookieName = $this->session->getCookieName();
         $existingCookies = $request->getCookieParams();
-        $cookieSessionId = $existingCookies['PHPSESSID'] ?? null;
+        $cookieSessionId = $existingCookies[$cookieName] ?? null;
         $session = $this->session->getSession($cookieSessionId);
 
         // Send session cookie to user.
         if ($cookieSessionId !== $session->id()) {
             $cookieParams = $request->getCookieParams();
-            $cookieParams['PHPSESSID'] = $session->id();
+            $cookieParams[$cookieName] = $session->id();
             $request = $request->withCookieParams($cookieParams);
 
             $expiration = time() + $session->getExpirationSeconds();
             $expiresFormatted = gmdate('D, d M Y H:i:s T', $expiration);
 
             // Create a new cookie string with the specified attributes.
-            $cookieString = 'PHPSESSID=' . $session->id() . '; path=' . $session->getSessionPath() . ';';
+            $cookieString = $cookieName . '=' . $session->id() . '; path=' . $session->getSessionPath() . ';';
             if ($session->getSecure() === true) {
                 $cookieString .= ' secure;';
             }

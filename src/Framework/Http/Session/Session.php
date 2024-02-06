@@ -23,6 +23,7 @@ class Session {
     private bool $secure = false;
     private ?string $sessionPath = '/';
     private ?string $sessionDomain = null;
+    private string $cookieName = 'PHPSESSID';
     public const STORAGE_MEMORY = 2;
     public const STORAGE_COLD = 1;
 
@@ -456,6 +457,31 @@ class Session {
      */
     public function getSessionDomain(): null|string {
         return $this->sessionDomain;
+    }
+
+    /**
+     * Sets the name of the session cookie.
+     *
+     * @throws RuntimeException If the cookie name is invalid.
+     * @param string $cookieName Session cookie name.
+     */
+    public function setCookieName(string $cookieName): void {
+        $cookieName = trim($cookieName);
+        if ($cookieName === '' || strpos($cookieName, ' ') !== false) {
+            throw new RuntimeException('Invalid cookie name: ' . $cookieName);
+        }
+
+        $this->cookieName = $cookieName;
+    }
+
+    /**
+     * Returns the name of the cookie used for session management.
+     * Defaults to 'PHPSESSID'.
+     *
+     * @return string Session cookie name.
+     */
+    public function getCookieName(): string {
+        return $this->cookieName;
     }
 
     /**

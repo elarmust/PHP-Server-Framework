@@ -30,11 +30,13 @@
         "enabled": true,
         "expirationSeconds": 86400,
         "sessionCacheRowCount": 4096,
-        "sessionRunetimeCacheDataLengthBytes": 4096,
+        "sessionCacheDataLengthBytes": 4096,
         "sessionGCMilliSeconds": 60000,
         "httpOnly": false,
         "secure": false,
         "path": "/",
+        "domain": "framework",
+        "cookieName": "PHPSESSID",
         "sessionColdStorage": {
             "mysqlDb": "default"
         }
