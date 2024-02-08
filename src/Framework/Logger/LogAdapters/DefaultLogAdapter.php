@@ -32,7 +32,7 @@ class DefaultLogAdapter extends AbstractLogger {
         $logPath = $this->getValue('logPath');
         $fileNameFull = $logPath . $this->getValue('fileName');
         if (!file_exists($logPath)) {
-            mkdir($logPath, 0666, true);
+            mkdir($logPath, recursive: true);
         }
 
         if (file_exists($fileNameFull)) {
