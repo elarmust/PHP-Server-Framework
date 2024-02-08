@@ -92,15 +92,15 @@ class Session {
         $sessionId = $this->generateSessionId();
         $session = $this->clone($sessionId, $data, $timeStamp);
 
-        // Save, if data is not empty.
+        // Save to database, if data is not empty.
         if ($session->getData() !== []) {
             $insertedId = $session->getDatabase()->insert(self::getTableName(), ['id' => $sessionId, 'data' => serialize($data), 'timestamp' => $timeStamp]);
             if ($insertedId === false) {
                 throw new RuntimeException('Failed to save a session to database!');
             }
-
-            $this->setCached($sessionId, $data, $timeStamp);
         }
+
+        $this->setCached($sessionId, $data, $timeStamp);
 
         return $session;
     }
@@ -116,14 +116,16 @@ class Session {
             throw new RuntimeException('Cannot save non-instanciated session.');
         }
 
-        // There is no need to save an empty session.
+        $serializedData = serialize($this->data);
+        $timeStamp = time();
+
+        $this->setCached($this->id(), ['data' => $serializedData, 'timestamp' => $timeStamp], $this->getTimestamp());
+
+        // There is no need to save an empty session to database.
         if ($this->getData() === []) {
-            $this->delete();
             return $this;
         }
 
-        $serializedData = serialize($this->data);
-        $timeStamp = time();
         go(function () use ($serializedData, $timeStamp) {
             $this->getDatabase()->query('
                 INSERT INTO
@@ -143,8 +145,6 @@ class Session {
                 $timeStamp
             ]);
         });
-
-        $this->setCached($this->id(), ['data' => $serializedData, 'timestamp' => $timeStamp], $this->getTimestamp());
         return $this;
     }
 
