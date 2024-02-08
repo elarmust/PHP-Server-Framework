@@ -109,8 +109,7 @@ class Database {
         $query = '
         INSERT INTO
             ' . $table . ' (' . $fieldsString . ')
-        VALUES (' . implode(', ', $sqlValues) . ');
-        SELECT LAST_INSERT_ID()';
+        VALUES (' . implode(', ', $sqlValues) . ')';
 
         return [
             $query,
@@ -123,10 +122,24 @@ class Database {
      *
      * @param string $table Table name.
      * @param array $data Data to insert.
+     *
+     * @return bool|int Returns the id of the inserted entry.
      */
-    public function insert(string $table, array $data): bool {
+    public function insert(string $table, array $data): bool|int {
         $insert = $this->insertSql($table, $data);
-        return $this->query($insert[0], $insert[1]);
+        $pdo = $this->pool->get();
+        $sql = $pdo->prepare($insert[0]);
+        $return = false;
+        try {
+            $sql->execute($insert[1]);
+            $return = $pdo->lastInsertId();
+        } catch (Throwable $e) {
+            $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
+        } finally {
+            $this->pool->put($pdo);
+        }
+
+        return $return;
     }
 
     public function update(string $table, array $data, array $where = null): bool {
