@@ -45,6 +45,7 @@ class CronManager {
             $this->cronJobsRunning[$cronJob->getName()] = $time;
             $insertId = $this->database->query('SELECT MAX(id) FROM cron_history WHERE cron_job = ?', [$cronJob->getName()]);
             try {
+                $this->logger->debug('Running cron job: ' . $cronJob->getName());
                 $cronJob->run();
             } catch (Throwable $e) {
                 $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
