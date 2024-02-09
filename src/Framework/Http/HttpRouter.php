@@ -50,6 +50,7 @@ class HttpRouter {
      * @return ResponseInterface The HTTP response generated as a result of processing the request.
      */
     public function process(ServerRequestInterface $request): ResponseInterface {
+        $this->logger->debug('Processing request', ['path' => $request->getServerParams()['path_info']]);
         $response = new Response('', 404);
         $highestMatch = RouteUtils::findNearestMatch($request->getServerParams()['path_info'], $this->routeRegistry->listRoutes(), '/');
 
@@ -66,6 +67,7 @@ class HttpRouter {
             }
         }
 
+        $this->logger->debug('Request processed', ['path' => $request->getServerParams()['path_info']]);
         return $response;
     }
 }
