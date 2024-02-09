@@ -41,9 +41,8 @@ class CronManager {
         $cron = new CronExpression($cronJob->getSchedule());
 
         if ($force || ($cron->isDue($date) && !isset($this->cronJobsRunning[$cronJob->getName()]))) {
-            $this->database->insert('cron_history', ['cron_job' => $cronJob->getName(), 'start_time' => $date]);
+            $insertId = $this->database->insert('cron_history', ['cron_job' => $cronJob->getName(), 'start_time' => $date]);
             $this->cronJobsRunning[$cronJob->getName()] = $time;
-            $insertId = $this->database->query('SELECT MAX(id) FROM cron_history WHERE cron_job = ?', [$cronJob->getName()]);
             try {
                 $this->logger->debug('Running cron job: ' . $cronJob->getName());
                 $cronJob->run();
@@ -52,7 +51,7 @@ class CronManager {
             }
 
             if ($insertId) {
-                $this->database->update('cron_history', ['end_time' => date('Y-m-d H:i:s', time())], ['id' => $insertId[0]['MAX(id)']]);
+                $this->database->update('cron_history', ['end_time' => date('Y-m-d H:i:s', time())], ['id' => $insertId]);
             }
 
             unset($this->cronJobsRunning[$cronJob->getName()]);
