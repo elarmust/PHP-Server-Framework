@@ -87,5 +87,106 @@ class LocaleTest extends TestCase {
     }
 
     public function testGetDeepNestedTranslationsWithMultipleChildLocales() {
+        $locale = new Locale('en', 'us');
+        $translations = [
+            'common' => [
+                'greeting' => 'Hello, welcome to our application!',
+                'navigation' => [
+                    'home' => 'Home',
+                    'about' => 'About Us',
+                    'contact' => 'Contact Us',
+                ],
+                'settings' => [
+                    'account' => [
+                        'general' => 'General Settings',
+                        'security' => 'Security Settings',
+                        'privacy' => 'Privacy Settings',
+                    ],
+                ],
+            ],
+            'errors' => [
+                '404' => 'Page not found.',
+                '500' => 'Internal server error occurred.',
+            ],
+        ];
+        $locale->addTranslations($translations);
+        
+        $locale2 = new Locale('en', 'us');
+        $translations = [
+            'common' => [
+                'greeting' => 'Hi, welcome to our app!',
+                'navigation' => [
+                    'home' => 'Home',
+                    'about' => 'About',
+                    'contact' => 'Contact',
+                ],
+            ],
+        ];
+        $locale2->addTranslations($translations);
+        
+        $locale3 = new Locale('en', 'us');
+        $translations = [
+            'common' => [
+                'greeting' => 'Hey there, welcome!',
+                'navigation' => [
+                    'about' => 'About Our Company',
+                ],
+            ],
+        ];
+        $locale3->addTranslations($translations);
+        $translations = [
+            'common' => [
+                'greeting' => 'Bonjour, bienvenue sur notre application!',
+                'navigation' => [
+                    'home' => 'Accueil',
+                    'about' => 'À propos de nous',
+                    'contact' => 'Contactez-nous',
+                ],
+                'settings' => [
+                    'account' => [
+                        'general' => 'Paramètres généraux',
+                        'security' => 'Paramètres de sécurité',
+                        'privacy' => 'Paramètres de confidentialité',
+                    ],
+                ],
+            ],
+            'errors' => [
+                '404' => 'Page non trouvée.',
+                '500' => 'Une erreur interne du serveur est survenue.',
+            ],
+        ];
+        $locale3->addTranslations($translations, 'fr');
+        
+        $locale4 = new Locale('es', 'es');
+        $translations = [
+            'common' => [
+                'greeting' => '¡Hola, bienvenido a nuestra aplicación!',
+                'navigation' => [
+                    'home' => 'Inicio',
+                    'about' => 'Acerca de Nosotros',
+                    'contact' => 'Contáctanos',
+                ],
+                'settings' => [
+                    'account' => [
+                        'general' => 'Configuración general',
+                        'security' => 'Configuración de seguridad',
+                        'privacy' => 'Configuración de privacidad',
+                    ],
+                ],
+            ],
+            'errors' => [
+                '404' => 'Página no encontrada.',
+                '500' => 'Se ha producido un error interno del servidor.',
+            ],
+        ];
+        $locale4->addTranslations($translations);
+        
+        $locale2->addLocale($locale3);
+        $locale->addLocale($locale2);
+        $locale2->addLocale($locale4);
+        
+        $locale->build();
+
+        $this->assertEquals('Hey there, welcome!', $locale->get('common.greeting'));
     }
 }
