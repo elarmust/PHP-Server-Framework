@@ -2,6 +2,7 @@
 
 namespace Framework\Tests\Tests;
 
+use DateTime;
 use PHPUnit\Framework\TestCase;
 use Framework\Localization\Locale;
 
@@ -86,8 +87,63 @@ class LocaleTest extends TestCase {
         $this->assertEquals('test2', $locale->get('test.test2'));
     }
 
+    public function testNumberFormat() {
+        $locale = new Locale('locale1', 'en_US');
+        $locale->setNumberFormat(2, '.', ',');
+
+        $this->assertEquals('1,000.00', $locale->numberFormat(1000));
+        $this->assertEquals('1,000.00', $locale->numberFormat(1000.00));
+
+        $locale->setNumberFormat(0, '.', ',');
+        $this->assertEquals('1,000', $locale->numberFormat(1000));
+        $this->assertEquals('1,000', $locale->numberFormat(1000.00));
+
+        // Test a named format
+        $locale->setNumberFormat(4, ',', '.', 'test');
+        $this->assertEquals('1.000,0000', $locale->numberFormat(1000, 'test'));
+
+        // Test a named format with a different locale
+        $locale->setNumberFormat(3, ',', '.', 'test', 'de_DE');
+        $this->assertEquals('1.000,000', $locale->numberFormat(1000, 'test', 'de_DE'));
+    }
+
+    public function testDateFormat() {
+        $locale = new Locale('locale1', 'en_US');
+        $locale->setDateFormat('Y-m-d');
+
+        // Test a date string
+        $this->assertEquals('2020-01-01', $locale->dateFormat('2020-01-01'));
+        $this->assertEquals('2020-01-01', $locale->dateFormat('2020-01-01 01:00:00'));
+
+        // Test a DateTime object
+        $date = new DateTime('2020-01-01');
+        $this->assertEquals('2020-01-01', $locale->dateFormat($date));
+
+        // Test date and time
+        $locale->setDateFormat('Y-m-d H:i:s');
+        $this->assertEquals('2020-01-01 15:30:00', $locale->dateFormat('2020-01-01 15:30:00'));
+        $this->assertEquals('2020-01-01 00:00:00', $locale->dateFormat('2020-01-01'));
+
+        // Test time
+        $locale->setDateFormat('H:i:s');
+        $this->assertEquals('15:30:00', $locale->dateFormat('2020-01-01 15:30:00'));
+
+        // Test a named format
+        $locale->setDateFormat('d/m/Y', 'test');
+        $this->assertEquals('01/01/2020', $locale->dateFormat('2020-01-01', 'test'));
+
+        // Test a named format with a different locale
+        $locale->setDateFormat('d/m/Y', 'test', 'de_DE');
+        $this->assertEquals('01/01/2020', $locale->dateFormat('2020-01-01', 'test', 'de_DE'));
+
+        // Test a DateTime object with a named format
+        $locale->setDateFormat('d/m/Y', 'test');
+        $date = new DateTime('01/01/2020');
+        $this->assertEquals('01/01/2020', $locale->dateFormat($date, 'test'));
+    }
+
     public function testGetDeepNestedTranslationsWithMultipleChildLocales() {
-        $locale = new Locale('en', 'us');
+        $locale = new Locale('locale', 'en_US');
         $translations = [
             'common' => [
                 'greeting' => 'Hello, welcome to our application!',
@@ -110,8 +166,12 @@ class LocaleTest extends TestCase {
             ],
         ];
         $locale->addTranslations($translations);
+        $locale->setNumberFormat(2, '.', ',');
+        $locale->setNumberFormat(4, ',', '.', 'test');
+        $locale->setDateFormat('Y-m-d');
+        $locale->setDateFormat('Y-m-d H:i:s', 'datetime');
         
-        $locale2 = new Locale('en', 'us');
+        $locale2 = new Locale('locale2', 'en_US');
         $translations = [
             'common' => [
                 'greeting' => 'Hi, welcome to our app!',
@@ -124,7 +184,7 @@ class LocaleTest extends TestCase {
         ];
         $locale2->addTranslations($translations);
         
-        $locale3 = new Locale('en', 'us');
+        $locale3 = new Locale('locale3', 'en_US');
         $translations = [
             'common' => [
                 'greeting' => 'Hey there, welcome!',
@@ -134,6 +194,13 @@ class LocaleTest extends TestCase {
             ],
         ];
         $locale3->addTranslations($translations);
+        // Add a number format
+        $locale3->setNumberFormat(0, '.', ',');
+        // Add a date format
+        $locale3->setDateFormat('m/d/Y');
+        // Add a named date format
+        $locale3->setDateFormat('m/d/Y H:i:s', 'datetime');
+
         $translations = [
             'common' => [
                 'greeting' => 'Bonjour, bienvenue sur notre application!',
@@ -155,9 +222,9 @@ class LocaleTest extends TestCase {
                 '500' => 'Une erreur interne du serveur est survenue.',
             ],
         ];
-        $locale3->addTranslations($translations, 'fr');
+        $locale3->addTranslations($translations, 'fr_FR');
         
-        $locale4 = new Locale('es', 'es');
+        $locale4 = new Locale('locale4', 'es_ES');
         $translations = [
             'common' => [
                 'greeting' => '¡Hola, bienvenido a nuestra aplicación!',
@@ -180,6 +247,14 @@ class LocaleTest extends TestCase {
             ],
         ];
         $locale4->addTranslations($translations);
+        // Add a number format
+        $locale4->setNumberFormat(0, '.', ',');
+        // Add a named number format
+        $locale4->setNumberFormat(3, ',', '.', 'test');
+        // Add a date format
+        $locale4->setDateFormat('d/m/Y');
+        // Add a named date format
+        $locale4->setDateFormat('d/m/Y H:i:s', 'datetime');
         
         $locale2->addLocale($locale3);
         $locale->addLocale($locale2);
@@ -188,5 +263,46 @@ class LocaleTest extends TestCase {
         $locale->build();
 
         $this->assertEquals('Hey there, welcome!', $locale->get('common.greeting'));
+        $this->assertEquals('About Our Company', $locale->get('common.navigation.about'));
+        $this->assertEquals('Contact', $locale->get('common.navigation.contact'));
+        $this->assertEquals('General Settings', $locale->get('common.settings.account.general'));
+        $this->assertEquals('Security Settings', $locale->get('common.settings.account.security'));
+        $this->assertEquals('Privacy Settings', $locale->get('common.settings.account.privacy'));
+        $this->assertEquals('Page non trouvée.', $locale->get('errors.404', [], 'fr_FR'));
+        $this->assertEquals('Se ha producido un error interno del servidor.', $locale->get('errors.500', [], 'es_ES'));
+
+        // Test number and date formats.
+        $this->assertEquals('1,000', $locale->numberFormat(1000));
+        $this->assertEquals('1.000,0000', $locale->numberFormat(1000, 'test'));
+        $this->assertEquals('01/01/2020', $locale->dateFormat('2020-01-01', locale: 'es_ES'));
+        $this->assertEquals('01/01/2020 15:30:00', $locale->dateFormat('2020-01-01 15:30:00', 'datetime', 'es_ES'));
+
+        // Set the locale to fr_FR
+        $locale->setDefaultLocale('fr_FR');
+        $this->assertEquals('Bonjour, bienvenue sur notre application!', $locale->get('common.greeting'));
+        $this->assertEquals('À propos de nous', $locale->get('common.navigation.about'));
+        $this->assertEquals('Contactez-nous', $locale->get('common.navigation.contact'));
+        $this->assertEquals('Paramètres généraux', $locale->get('common.settings.account.general'));
+        $this->assertEquals('Paramètres de sécurité', $locale->get('common.settings.account.security'));
+        $this->assertEquals('Paramètres de confidentialité', $locale->get('common.settings.account.privacy'));
+        $this->assertEquals('Page non trouvée.', $locale->get('errors.404'));
+        $this->assertEquals('Une erreur interne du serveur est survenue.', $locale->get('errors.500'));
+
+        // Set the locale to es_ES
+        $locale->setDefaultLocale('es_ES'); 
+        $this->assertEquals('¡Hola, bienvenido a nuestra aplicación!', $locale->get('common.greeting'));
+        $this->assertEquals('Acerca de Nosotros', $locale->get('common.navigation.about'));
+        $this->assertEquals('Contáctanos', $locale->get('common.navigation.contact'));
+        $this->assertEquals('Configuración general', $locale->get('common.settings.account.general'));
+        $this->assertEquals('Configuración de seguridad', $locale->get('common.settings.account.security'));
+        $this->assertEquals('Configuración de privacidad', $locale->get('common.settings.account.privacy'));
+        $this->assertEquals('Página no encontrada.', $locale->get('errors.404'));
+        $this->assertEquals('Se ha producido un error interno del servidor.', $locale->get('errors.500'));
+
+        // Test number and date formats.
+        $this->assertEquals('1,000', $locale->numberFormat(1000));
+        $this->assertEquals('1.000,000', $locale->numberFormat(1000, 'test'));
+        $this->assertEquals('01/01/2020', $locale->dateFormat('2020-01-01'));
+        $this->assertEquals('01/01/2020 15:30:00', $locale->dateFormat('2020-01-01 15:30:00', 'datetime'));
     }
 }

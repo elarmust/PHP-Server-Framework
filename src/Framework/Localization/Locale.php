@@ -2,8 +2,11 @@
 
 namespace Framework\Localization;
 
+use DateTime;
+use Exception;
 use DateTimeInterface;
 use RecursiveArrayIterator;
+use InvalidArgumentException;
 use RecursiveIteratorIterator;
 
 class Locale implements LocaleInterface {
@@ -133,15 +136,17 @@ class Locale implements LocaleInterface {
     /**
      * Sets the number format for a specific locale.
      *
-     * @param int $decimals The number of decimal places to display.
-     * @param string|null $decimalSeparator The character used as the decimal separator. If null, the default separator for the locale will be used.
-     * @param string|null $thousandsSeparator The character used as the thousands separator. If null, the default separator for the locale will be used.
+     * @param int $decimals The number of decimal places to display, defaults to 2.
+     * @param string|null $decimalSeparator The character used as the decimal separator. Defaults to '.'.
+     * @param string|null $thousandsSeparator The character used as the thousands separator. Defaults to ','.
+     * @param string $formatName The name of the number format to set, defaults to 'default'.
      * @param string|null $locale The locale for which to set the number format. If null, the default locale will be used.
+     *
      * @return void
      */
-    public function setNumberFormat(int $decimals, ?string $decimalSeparator = null, ?string $thousandsSeparator = null, ?string $locale = null): void {
+    public function setNumberFormat(int $decimals = 2, ?string $decimalSeparator = '.', ?string $thousandsSeparator = ',', string $formatName = 'default', ?string $locale = null): void {
         $locale = $locale ?? $this->defaultLocale;
-        $this->data[$locale]['numberFormat'] = [
+        $this->data[$locale]['numberFormat'][$formatName] = [
             'decimals' => $decimals,
             'decimalSeparator' => $decimalSeparator,
             'thousandsSeparator' => $thousandsSeparator
@@ -152,14 +157,17 @@ class Locale implements LocaleInterface {
      * Formats a number according to the specified locale.
      *
      * @param int|float $number The number to format.
+     * @param string $formatName The name of the number format to use, defaults to 'default'.
      * @param string|null $locale The locale to use for formatting. If not provided, the default locale will be used.
+     *
      * @return string The formatted number.
      */
-    public function numberFormat(int|float $number, ?string $locale = null): string {
+    public function numberFormat(int|float $number, string $formatName = 'default', ?string $locale = null): string {
         $locale = $locale ?? $this->defaultLocale;
-        $decimals = $this->data[$locale]['numberFormat']['decimals'] ?? 0;
-        $decimalSeparator = $this->data[$locale]['numberFormat']['decimalSeparator'] ?? '.';
-        $thousandsSeparator = $this->data[$locale]['numberFormat']['thousandsSeparator'] ?? ',';
+        $format = $this->data[$locale]['numberFormat'][$formatName] ?? [];
+        $decimals = $format['decimals'] ?? 2;
+        $decimalSeparator = $format['decimalSeparator'] ?? '.';
+        $thousandsSeparator = $format['thousandsSeparator'] ?? ',';
         return number_format($number, $decimals, $decimalSeparator, $thousandsSeparator);
     }
 
@@ -167,49 +175,65 @@ class Locale implements LocaleInterface {
      * Retrieves the number format for the specified locale.
      *
      * @param string|null $locale The locale for which to retrieve the number format. If null, returns all number formats.
+     * @param string $formatName The name of the number format to retrieve, defaults to 'default'.
+     *
      * @return array The number format for the specified locale, or an empty array if the locale is not found.
      */
-    public function getNumberFormat(?string $locale = null): array {
+    public function getNumberFormat(string $formatName = 'default', ?string $locale = null): array {
         $locale = $locale ?? $this->defaultLocale;
-        return $this->data[$locale]['numberFormat'] ?? [];
+        return $this->data[$locale]['numberFormat'][$formatName] ?? [];
     }
 
     /**
      * Sets the date format for a specific locale.
      *
      * @param string $format The date format to set.
+     * @param string $formatName The name of the date format to set, defaults to 'default'.
+     *
      * @param string|null $locale The locale for which to set the date format. If null, the default locale will be used.
      *
      * @return void
      */
-    public function setDateFormat(array $formatData, ?string $locale = null): void {
+    public function setDateFormat(string $format, string $formatName = 'default', ?string $locale = null): void {
         $locale = $locale ?? $this->defaultLocale;
-        $formats = $this->flatten($formatData);
-        $this->data[$locale]['dateFormats'] = array_merge($this->data[$locale]['dateFormats'] ?? [], $formats);
+        $this->data[$locale]['dateFormats'][$formatName] = $format;
     }
 
     /**
      * Returns an array of date formats.
+     * 
+     * @param string $formatName The name of the date format to retrieve, defaults to 'default'.
+     * @param string|null $locale The locale for which to retrieve the date format, defaults to default locale.
      *
      * @return array The array of date formats.
      */
-    public function getDateFormat(?string $locale = null): array {
+    public function getDateFormat(string $formatName = 'default', ?string $locale = null): array {
         $locale = $locale ?? $this->defaultLocale;
-        return $this->data[$locale]['dateFormats'] ?? [];
+        return $this->data[$locale]['dateFormats'][$formatName] ?? [];
     }
 
     /**
      * Formats a DateTimeInterface object according to the specified format and locale name.
      *
-     * @param DateTimeInterface $date DateTimeInterface to be formatted.
+     * @param DateTimeInterface|string $date DateTimeInterface object or date string to format.
      * @param string $formatName Format name use for date formatting, as defined in the Locale class dateFormats array.
      * @param string|null $locale Locale name to be used for formatting, defaults to the default locale.
      *
      * @return string Formatted date string.
      */
-    public function dateFormat(DateTimeInterface $date, string $formatName = 'default', ?string $locale = null): string {
+    public function dateFormat(DateTimeInterface|string $date, string $formatName = 'default', ?string $locale = null): string {
         $locale = $locale ?? $this->defaultLocale;
-        return $date->format($this->data[$locale]['dateFormats'][$formatName] ?? 'Y-m-d H:i:s');
+        $format = $this->data[$locale]['dateFormats'][$formatName] ?? 'Y-m-d H:i:s';
+
+        if (is_string($date)) {
+            try {
+                $date = new DateTime($date);
+            } catch (Exception $e) {
+                throw new InvalidArgumentException('Invalid date: ' . $date);
+            }
+        }
+
+        return $date->format($format);
     }
 
     /**
