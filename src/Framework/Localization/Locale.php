@@ -144,7 +144,7 @@ class Locale implements LocaleInterface {
      *
      * @return void
      */
-    public function setNumberFormat(int $decimals = 2, ?string $decimalSeparator = '.', ?string $thousandsSeparator = ',', string $formatName = 'default', ?string $locale = null): void {
+    public function addNumberFormat(int $decimals = 2, ?string $decimalSeparator = '.', ?string $thousandsSeparator = ',', string $formatName = 'default', ?string $locale = null): void {
         $locale = $locale ?? $this->defaultLocale;
         $this->data[$locale]['numberFormat'][$formatName] = [
             'decimals' => $decimals,
@@ -194,7 +194,7 @@ class Locale implements LocaleInterface {
      *
      * @return void
      */
-    public function setDateFormat(string $format, string $formatName = 'default', ?string $locale = null): void {
+    public function addDateFormat(string $format, string $formatName = 'default', ?string $locale = null): void {
         $locale = $locale ?? $this->defaultLocale;
         $this->data[$locale]['dateFormats'][$formatName] = $format;
     }
@@ -215,15 +215,18 @@ class Locale implements LocaleInterface {
     /**
      * Formats a DateTimeInterface object according to the specified format and locale name.
      *
-     * @param DateTimeInterface|string $date DateTimeInterface object or date string to format.
+     * @param DateTimeInterface|string|null $date DateTimeInterface object, date string or null for current date to format.
      * @param string $formatName Format name use for date formatting, as defined in the Locale class dateFormats array.
      * @param string|null $locale Locale name to be used for formatting, defaults to the default locale.
      *
      * @return string Formatted date string.
      */
-    public function dateFormat(DateTimeInterface|string $date, string $formatName = 'default', ?string $locale = null): string {
+    public function formatDate(DateTimeInterface|string|null $date = null, string $formatName = 'default', ?string $locale = null): string {
         $locale = $locale ?? $this->defaultLocale;
         $format = $this->data[$locale]['dateFormats'][$formatName] ?? 'Y-m-d H:i:s';
+        if (!$date) {
+            $date = new DateTime();
+        }
 
         if (is_string($date)) {
             try {

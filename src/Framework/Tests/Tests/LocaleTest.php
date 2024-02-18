@@ -89,57 +89,57 @@ class LocaleTest extends TestCase {
 
     public function testNumberFormat() {
         $locale = new Locale('locale1', 'en_US');
-        $locale->setNumberFormat(2, '.', ',');
+        $locale->addNumberFormat(2, '.', ',');
 
         $this->assertEquals('1,000.00', $locale->numberFormat(1000));
         $this->assertEquals('1,000.00', $locale->numberFormat(1000.00));
 
-        $locale->setNumberFormat(0, '.', ',');
+        $locale->addNumberFormat(0, '.', ',');
         $this->assertEquals('1,000', $locale->numberFormat(1000));
         $this->assertEquals('1,000', $locale->numberFormat(1000.00));
 
         // Test a named format
-        $locale->setNumberFormat(4, ',', '.', 'test');
+        $locale->addNumberFormat(4, ',', '.', 'test');
         $this->assertEquals('1.000,0000', $locale->numberFormat(1000, 'test'));
 
         // Test a named format with a different locale
-        $locale->setNumberFormat(3, ',', '.', 'test', 'de_DE');
+        $locale->addNumberFormat(3, ',', '.', 'test', 'de_DE');
         $this->assertEquals('1.000,000', $locale->numberFormat(1000, 'test', 'de_DE'));
     }
 
     public function testDateFormat() {
         $locale = new Locale('locale1', 'en_US');
-        $locale->setDateFormat('Y-m-d');
+        $locale->addDateFormat('Y-m-d');
 
         // Test a date string
-        $this->assertEquals('2020-01-01', $locale->dateFormat('2020-01-01'));
-        $this->assertEquals('2020-01-01', $locale->dateFormat('2020-01-01 01:00:00'));
+        $this->assertEquals('2020-01-01', $locale->formatDate('2020-01-01'));
+        $this->assertEquals('2020-01-01', $locale->formatDate('2020-01-01 01:00:00'));
 
         // Test a DateTime object
         $date = new DateTime('2020-01-01');
-        $this->assertEquals('2020-01-01', $locale->dateFormat($date));
+        $this->assertEquals('2020-01-01', $locale->formatDate($date));
 
         // Test date and time
-        $locale->setDateFormat('Y-m-d H:i:s');
-        $this->assertEquals('2020-01-01 15:30:00', $locale->dateFormat('2020-01-01 15:30:00'));
-        $this->assertEquals('2020-01-01 00:00:00', $locale->dateFormat('2020-01-01'));
+        $locale->addDateFormat('Y-m-d H:i:s');
+        $this->assertEquals('2020-01-01 15:30:00', $locale->formatDate('2020-01-01 15:30:00'));
+        $this->assertEquals('2020-01-01 00:00:00', $locale->formatDate('2020-01-01'));
 
         // Test time
-        $locale->setDateFormat('H:i:s');
-        $this->assertEquals('15:30:00', $locale->dateFormat('2020-01-01 15:30:00'));
+        $locale->addDateFormat('H:i:s');
+        $this->assertEquals('15:30:00', $locale->formatDate('2020-01-01 15:30:00'));
 
         // Test a named format
-        $locale->setDateFormat('d/m/Y', 'test');
-        $this->assertEquals('01/01/2020', $locale->dateFormat('2020-01-01', 'test'));
+        $locale->addDateFormat('d/m/Y', 'test');
+        $this->assertEquals('01/01/2020', $locale->formatDate('2020-01-01', 'test'));
 
         // Test a named format with a different locale
-        $locale->setDateFormat('d/m/Y', 'test', 'de_DE');
-        $this->assertEquals('01/01/2020', $locale->dateFormat('2020-01-01', 'test', 'de_DE'));
+        $locale->addDateFormat('d/m/Y', 'test', 'de_DE');
+        $this->assertEquals('01/01/2020', $locale->formatDate('2020-01-01', 'test', 'de_DE'));
 
         // Test a DateTime object with a named format
-        $locale->setDateFormat('d/m/Y', 'test');
+        $locale->addDateFormat('d/m/Y', 'test');
         $date = new DateTime('01/01/2020');
-        $this->assertEquals('01/01/2020', $locale->dateFormat($date, 'test'));
+        $this->assertEquals('01/01/2020', $locale->formatDate($date, 'test'));
     }
 
     public function testGetDeepNestedTranslationsWithMultipleChildLocales() {
@@ -166,10 +166,10 @@ class LocaleTest extends TestCase {
             ],
         ];
         $locale->addTranslations($translations);
-        $locale->setNumberFormat(2, '.', ',');
-        $locale->setNumberFormat(4, ',', '.', 'test');
-        $locale->setDateFormat('Y-m-d');
-        $locale->setDateFormat('Y-m-d H:i:s', 'datetime');
+        $locale->addNumberFormat(2, '.', ',');
+        $locale->addNumberFormat(4, ',', '.', 'test');
+        $locale->addDateFormat('Y-m-d');
+        $locale->addDateFormat('Y-m-d H:i:s', 'datetime');
         
         $locale2 = new Locale('locale2', 'en_US');
         $translations = [
@@ -195,11 +195,11 @@ class LocaleTest extends TestCase {
         ];
         $locale3->addTranslations($translations);
         // Add a number format
-        $locale3->setNumberFormat(0, '.', ',');
+        $locale3->addNumberFormat(0, '.', ',');
         // Add a date format
-        $locale3->setDateFormat('m/d/Y');
+        $locale3->addDateFormat('m/d/Y');
         // Add a named date format
-        $locale3->setDateFormat('m/d/Y H:i:s', 'datetime');
+        $locale3->addDateFormat('m/d/Y H:i:s', 'datetime');
 
         $translations = [
             'common' => [
@@ -248,13 +248,13 @@ class LocaleTest extends TestCase {
         ];
         $locale4->addTranslations($translations);
         // Add a number format
-        $locale4->setNumberFormat(0, '.', ',');
+        $locale4->addNumberFormat(0, '.', ',');
         // Add a named number format
-        $locale4->setNumberFormat(3, ',', '.', 'test');
+        $locale4->addNumberFormat(3, ',', '.', 'test');
         // Add a date format
-        $locale4->setDateFormat('d/m/Y');
+        $locale4->addDateFormat('d/m/Y');
         // Add a named date format
-        $locale4->setDateFormat('d/m/Y H:i:s', 'datetime');
+        $locale4->addDateFormat('d/m/Y H:i:s', 'datetime');
         
         $locale2->addLocale($locale3);
         $locale->addLocale($locale2);
@@ -274,8 +274,8 @@ class LocaleTest extends TestCase {
         // Test number and date formats.
         $this->assertEquals('1,000', $locale->numberFormat(1000));
         $this->assertEquals('1.000,0000', $locale->numberFormat(1000, 'test'));
-        $this->assertEquals('01/01/2020', $locale->dateFormat('2020-01-01', locale: 'es_ES'));
-        $this->assertEquals('01/01/2020 15:30:00', $locale->dateFormat('2020-01-01 15:30:00', 'datetime', 'es_ES'));
+        $this->assertEquals('01/01/2020', $locale->formatDate('2020-01-01', locale: 'es_ES'));
+        $this->assertEquals('01/01/2020 15:30:00', $locale->formatDate('2020-01-01 15:30:00', 'datetime', 'es_ES'));
 
         // Set the locale to fr_FR
         $locale->setDefaultLocale('fr_FR');
@@ -302,7 +302,7 @@ class LocaleTest extends TestCase {
         // Test number and date formats.
         $this->assertEquals('1,000', $locale->numberFormat(1000));
         $this->assertEquals('1.000,000', $locale->numberFormat(1000, 'test'));
-        $this->assertEquals('01/01/2020', $locale->dateFormat('2020-01-01'));
-        $this->assertEquals('01/01/2020 15:30:00', $locale->dateFormat('2020-01-01 15:30:00', 'datetime'));
+        $this->assertEquals('01/01/2020', $locale->formatDate('2020-01-01'));
+        $this->assertEquals('01/01/2020 15:30:00', $locale->formatDate('2020-01-01 15:30:00', 'datetime'));
     }
 }

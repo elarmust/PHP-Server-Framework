@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="<?=$controller->getLocale()->getDefaultLocale()?>">
     <head>
         <title>Framework</title>
         <meta charset="UTF-8">
@@ -8,9 +8,9 @@
         <meta name="author" content="Elar Must">
     </head>
     <body>
-        <h1>Test website.</h1>
+        <h1><?=$controller->getLocale()->get('test-website')?></h1>
         <footer>
-            © Copyright <?=date('Y')?> by Elar Must. All Rights Reserved.
+            <?=$controller->getLocale()->get('footer', ['year' => date('Y')])?>
         </footer>
     </body>
 </html>

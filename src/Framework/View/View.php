@@ -9,6 +9,7 @@
 namespace Framework\View;
 
 use Framework\View\ViewInterface;
+use Throwable;
 
 class View implements ViewInterface {
     protected string $viewFile = '';
@@ -37,7 +38,14 @@ class View implements ViewInterface {
 
         ob_start();
         extract($variables);
-        include $this->viewFile;
-        return ob_get_clean();
+        try {
+            include $this->viewFile;
+        } catch (Throwable $e) {
+            throw $e;
+        } finally {
+            $output = ob_get_clean();
+        }
+
+        return $output;
     }
 }

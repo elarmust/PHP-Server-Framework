@@ -23,6 +23,7 @@ use Framework\Container\ClassContainer;
 use Framework\Exception\ErrorHandler;
 use Framework\Module\ModuleRegistry;
 use Framework\Event\EventDispatcher;
+use Framework\Localization\Locale;
 use Framework\Database\Migrations;
 use Framework\Http\RouteRegistry;
 use Framework\Task\TaskScheduler;
@@ -52,16 +53,17 @@ use Throwable;
 class Framework extends Server {
     private readonly Atomic $workersStarted;
     private readonly Lock $lock;
+    private ExceptionHandlerInterface $exceptionHandler;
+    private ErrorHandlerInterface $errorHandler;
+    private WebSocketRegistry $webSocketRegistry;
+    private EventDispatcher $eventDispatcher;
     private ModuleRegistry $moduleRegistry;
     private ClassContainer $classContainer;
     private Configuration $configuration;
     private HttpRouter $router;
-    private Logger $logger;
-    private EventDispatcher $eventDispatcher;
-    private WebSocketRegistry $webSocketRegistry;
     private Database $database;
-    private ExceptionHandlerInterface $exceptionHandler;
-    private ErrorHandlerInterface $errorHandler;
+    private Logger $logger;
+    private Locale $locale;
     private bool $isTestingEnvironment = false;
     private bool $maintenance = false;
     private bool $ssl = false;
@@ -117,6 +119,21 @@ class Framework extends Server {
 
         $this->logger->info('Initializing module registry...', identifier: 'framework');
         $this->moduleRegistry = $this->classContainer->get(ModuleRegistry::class);
+
+
+        $this->logger->info('Initializing localization...', identifier: 'framework');
+        $localeSettings = $this->configuration->getConfig('localization') ?? [];
+        $this->locale = $this->classContainer->get(Locale::class, ['root', $localeSettings['defaultLocale'] ?? 'en_US']);
+
+        foreach ($localeSettings['defaultNumberFormats'] ?? [] as $name => $numberFormat) {
+            $this->locale->addNumberFormat($numberFormat['decimals'] ?? 2, $numberFormat['decimalSeparator'] ?? '.', $numberFormat['thousandsSeparator'] ?? ',', $name);
+        }
+
+        foreach ($localeSettings['defaultDateFormats'] ?? [] as $name => $dateFormat) {
+            $this->locale->addDateFormat($dateFormat['format'] ?? 'Y-m-d H:i:s', $name);
+        }
+
+        $this->logger->info('Default locale: ' . $this->locale->getDefaultLocale(), identifier: 'framework');
 
 
         $this->logger->info('Preparing HTTP server...', identifier: 'framework');
@@ -403,6 +420,10 @@ class Framework extends Server {
 
     public function getCron(): CronManager {
         return $this->classContainer->get(CronManager::class);
+    }
+
+    public function getLocale(): Locale {
+        return $this->locale;
     }
 
     public function getIp(): string {
