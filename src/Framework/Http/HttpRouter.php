@@ -53,19 +53,20 @@ class HttpRouter {
         $response = new Response('', 404);
         $highestMatch = RouteUtils::findNearestMatch($request->getServerParams()['path_info'], $this->routeRegistry->listRoutes(), '/');
 
-        if ($highestMatch) {
-            try {
-                $route = clone $this->routeRegistry->getRoute($highestMatch);
-                $this->EventDispatcher->dispatch(new BeforeMiddlewaresEvent($request, $response, $route));
-
-                // Get a new RequestHandler instance for this route and handle it.
-                $requestHandler = $this->classContainer->get($route->getRequestHandler(), [$route], useCache: false);
-                $response = $requestHandler->handle($request);
-            } catch (Throwable $e) {
-                $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
-            }
+        if (!$highestMatch) {
+            return $response;
         }
 
-        return $response;
+        try {
+            $route = clone $this->routeRegistry->getRoute($highestMatch);
+            $this->EventDispatcher->dispatch(new BeforeMiddlewaresEvent($request, $response, $route));
+
+            // Get a new RequestHandler instance for this route and handle it.
+            $requestHandler = $this->classContainer->get($route->getRequestHandler(), [$route], useCache: false);
+            return $requestHandler->handle($request);
+        } catch (Throwable $e) {
+            $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
+            return new Response('', 500);
+        }
     }
 }

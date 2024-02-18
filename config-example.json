@@ -41,6 +41,19 @@
             "mysqlDb": "default"
         }
     },
+    "localization": {
+        "defaultLocale": "en_US",
+        "defaultNumberFormats": {
+            "default": {
+                "decimals": 2,
+                "thousandsSeparator": ",",
+                "decimalSeparator": "."
+            }
+        },
+        "defaultDateFormats": {
+            "default": "Y-m-d H:i:s"
+        }
+    },
     "hostName": "framework",
     "defaultCsrfTokenExpirationSeconds": 86400
 }
