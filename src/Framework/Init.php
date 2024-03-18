@@ -9,10 +9,12 @@
 namespace Framework;
 
 use Framework\Model\EventListeners\ModelRestore;
+use Framework\Http\Middlewares\SessionMiddleware;
+use Framework\Http\EventListeners\AddDefaultMiddlewares;
+use Framework\Http\Events\BeforeMiddlewaresEvent;
 use Framework\Model\EventListeners\ModelCreate;
 use Framework\Model\EventListeners\ModelDelete;
 use Framework\Http\Session\Task\SessionGCTask;
-use Framework\Http\Session\SessionMiddleware;
 use Framework\Model\EventListeners\ModelLoad;
 use Framework\Model\EventListeners\ModelSave;
 use Framework\Model\Events\ModelRestoreEvent;
@@ -75,6 +77,7 @@ class Init {
             $sessionDomain = $framework->getConfiguration()->getConfig('session.domain') ?: null;
             $sessionCookieName = $framework->getConfiguration()->getConfig('session.cookieName') ?: 'PHPSESSID';
             $expirationSeconds = $framework->getConfiguration()->getConfig('session.expirationSeconds') ?? 86400;
+            $csrfExpirationSeconds = $framework->getConfiguration()->getConfig('session.csrfExpirationSeconds') ?? 3600;
             $expirationSeconds = is_int($expirationSeconds) && $expirationSeconds >= 1 ? $expirationSeconds : 1;
 
             if (!$databaseInfo) {
@@ -88,12 +91,14 @@ class Init {
                 $databaseInfo['username'],
                 $databaseInfo['password']
             ], $dbName);
-            $session = $classContainer->get(Session::class, [$database, $expirationSeconds]);
+            $session = $classContainer->get(Session::class, [$database]);
             $session->setHttponly($httpOnly);
             $session->setSecure($secure);
             $session->setSessionPath($path);
             $session->setSessionDomain($sessionDomain);
             $session->setCookieName($sessionCookieName);
+            $session->setExpirationSeconds($expirationSeconds);
+            $session->setCsrfExpiration($csrfExpirationSeconds);
         }
 
         // Register model events.
@@ -103,6 +108,9 @@ class Init {
         $framework->getEventListenerProvider()->registerEventListener(ModelSaveEvent::class, $classContainer->get(ModelSave::class, useCache: false));
         $framework->getEventListenerProvider()->registerEventListener(ModelDeleteEvent::class, $classContainer->get(ModelDelete::class, useCache: false));
         $framework->getEventListenerProvider()->registerEventListener(ModelRestoreEvent::class, $classContainer->get(ModelRestore::class, useCache: false));
+
+        // Register Http events.
+        $framework->getEventListenerProvider()->registerEventListener(BeforeMiddlewaresEvent::class, $classContainer->get(AddDefaultMiddlewares::class, useCache: false));
 
         if (!$framework->isTaskWorker()) {
             // Register / root path.

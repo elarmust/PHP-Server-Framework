@@ -9,9 +9,10 @@
 namespace Framework\Http;
 
 use InvalidArgumentException;
+use Framework\Http\Middleware;
 use Framework\Http\RequestHandler;
-use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Framework\Http\Middlewares\ControllerMiddleware;
 
 class Route {
     private string $path;
@@ -36,8 +37,8 @@ class Route {
      *
      * @param string $requestHandler
      *
-     * @return Route
      * @throws InvalidArgumentException
+     * @return Route
      */
     public function setRequestHandler(string $requestHandler): Route {
         if (!class_exists($requestHandler) || !in_array(RequestHandlerInterface::class, class_implements($requestHandler))) {
@@ -67,10 +68,10 @@ class Route {
     /**
      * Set the list of controllers for this route.
      *
-     * @param array $controllers An array of RouteControllerInterface compatible controllers.
+     * @param array $controllers An array of ControllerInterface compatible controllers.
      *
-     * @return Route
      * @throws InvalidArgumentException
+     * @return Route
      */
     public function setControllerStack(array $controllers): Route {
         $this->controllerStack = [];
@@ -80,15 +81,15 @@ class Route {
     /**
      * Add a new controller to the list of controllers for this route.
      *
-     * @param array $controllers An array of RouteControllerInterface compatible controllers.
+     * @param array $controllers An array of ControllerInterface compatible controllers.
      *
-     * @return Route
      * @throws InvalidArgumentException
+     * @return Route
      */
     public function addControllers(array $controllers): Route {
         foreach ($controllers as $controller) {
-            if (!class_exists($controller) || !in_array(RouteControllerInterface::class, class_implements($controller))) {
-                throw new InvalidArgumentException($controller . ' must implement ' . RouteControllerInterface::class . '!');
+            if (!class_exists($controller) || !in_array(ControllerInterface::class, class_implements($controller))) {
+                throw new InvalidArgumentException($controller . ' must implement ' . ControllerInterface::class . '!');
             }
 
             $this->controllerStack[] = $controller;
@@ -113,17 +114,17 @@ class Route {
     }
 
     /**
-     * Add new MiddlewareInterface compatible middlewares to the middleware stack associated with this route.
+     * Add new Middleware compatible middlewares to the middleware stack associated with this route.
      *
-     * @param array $middlewares An array of MiddlewareInterface compatible middlewares.
+     * @param array $middlewares An array of Middleware compatible middlewares.
      *
-     * @return Route
      * @throws InvalidArgumentException
+     * @return Route
      */
     public function addMiddlewares(array $middlewares): Route {
         foreach ($middlewares as $middleware) {
-            if (!class_exists($middleware) || !in_array(MiddlewareInterface::class, class_implements($middleware))) {
-                throw new InvalidArgumentException($middleware . ' must implement ' . MiddlewareInterface::class . '!');
+            if (!class_exists($middleware) || !is_subclass_of($middleware, Middleware::class)) {
+                throw new InvalidArgumentException($middleware . ' must extend ' . Middleware::class . '!');
             }
 
             $this->middlewares[] = $middleware;
@@ -148,9 +149,9 @@ class Route {
     }
 
     /**
-     * Replace existing middleware stack with new MiddlewareInterface compatible middlewares.
+     * Replace existing middleware stack with new Middleware compatible middlewares.
      *
-     * @param array $middlewares An array of MiddlewareInterface compatible middlewares.
+     * @param array $middlewares An array of Middleware compatible middlewares.
      *
      * @return Route
      */
@@ -166,6 +167,17 @@ class Route {
      */
     public function getPath(): string {
         return $this->path;
+    }
+
+    /**
+     * Set the path for the route.
+     *
+     * @param string $path New path for the route.
+     * @return Route Route instance.
+     */
+    public function setPath(string $path): Route {
+        $this->path = $path;
+        return $this;
     }
 
     /**
@@ -192,8 +204,7 @@ class Route {
      * @return array
      */
     public function getMiddlewareStack(): array {
-        // Controller stack class is the last middleware in the stack.
-        return array_merge($this->middlewares, [$this->getControllerStackClass()]);
+        return array_merge($this->middlewares);
     }
 
     /**

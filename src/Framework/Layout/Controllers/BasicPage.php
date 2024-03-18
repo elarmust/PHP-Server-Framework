@@ -6,11 +6,9 @@ use Framework\Container\ClassContainer;
 use Framework\View\ViewRegistry;
 use Framework\Localization\Locale;
 use Psr\Http\Message\ResponseInterface;
-use Framework\Http\AbstractRouteController;
-use Framework\Http\ControllerStackInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Framework\Http\Controller;
 
-class BasicPage extends AbstractRouteController {
+class BasicPage extends Controller {
     private Locale $locale;
 
     public function __construct(private ViewRegistry $viewRegistry, private ClassContainer $classContainer) {
@@ -22,11 +20,11 @@ class BasicPage extends AbstractRouteController {
         ]);
     }
 
-    public function execute(ServerRequestInterface $request, ResponseInterface $response, ControllerStackInterface $controllerStack): ResponseInterface {
+    public function process(): ResponseInterface {
         $view = $this->viewRegistry->getView('basicPage');
-        $response = $response->withStatus(200);
+        $response = $this->response->withStatus(200);
         $response->getBody()->write($view->getView(['controller' => $this]));
-        return $controllerStack->execute($request, $response);
+        return $this->controllerStack->next($this->request, $response);
     }
 
     public function getLocale(): Locale {

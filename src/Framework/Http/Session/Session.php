@@ -18,17 +18,17 @@ class Session {
     private array $data = [];
     private ?string $id = null;
     private ?int $timeStamp = null;
-    private ?int $expiration = null;
+    private int $expiration = 86400;
+    private int $csrfExpiration = 3600;
     private bool $httpOnly = false;
     private bool $secure = false;
     private ?string $sessionPath = '/';
     private ?string $sessionDomain = null;
     private string $cookieName = 'PHPSESSID';
     public const STORAGE_MEMORY = 2;
-    public const STORAGE_COLD = 1;
+    public const STORAGE_DATABASE = 1;
 
-    public function __construct (private Framework $framework, private Logger $logger, private Database $database, int $expiration = 86400) {
-        $this->expiration = max(0, $expiration);
+    public function __construct (private Framework $framework, private Logger $logger, private Database $database) {
     }
 
     /**
@@ -84,8 +84,8 @@ class Session {
      *
      * @param array $data Session data.
      *
-     * @return Session New session.
      * @throws RuntimeException If the session creation in the database fails.
+     * @return Session New session.
      */
     public function create(array $data = []): Session {
         $timeStamp = time();
@@ -225,6 +225,7 @@ class Session {
      * @param string $sessionId Session ID.
      * @param array $data Session data to be cached.
      * @param int $timeStamp Timestamp for the session data.
+     *
      * @return void
      */
     private function setCached(string $sessionId, array $data, int $timeStamp): void {
@@ -276,6 +277,63 @@ class Session {
     }
 
     /**
+     * Generate and return a new CSRF token.
+     *
+     * @throws RuntimeException if the session is not instantiated.
+     * @return string New CSRF token.
+     */
+    public function generateCsrfToken(): string {
+        if ($this->id() === null) {
+            throw new RuntimeException('Cannot set non-instantiated session.');
+        }
+
+        $key = bin2hex(random_bytes(32));
+        $data[$key] = ['created' => time(), 'expiration' => $this->csrfExpiration];
+        $this->setData(['csrfTokens' => $data]);
+        return $key;
+    }
+
+    /**
+     * Checks if the provided CSRF token is valid.
+     * Cleans up expired CSRF tokens.
+     *
+     * @param null|string $token
+     *
+     * @throws RuntimeException if the session is not instantiated.
+     * @return bool
+     */
+    public function validateCsrfToken(?string $token): bool {
+        if ($this->id() === null) {
+            throw new RuntimeException('Cannot set non-instantiated session.');
+        }
+
+        $return = false;
+        foreach ($this->getData()['csrfTokens'] ?? [] as $sessionToken => $tokenData) {
+            if (time() - $tokenData['created'] < $tokenData['expiration']) {
+                if ($token === $sessionToken) {
+                    unset($this->csrfTokens[$sessionToken]);
+                    $return = true;
+                }
+            } else {
+                unset($this->csrfTokens[$sessionToken]);
+            }
+        }
+
+        return $return;
+    }
+
+    /**
+     * Sets the expiration time for the CSRF token.
+     *
+     * @param int $expiration CSRF token expiration time in seconds.
+     *
+     * @return void
+     */
+    public function setCsrfExpiration(int $expiration): void {
+        $this->csrfExpiration = $expiration;
+    }
+
+    /**
      * Get an array of all available model data keys.
      *
      * @return array An array of model data keys.
@@ -286,12 +344,12 @@ class Session {
 
     /**
      * Returns Session::STORAGE_MEMORY, if session is stored in memory,
-     * Session::STORAGE_COLD if session is stored in databse only,
+     * Session::STORAGE_DATABASE if session is stored in databse only,
      * false if session does not exist.
      *
      * @param string $sessionId Session ID.
      *
-     * @return int
+     * @return int|bool
      */
     public function sessionStorageLocation(string $sessionId): int|bool {
         if (Cache::getTable(self::getTableName())->exists($sessionId)) {
@@ -299,7 +357,7 @@ class Session {
         }
 
         if ($this->database->select(self::getTableName(), ['id'], ['id' => $sessionId])) {
-            return true;
+            return $this::STORAGE_DATABASE;
         }
 
         return false;
@@ -317,9 +375,9 @@ class Session {
     /**
      * Returns the expiration time of the session in seconds.
      *
-     * @return int|null Session expiration time in seconds or null, if not set.
+     * @return int Session expiration time in seconds.
      */
-    public function getExpirationSeconds(): int|null {
+    public function getExpirationSeconds(): int {
         return $this->expiration;
     }
 
@@ -384,6 +442,7 @@ class Session {
      * Sets the flag indicating whether the session cookie should be accessible only through the HTTP protocol.
      *
      * @param bool $httpOnly Whether the session cookie should be accessible only through the HTTP protocol.
+     *
      * @return void
      */
     public function setHttpOnly(bool $httpOnly): void {
@@ -462,8 +521,10 @@ class Session {
     /**
      * Sets the name of the session cookie.
      *
-     * @throws RuntimeException If the cookie name is invalid.
      * @param string $cookieName Session cookie name.
+     *
+     * @throws RuntimeException If the cookie name is invalid.
+     * @return void
      */
     public function setCookieName(string $cookieName): void {
         $cookieName = trim($cookieName);
