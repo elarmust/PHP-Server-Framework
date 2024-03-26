@@ -234,12 +234,12 @@ abstract class Model implements ModelInterface {
      */
     public function getData(array $keys = []): array {
         if (!$keys) {
-        	return $this->data;
+            return $this->data;
         }
 
         $invalidKeys = array_diff($keys, array_keys($this->data));
         if ($invalidKeys) {
-        	throw new ModelException('Invalid keys: ' . implode(', ', $invalidKeys));
+            throw new ModelException('Invalid keys: ' . implode(', ', $invalidKeys));
         }
 
         return array_intersect_key($this->data, array_flip($keys));
@@ -261,7 +261,7 @@ abstract class Model implements ModelInterface {
      */
     public function getProperties(array $keys = []): array {
         if (!$keys) {
-        	return $this->properties;
+            return $this->properties;
         }
     
         return array_intersect_key($this->properties, array_flip($keys));

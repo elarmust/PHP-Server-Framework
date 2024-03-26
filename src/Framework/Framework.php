@@ -31,13 +31,14 @@ use Framework\Database\Database;
 use Framework\View\ViewRegistry;
 use Framework\Cron\CronManager;
 use Framework\Http\HttpRouter;
+use Framework\Http\Response;
 use Framework\Logger\Logger;
 use Framework\Cli\Cli;
 use Framework\Init;
-use OpenSwoole\Core\Psr\ServerRequest;
+use Framework\Http\Request as HttpRequest;
 use OpenSwoole\WebSocket\Server;
 use OpenSwoole\WebSocket\Frame;
-use OpenSwoole\Http\Response;
+use OpenSwoole\Http\Response as OpenswooleResponse;
 use OpenSwoole\Http\Request;
 use OpenSwoole\Server\Task;
 use OpenSwoole\Coroutine;
@@ -294,8 +295,8 @@ class Framework extends Server {
         $this->eventDispatcher->dispatch(new WebSocketCloseEvent($framework, $fd));
     }
 
-    private function onRequest(Request $request, Response $response): void {
-        \OpenSwoole\Core\Psr\Response::emit($response, $this->router->process(ServerRequest::from($request)));
+    private function onRequest(Request $request, OpenswooleResponse $response): void {
+        Response::emit($response, $this->router->process(HttpRequest::from($request)));
     }
 
     public function onTask(Framework $framework, Task $serverTask): void {

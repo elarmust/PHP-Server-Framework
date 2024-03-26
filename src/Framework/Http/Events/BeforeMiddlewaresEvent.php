@@ -4,7 +4,7 @@
  * @copyright  Elar Must
  */
 
-namespace Framework\Event\Events;
+namespace Framework\Http\Events;
 
 use Framework\Http\Route;
 use Psr\Http\Message\ResponseInterface;
@@ -17,7 +17,7 @@ class BeforeMiddlewaresEvent implements StoppableEventInterface {
     public function __construct(
         private ServerRequestInterface $request,
         private ResponseInterface $response,
-        private Route $route
+        private ?Route $route
     ) {
     }
 
@@ -29,7 +29,7 @@ class BeforeMiddlewaresEvent implements StoppableEventInterface {
         return $this->response;
     }
 
-    public function getRoute(): Route {
+    public function getRoute(): ?Route {
         return $this->route;
     }
 
@@ -41,7 +41,7 @@ class BeforeMiddlewaresEvent implements StoppableEventInterface {
         $this->response = $response;
     }
 
-    public function setRoute(Route $route): void {
+    public function setRoute(?Route $route): void {
         $this->route = $route;
     }
 

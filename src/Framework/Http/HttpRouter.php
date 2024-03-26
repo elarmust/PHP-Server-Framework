@@ -11,12 +11,12 @@
 namespace Framework\Http;
 
 use Framework\Container\ClassContainer;
-use Framework\Event\Events\BeforeMiddlewaresEvent;
+use Framework\Http\Response;
+use Framework\Http\Events\BeforeMiddlewaresEvent;
 use Framework\Event\EventDispatcher;
 use Framework\Http\RouteRegistry;
 use Framework\Utils\RouteUtils;
 use Framework\Logger\Logger;
-use OpenSwoole\Core\Psr\Response;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LogLevel;
@@ -59,9 +59,13 @@ class HttpRouter {
 
         try {
             $route = clone $this->routeRegistry->getRoute($highestMatch);
-            $this->EventDispatcher->dispatch(new BeforeMiddlewaresEvent($request, $response, $route));
+            // Dispatch a BeforeMiddlewaresEvent event for the matched route. This event can be used to preprocess the request and response.
+            $event = $this->EventDispatcher->dispatch(new BeforeMiddlewaresEvent($request, $response, $route));
+            $route = $event->getRoute();
+            $request = $event->getRequest();
+            $response = $event->getResponse();
 
-            // Get a new RequestHandler instance for this route and handle it.
+            // Get a new RequestHandler instance for this route and delegate the request to it.
             $requestHandler = $this->classContainer->get($route->getRequestHandler(), [$route], useCache: false);
             return $requestHandler->handle($request);
         } catch (Throwable $e) {

@@ -6,23 +6,28 @@
  * Copyright @ Elar Must.
  */
 
-namespace Framework\Http\Session;
+namespace Framework\Http\Middlewares;
 
+use Framework\Http\Middleware;
+use Framework\Http\Session\Session;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Framework\Configuration\Configuration;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Message\ResponseInterface;
-use Framework\Framework;
 
-class SessionMiddleware implements MiddlewareInterface {
+class SessionMiddleware extends Middleware {
     public function __construct(
-        private Session $session,
-        private Configuration $configuration,
-        private Framework $server
+        private Session $session
     ) {
     }
 
+    /**
+     * Process the middleware.
+     *
+     * @param ServerRequestInterface $request
+     * @param RequestHandlerInterface $handler
+     *
+     * @return ResponseInterface
+     */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
         $cookieName = $this->session->getCookieName();
         $existingCookies = $request->getCookieParams();

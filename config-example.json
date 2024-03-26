@@ -29,6 +29,7 @@
     "session": {
         "enabled": true,
         "expirationSeconds": 86400,
+        "csrfExpirationSeconds": 3600,
         "sessionCacheRowCount": 4096,
         "sessionCacheDataLengthBytes": 4096,
         "sessionGCMilliSeconds": 60000,
@@ -54,6 +55,5 @@
             "default": "Y-m-d H:i:s"
         }
     },
-    "hostName": "framework",
-    "defaultCsrfTokenExpirationSeconds": 86400
+    "hostName": "framework"
 }
