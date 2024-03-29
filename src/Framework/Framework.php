@@ -70,6 +70,13 @@ class Framework extends Server {
     private bool $ssl = false;
     private float $startTime;
     private string $ip;
+    public array $serverOptions = [
+        'enable_coroutine' => true,
+        'task_enable_coroutine' => true,
+        'pid_file' => BASE_PATH . '/var/server.pid',
+        'max_wait_time' => 10,
+        'open_http2_protocol' => true,
+    ];
 
     public function __construct() {
         define('FRAMEWORK', $this);
@@ -157,20 +164,11 @@ class Framework extends Server {
         $coroutineNum = $this->configuration->getConfig('maxCoroutines') ?: 4096;
         $coroutineNum = is_int($coroutineNum) && $coroutineNum > 0 ? $coroutineNum : 4096;
 
-        $serverOptions = [
-            'enable_coroutine' => true,
-            'task_enable_coroutine' => true,
-            'pid_file' => BASE_PATH . '/var/server.pid',
-            'worker_num' => $workerNum,
-            'task_worker_num' => $taskWorkerNum,
-            'max_wait_time' => 10,
-            'max_coroutine' => $coroutineNum,
-            'open_http2_protocol' => true,
-            'ssl_cert_file' => $this->configuration->getConfig('cert.cert') ?: '',
-            'ssl_key_file' => $this->configuration->getConfig('cert.key') ?: ''
-        ];
-        parent::__construct(...$this->classContainer->prepareFunctionArguments(parent::class, parameters: [$this->ip, $this->port, Server::POOL_MODE, $swooleSock]));
-        $this->set($serverOptions);
+        $this->serverOptions['worker_num'] = $workerNum;
+        $this->serverOptions['task_worker_num'] = $taskWorkerNum;
+        $this->serverOptions['max_coroutine'] = $coroutineNum;
+        $this->serverOptions['ssl_cert_file'] = $this->configuration->getConfig('cert.cert') ?: '';
+        $this->serverOptions['ssl_key_file'] = $this->configuration->getConfig('cert.key') ?: '';
 
         // Initialize built in features.
         Init::beforeWorkers($this);
@@ -184,6 +182,9 @@ class Framework extends Server {
                 $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
             }
         }
+
+        parent::__construct(...$this->classContainer->prepareFunctionArguments(parent::class, parameters: [$this->ip, $this->port, Server::POOL_MODE, $swooleSock]));
+        $this->set($this->serverOptions);
 
         $this->on('workerStart', $this->onWorkerStart(...));
         $this->on('request', $this->onRequest(...));

@@ -20,7 +20,8 @@
         "psr/http-server-handler": "^1.0@dev",
         "psr/http-server-middleware": "^1.0@dev",
         "psr/event-dispatcher": "^1.0@dev",
-        "phpunit/phpunit": "^9.6"
+        "phpunit/phpunit": "^9.6",
+        "karwana/mime": "^1.0"
     },
     "autoload": {
         "psr-4": {

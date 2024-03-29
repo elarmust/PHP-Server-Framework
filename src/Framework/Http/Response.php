@@ -2,6 +2,8 @@
 
 namespace Framework\Http;
 
+use Exception;
+use Karwana\Mime\Mime;
 use InvalidArgumentException;
 use OpenSwoole\Core\Psr\Stream;
 use Psr\Http\Message\StreamInterface;
@@ -37,4 +39,42 @@ class Response extends OpenSwooleResponse implements ResponseInterface {
     public function getStream(): StreamInterface {
         return $this->stream;
     }
+
+    /**
+     * Set the response body to a file.
+     *
+     * @param string $fileRoot Path to the directory containing the file path. This is used to access control.
+     * @param string $filePath Path to the file to send. Must be within the file root directory.
+     * @param bool $asAttachment Whether to send the file as an attachment or body content.
+     *
+     * @return ResponseInterface Response with the file as the body.
+     */
+    public function withFile(string $fileRoot, string $filePath, bool $asAttachment = false): ResponseInterface {
+        $realPath = realpath($fileRoot . $filePath);
+        $new = clone $this;
+
+        if (!$realPath || !file_exists($realPath) || !str_starts_with($realPath, $fileRoot)) {
+            $new->stream = Stream::streamFor('');
+            $new = $new->withStatus(404);
+            return $new;
+        }
+
+        try {
+            $new->stream = Stream::createStreamFromFile($realPath);
+            $new = $new->withStatus(200);
+
+            $mimeType = Mime::guessType($realPath);
+            $new = $new->withHeader('Content-Type', $mimeType);
+
+            if ($asAttachment) {
+                // Send the file as an attachment.
+                $new = $new->withHeader('Content-Disposition', 'attachment; filename="' . basename($realPath) .'"');
+            }
+        } catch (Exception $e) {
+            $new->stream = Stream::streamFor('');
+            $new = $new->withStatus(404);
+        }
+
+        return $new;
+    }    
 }
