@@ -134,7 +134,7 @@ class Framework extends Server {
             $this->locale->addDateFormat($dateFormat['format'] ?? 'Y-m-d H:i:s', $name);
         }
 
-        $this->logger->info('Default locale: ' . $this->locale->getDefaultLocale(), identifier: 'framework');
+        $this->logger->info('Default locale: ' . $this->locale->getLocale(), identifier: 'framework');
 
 
         $this->logger->info('Preparing HTTP server...', identifier: 'framework');

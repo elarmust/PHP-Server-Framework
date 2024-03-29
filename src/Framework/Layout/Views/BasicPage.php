@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="<?=$controller->getLocale()->getDefaultLocale()?>">
+<html lang="<?=$controller->getLocale()->getLocale()?>">
     <head>
         <title>Framework</title>
         <meta charset="UTF-8">

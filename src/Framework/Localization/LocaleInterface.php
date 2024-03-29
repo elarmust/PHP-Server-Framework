@@ -61,7 +61,7 @@ interface LocaleInterface {
      *
      * @return string Default locale name.
      */
-    public function getDefaultLocale(): string;
+    public function getLocale(): string;
 
     /**
      * Returns the child Locale classes associated with the Locale class.

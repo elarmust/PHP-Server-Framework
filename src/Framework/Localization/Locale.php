@@ -99,7 +99,7 @@ class Locale implements LocaleInterface {
      *
      * @return string Default locale name.
      */
-    public function getDefaultLocale(): string {
+    public function getLocale(): string {
         return $this->defaultLocale;
     }
 
