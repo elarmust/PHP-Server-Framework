@@ -10,6 +10,8 @@
 namespace Framework\Http;
 
 use Psr\Http\Message\ResponseInterface;
+use Framework\Http\Mime\MimeTypes;
+
 use Framework\Http\Response;
 use Framework\Http\Middleware;
 use ReflectionClass;
@@ -24,13 +26,14 @@ class RequestHandler implements RequestHandlerInterface {
 
     public function __construct(
         private ClassContainer $classContainer,
-        private Route $route
+        private Route $route,
+        private MimeTypes $mimeTypes
     ) {
         // Get the middleware stack from the route.
         $middlewares = $this->route->getMiddlewareStack();
         // Controller stack class is the last middleware in the middleware stack.
         $this->middlewareStack = array_merge($middlewares, [$this->route->getControllerStackClass()]);
-        $this->response = new Response('', 404);
+        $this->response = new Response($this->mimeTypes, '', 404);
     }
 
     /**

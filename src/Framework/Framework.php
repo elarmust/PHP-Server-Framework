@@ -10,6 +10,8 @@
 namespace Framework;
 
 use Framework\Logger\LogAdapters\DefaultLogAdapter;
+use Framework\Http\Mime\MimeTypes;
+
 use Framework\Exception\ExceptionHandlerInterface;
 use Framework\Event\Events\WebSocketCloseEvent;
 use Framework\Exception\ErrorHandlerInterface;
@@ -62,6 +64,7 @@ class Framework extends Server {
     private ClassContainer $classContainer;
     private Configuration $configuration;
     private HttpRouter $router;
+    private MimeTypes $mimeTypes;
     private Database $database;
     private Logger $logger;
     private Locale $locale;
@@ -118,6 +121,7 @@ class Framework extends Server {
 
         $this->logger->info('Initializing HTTP router...', identifier: 'framework');
         $this->router = $this->classContainer->get(HttpRouter::class);
+        $this->mimeTypes = $this->classContainer->get(MimeTypes::class);
 
 
         if ($this->configuration->getConfig('websocket.enabled') === true) {
@@ -406,6 +410,10 @@ class Framework extends Server {
 
     public function getRouteRegistry(): RouteRegistry {
         return $this->classContainer->get(RouteRegistry::class);
+    }
+
+    public function getMimeTypes(): MimeTypes {
+        return $this->mimeTypes;
     }
 
     public function getMigrations(): Migrations {

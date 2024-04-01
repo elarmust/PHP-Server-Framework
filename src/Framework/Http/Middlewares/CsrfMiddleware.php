@@ -8,18 +8,20 @@
 
 namespace Framework\Http\Middlewares;
 
-use Framework\Configuration\Configuration;
 use Framework\Http\Response;
 use Framework\Http\Middleware;
+use Framework\Http\Mime\MimeTypes;
 use Framework\Http\Session\Session;
 use Psr\Http\Message\ResponseInterface;
+use Framework\Configuration\Configuration;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 class CsrfMiddleware extends Middleware {
     public function __construct(
         private Session $session,
-        private Configuration $configuration
+        private Configuration $configuration,
+        private MimeTypes $mimeTypes
     ) {
     }
 
@@ -44,7 +46,7 @@ class CsrfMiddleware extends Middleware {
 
         // Check the validity of the token.
         if (!$session->validateCsrfToken($token ?? '', $session)) {
-            return new Response('', 403);
+            return new Response($this->mimeTypes, '', 403);
         }
 
         return $handler->handle($request);

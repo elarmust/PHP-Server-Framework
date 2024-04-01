@@ -11,6 +11,8 @@
 namespace Framework\Http;
 
 use Framework\Container\ClassContainer;
+use Framework\Http\Mime\MimeTypes;
+
 use Framework\Http\Response;
 use Framework\Http\Events\BeforeMiddlewaresEvent;
 use Framework\Event\EventDispatcher;
@@ -33,7 +35,8 @@ class HttpRouter {
         private ClassContainer $classContainer,
         private EventDispatcher $EventDispatcher,
         private RouteRegistry $routeRegistry,
-        private Logger $logger
+        private Logger $logger,
+        private MimeTypes $mimeTypes
     ) {
     }
 
@@ -50,7 +53,7 @@ class HttpRouter {
      * @return ResponseInterface The HTTP response generated as a result of processing the request.
      */
     public function process(ServerRequestInterface $request): ResponseInterface {
-        $response = new Response('', 404);
+        $response = new Response($this->mimeTypes, '', 404);
         $highestMatch = RouteUtils::findNearestMatch($request->getServerParams()['path_info'], $this->routeRegistry->listRoutes(), '/');
 
         if (!$highestMatch) {
@@ -70,7 +73,7 @@ class HttpRouter {
             return $requestHandler->handle($request);
         } catch (Throwable $e) {
             $this->logger->log(LogLevel::ERROR, $e, identifier: 'framework');
-            return new Response('', 500);
+            return new Response($this->mimeTypes, '', 500);
         }
     }
 }
