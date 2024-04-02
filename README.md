@@ -58,7 +58,6 @@ If you'd like to contribute, you can do the following:
 + [Submit an issue or feature request](https://github.com/elarike12/PHP_Framework/issues)
 
 # TO DO list
-+ Add localization feature.
 + Cron improvement
 + Add command arguments to unit tests and fix some errors
 + Better CLI and fix an error thrown, when invalid command is used.
