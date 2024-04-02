@@ -3,17 +3,15 @@
 namespace Framework\Http;
 
 use Exception;
-use Karwana\Mime\Mime;
 use InvalidArgumentException;
 use OpenSwoole\Core\Psr\Stream;
+use Framework\Http\Mime\MimeTypes;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\ResponseInterface;
 use OpenSwoole\Core\Psr\Response as OpenSwooleResponse;
 
 class Response extends OpenSwooleResponse implements ResponseInterface {
-    protected string $streamType = 'php://memory';
-
-    public function __construct(StreamInterface|string $body, int $statusCode = 200, string $reasonPhrase = '', array $headers = [], string $protocolVersion = '1.1') {
+    public function __construct(protected MimeTypes $mimeTypes, StreamInterface|string $body, int $statusCode = 200, string $reasonPhrase = '', array $headers = [], string $protocolVersion = '1.1') {
         parent::__construct($body, $statusCode, $reasonPhrase, $headers, $protocolVersion);
     }
 
@@ -62,9 +60,7 @@ class Response extends OpenSwooleResponse implements ResponseInterface {
         try {
             $new->stream = Stream::createStreamFromFile($realPath);
             $new = $new->withStatus(200);
-
-            $mimeType = Mime::guessType($realPath);
-            $new = $new->withHeader('Content-Type', $mimeType);
+            $new = $new->withHeader('Content-Type', $this->mimeTypes->guessType($realPath));
 
             if ($asAttachment) {
                 // Send the file as an attachment.
