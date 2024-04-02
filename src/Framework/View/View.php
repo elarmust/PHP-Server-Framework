@@ -14,6 +14,9 @@ use Throwable;
 class View implements ViewInterface {
     protected string $viewFile = '';
 
+    public function __construct(private ViewRegistry $viewRegistry) {
+    }
+
     /**
      * Set view contents.
      *
@@ -23,6 +26,22 @@ class View implements ViewInterface {
     public function setView(string $viewFile): ViewInterface {
         $this->viewFile = $viewFile;
         return $this;
+    }
+
+    /**
+     * Import and render a view.
+     *
+     * @param string $viewName View name.
+     * @param array $variables = [] Variables to pass to the view
+     *
+     * @return string rendered view.
+     */
+    public function import(string $viewName, array $variables = []): string {
+        try {
+            return $this->viewRegistry->getView($viewName)->getView($variables);
+        } catch (Throwable $e) {
+            return '';
+        }
     }
 
     /**

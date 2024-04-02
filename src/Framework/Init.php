@@ -120,7 +120,7 @@ class Init {
             $framework->getRouteRegistry()->registerRoute($route);
     
             // Create a new default page view.
-            $view = new View();
+            $view = new View($framework->getViewRegistry());
             $view->setView(BASE_PATH . '/src/Framework/Layout/Views/BasicPage.php');
             $framework->getViewRegistry()->registerView('basicPage', $view);
             return;
