@@ -10,8 +10,8 @@ use InvalidArgumentException;
 use RecursiveIteratorIterator;
 
 class Locale implements LocaleInterface {
-    private array $locales = [];
-    private array $data = [];
+    protected array $locales = [];
+    protected array $data = [];
 
     /**
      * Class representing a locale.
@@ -19,7 +19,7 @@ class Locale implements LocaleInterface {
      * @param string $identifier The identifier of the locale.
      * @param string $defaultLocale The default locale.
      */
-    public function __construct(private string $identifier, private string $defaultLocale) {
+    public function __construct(protected string $identifier, protected string $defaultLocale) {
     }
 
     /**
