@@ -50,7 +50,7 @@ class Configuration {
 
     public function getConfig(string $key = ''): bool|int|array|string {
         $getKeys = explode('.', $key);
-        if (count($getKeys) < 1) {
+        if ($key === '' || count($getKeys) < 1) {
             return $this->config;
         }
 
