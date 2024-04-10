@@ -1,19 +1,9 @@
 # PHP Server Framework
-A lightweight PHP server framework powered by Swoole for creating HTTP/WebSocket servers.
+A lightweight PHP server framework powered by OpenSwoole, integrating MVC architecture and WebSockets within a single server instance.<br />
+One of the key features is its modularity, allowing you to extend its functionality by creating custom modules.
 
 **Note: This project is currently under development, and some features may not work as expected.
 Feel free to explore and contribute, but be aware that the codebase is subject to changes.**
-
-# Main features
-+ HTTP router
-+ MVC
-+ WebSocket
-+ Database migrations
-+ Event system
-+ Task scheduling
-+ CLI
-+ Logging
-+ Configuration system
 
 # General requirements
 + MySQL database
@@ -46,7 +36,7 @@ docker attach framework-framework-1
 migrate run up all
 ```
 
-You can access the built-in CLI tool with
+When running on Docker, you can communicate with the Framework process with:
 ```
 docker attach framework-framework-1
 ```
