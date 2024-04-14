@@ -149,4 +149,54 @@ interface ModelInterface {
      * @return ModelInterface
      */
     public function removeProperties(array $keys): ModelInterface;
+
+    /**
+     * Get the value of the data key.
+     *
+     * @param string $name The name of the data key.
+     *
+     * @throws ModelException If the property does not exist.
+     * @return mixed The value of the property.
+     */
+    public function __get($name): mixed;
+
+    /**
+     * Sets the value of a model data key.
+     *
+     * @param string $name The name of the data key.
+     * @param mixed $value The value to be set.
+     *
+     * @return void
+     */
+    public function __set($name, $value): void;
+
+    /**
+     * Checks if a data key is set.
+     *
+     * @param string $name The name of the data key to check.
+     * @return bool Returns true if the data key is set, false otherwise.
+     */
+    public function __isset($name): bool;
+
+    /**
+     * Unsets a model's data key.
+     *
+     * @param string $name The name of the data key to unset.
+     * @return void
+     */
+    public function __unset($name): void;
+
+    /**
+     * Retursn mode's data array.
+     *
+     * @return array The model data as an array.
+     */
+    public function __toArray(): array;
+
+    /**
+     * Returns a JSON representation of the model data.
+     *
+     * @return string The JSON representation of the model data.
+     */
+    public function __toString(): string;
 }

@@ -450,7 +450,7 @@ abstract class Model implements ModelInterface {
      * @throws ModelException If the property does not exist.
      * @return mixed The value of the property.
      */
-    public function __get($name) {
+    public function __get($name): mixed {
         return $this->getData([$name])[$name];
     }
 
