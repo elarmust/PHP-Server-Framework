@@ -2,6 +2,7 @@
 
 namespace Framework\Http;
 
+use Framework\Http\Session\Session;
 use OpenSwoole\Http\Request as HttpRequest;
 use OpenSwoole\Core\Psr\Stream;
 use OpenSwoole\Core\Psr\UploadedFile;
@@ -73,6 +74,15 @@ class Request extends ServerRequest implements ServerRequestInterface {
         }
 
         return $this->getAttributes()['pathParams'][$query] ?? null;
+    }
+
+    /**
+     * Get the session associated with the request.
+     *
+     * @return Session|null The session or null if not found.
+     */
+    public function session(): ?Session {
+        return $this->getAttribute('session');
     }
 
     /**

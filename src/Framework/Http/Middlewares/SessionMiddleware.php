@@ -33,38 +33,38 @@ class SessionMiddleware extends Middleware {
         $existingCookies = $request->getCookieParams();
         $cookieSessionId = $existingCookies[$cookieName] ?? null;
         $session = $this->session->getSession($cookieSessionId);
+        $request = $request->withAttribute('session', $session);
 
-        // Send session cookie to user.
-        if ($cookieSessionId !== $session->id()) {
-            $cookieParams = $request->getCookieParams();
-            $cookieParams[$cookieName] = $session->id();
-            $request = $request->withCookieParams($cookieParams);
-
-            $expiration = time() + $session->getExpirationSeconds();
-            $expiresFormatted = gmdate('D, d M Y H:i:s T', $expiration);
-
-            // Create a new cookie string with the specified attributes.
-            $cookieString = $cookieName . '=' . $session->id() . '; path=' . $session->getSessionPath() . ';';
-            if ($session->getSecure() === true) {
-                $cookieString .= ' secure;';
-            }
-
-            if ($session->getHttpOnly() === true) {
-                $cookieString .= ' HttpOnly;';
-            }
-
-            $domain = $session->getSessionDomain();
-            if ($domain) {
-                $cookieString .= ' domain=' . $domain . ';';
-            }
-
-            $cookieString .= ' expires=' . $expiresFormatted . ';';
-
-            $response = $handler->handle($request);
-            $response = $response->withAddedHeader('Set-Cookie', $cookieString);
-            return $response;
+        if ($cookieSessionId === $session->id()) {
+            return $handler->handle($request);
         }
 
-        return $handler->handle($request);
+        $cookieParams = $request->getCookieParams();
+        $cookieParams[$cookieName] = $session->id();
+        $request = $request->withCookieParams($cookieParams);
+
+        $expiration = time() + $session->getExpirationSeconds();
+        $expiresFormatted = gmdate('D, d M Y H:i:s T', $expiration);
+
+        // Create a new cookie string with the specified attributes.
+        $cookieString = $cookieName . '=' . $session->id() . '; path=' . $session->getSessionPath() . ';';
+        if ($session->getSecure() === true) {
+            $cookieString .= ' secure;';
+        }
+
+        if ($session->getHttpOnly() === true) {
+            $cookieString .= ' HttpOnly;';
+        }
+
+        $domain = $session->getSessionDomain();
+        if ($domain) {
+            $cookieString .= ' domain=' . $domain . ';';
+        }
+
+        $cookieString .= ' expires=' . $expiresFormatted . ';';
+
+        $response = $handler->handle($request);
+        $response = $response->withAddedHeader('Set-Cookie', $cookieString);
+        return $response;
     }
 }
