@@ -72,7 +72,7 @@ class Session {
 
             // In coroutine to do it async.
             go(function () use ($sessionId, $timeStamp) {
-                $this->getDatabase()->update(self::getTableName(), ['timestamp' => $timeStamp], where: ['id' => $sessionId]);
+                $this->getDatabase()->update(self::getTableName(), ['timestamp' => $timeStamp], ['id' => $sessionId]);
             });
         }
 
@@ -116,17 +116,17 @@ class Session {
             throw new RuntimeException('Cannot save non-instanciated session.');
         }
 
-        $serializedData = serialize($this->data);
         $timeStamp = time();
 
-        $this->setCached($this->id(), ['data' => $serializedData, 'timestamp' => $timeStamp], $this->getTimestamp());
+        $this->setCached($this->id(), $this->getData(), $this->getTimestamp());
 
         // There is no need to save an empty session to database.
         if ($this->getData() === []) {
             return $this;
         }
 
-        go(function () use ($serializedData, $timeStamp) {
+        go(function () use ($timeStamp) {
+            $serializedData = serialize($this->getData());
             $this->getDatabase()->query('
                 INSERT INTO
                     ' . self::getTableName() . '
@@ -163,7 +163,7 @@ class Session {
         }
 
         $this->setTimeStamp(time());
-        $this->data = $merge ? array_replace_recursive($this->data, $data) : $data;
+        $this->data = $merge ? array_replace_recursive($this->getData(), $data) : $data;
 
         // We might as well delete it, if data is empty.
         if ($this->getData() === []) {
@@ -171,7 +171,7 @@ class Session {
             return $this;
         }
 
-        $this->setCached($this->id(), $this->data, $this->getTimestamp());
+        $this->setCached($this->id(), $this->getData(), $this->getTimestamp());
 
         return $this;
     }
@@ -231,7 +231,9 @@ class Session {
     private function setCached(string $sessionId, array $data, int $timeStamp): void {
         try {
             $existingData = Cache::getTable(self::getTableName())->get($sessionId)['data'] ?? serialize([]);
-            Cache::getTable(self::getTableName())->set($sessionId, ['data' => serialize(array_replace_recursive(unserialize($existingData), $data)), 'timestamp' => $timeStamp]);
+            $newData = array_replace_recursive(unserialize($existingData), $data);
+
+            Cache::getTable(self::getTableName())->set($sessionId, ['data' => serialize($newData), 'timestamp' => $timeStamp]);
         } catch (Throwable $e) {
             $this->logger->debug('Unable to save session to cache!', identifier: 'framework');
             $this->logger->debug($e, identifier: 'framework');
@@ -339,7 +341,7 @@ class Session {
      * @return array An array of model data keys.
      */
     public function getDataKeys(): array {
-        return array_keys($this->data);
+        return array_keys($this->getData());
     }
 
     /**
@@ -586,7 +588,7 @@ class Session {
      * @return bool Returns true if the data key is set, false otherwise.
      */
     public function __isset($name): bool {
-        return array_key_exists($name, $this->data);
+        return array_key_exists($name, $this->getData());
     }
 
     /**
@@ -615,6 +617,6 @@ class Session {
      * @return string JSON representation of session data.
      */
     public function __toString(): string {
-        return json_encode($this->data);
+        return json_encode($this->getData());
     }
 }
