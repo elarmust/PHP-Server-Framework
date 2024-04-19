@@ -48,7 +48,7 @@ class Configuration {
     private function decodeYML() {
     }
 
-    public function getConfig(string $key = '', null|bool|int|array|string $default = null): null|bool|int|array|string {
+    public function getConfig(string $key = ''): null|bool|int|array|string {
         $getKeys = explode('.', $key);
         if ($key === '' || count($getKeys) < 1) {
             return $this->config;
