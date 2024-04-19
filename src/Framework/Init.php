@@ -9,9 +9,8 @@
 namespace Framework;
 
 use Framework\Model\EventListeners\ModelRestore;
+use Framework\Http\Middlewares\ParseRequestMiddleware;
 use Framework\Http\Middlewares\SessionMiddleware;
-use Framework\Http\EventListeners\AddDefaultMiddlewares;
-use Framework\Http\Events\BeforeMiddlewaresEvent;
 use Framework\Model\EventListeners\ModelCreate;
 use Framework\Model\EventListeners\ModelDelete;
 use Framework\Http\Session\Task\SessionGCTask;
@@ -109,8 +108,11 @@ class Init {
         $framework->getEventListenerProvider()->registerEventListener(ModelDeleteEvent::class, $classContainer->get(ModelDelete::class, useCache: false));
         $framework->getEventListenerProvider()->registerEventListener(ModelRestoreEvent::class, $classContainer->get(ModelRestore::class, useCache: false));
 
-        // Register Http events.
-        $framework->getEventListenerProvider()->registerEventListener(BeforeMiddlewaresEvent::class, $classContainer->get(AddDefaultMiddlewares::class, useCache: false));
+        // Set default middlewares.
+        Route::setDefaultMiddlewareStack([
+            ParseRequestMiddleware::class,
+            SessionMiddleware::class,
+        ]);
 
         if (!$framework->isTaskWorker()) {
             // Register / root path.
