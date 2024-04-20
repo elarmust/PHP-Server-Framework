@@ -211,7 +211,7 @@ class Session {
      */
     public function generateSessionId(): string {
         while (true) {
-            $randomString = bin2hex(random_bytes(16));
+            $randomString = base64_encode(random_bytes(45));
 
             if (!$this->sessionStorageLocation($randomString)) {
                 return $randomString;
@@ -289,7 +289,7 @@ class Session {
             throw new RuntimeException('Cannot set non-instantiated session.');
         }
 
-        $key = bin2hex(random_bytes(32));
+        $key = base64_encode(random_bytes(45));
         $data[$key] = ['created' => time(), 'expiration' => $this->csrfExpiration];
         $this->setData(['csrfTokens' => $data]);
         return $key;

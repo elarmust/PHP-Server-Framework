@@ -17,7 +17,7 @@ class M1706894162SessionStorage implements MigrationInterface {
     public function up(Database $database) {
         $database->query('
             CREATE TABLE `' . Session::getTableName() . '` (
-                `id` VARCHAR(32) PRIMARY KEY,
+                `id` VARCHAR(64) PRIMARY KEY,
                 `data` TEXT NOT NULL,
                 `timestamp` INT NOT NULL
             )

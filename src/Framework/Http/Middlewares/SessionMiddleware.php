@@ -64,7 +64,7 @@ class SessionMiddleware extends Middleware {
         $cookieString .= ' expires=' . $expiresFormatted . ';';
 
         $response = $handler->handle($request);
-        $response = $response->withAddedHeader('Set-Cookie', $cookieString);
+        $response = $response->withHeader('Set-Cookie', $cookieString);
         return $response;
     }
 }
