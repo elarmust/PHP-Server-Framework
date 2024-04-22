@@ -59,7 +59,7 @@ class Configuration {
             if (isset($configSection[$key])) {
                 $configSection = $configSection[$key];
                 if (array_key_last($getKeys) == $id) {
-                    if ($configSection == (int)$configSection) {
+                    if (is_int($configSection)) {
                         return (int)$configSection;
                     } else if (is_bool($configSection)) {
                         return (bool)$configSection;
