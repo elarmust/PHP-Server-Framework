@@ -88,10 +88,14 @@ abstract class Model implements ModelInterface {
         }
 
         // Insert data to database and get the id.
-        $data['id'] = $model->getDatabase()->insert($model->getTableName(), $createData);
-        if ($data['id'] === false) {
+        $autoIncrementId = $model->getDatabase()->insert($model->getTableName(), $createData);
+        if ($autoIncrementId === false) {
             throw new ModelException('Failed to create model in database!');
         }
+
+        // Insert will return 0 if the id does not use auto increment.
+        // In that case, use the id from the data or if that is not set, use the inserted id.
+        $data['id'] = $autoIncrementId ?: $createData['id'] ?? $autoIncrementId;
 
         // Set the model to new model with the data.
         return $model->withData($data);
