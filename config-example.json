@@ -6,7 +6,7 @@
             "database": "root",
             "username": "root",
             "password": "root",
-            "charset": "utf8mb4",
+            "charset": "utf8mb4-general-ci",
             "poolSize": 25
         }
     },
