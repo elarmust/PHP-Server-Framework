@@ -33,7 +33,7 @@ class Database {
         $mysqlConfig->withUsername($this->username);
         $mysqlConfig->withPassword($this->password);
         $mysqlConfig->withDbname($this->database);
-        $mysqlConfig->withCharset('utf8mb4');
+        $mysqlConfig->withCharset($charset);
         $this->pool = new ClientPool(PDOClientFactory::class, $mysqlConfig, $maxPoolSize);
     }
 
