@@ -8,9 +8,9 @@
 
 namespace Framework\Model;
 
-use Framework\Model\Exception\ModelException;
-use Framework\Database\Database;
 use Framework\Logger\Logger;
+use Framework\Database\Database;
+use Framework\Model\Exception\ModelException;
 
 abstract class Model implements ModelInterface {
     protected null|string $tableName = null;
@@ -43,9 +43,9 @@ abstract class Model implements ModelInterface {
      * @param string|int $modelId The ID of the model to load.
      * @param bool $includeArchived Whether or not to include archived entries.
      *
-     * @return ModelInterface
+     * @return static
      */
-    public function load(string|int $modelId, bool $includeArchived = false): ModelInterface {
+    public function load(string|int $modelId, bool $includeArchived = false): static {
         $model = clone $this;
 
         // Load the model from database.
@@ -70,9 +70,9 @@ abstract class Model implements ModelInterface {
      *
      * @param array $data = [] Data to be inserted into the database.
      *
-     * @return ModelInterface Newly created model instance.
+     * @return static Newly created model instance.
      */
-    public function create(array $data = []): ModelInterface {
+    public function create(array $data = []): static {
         $model = $this->withData([]);
         $properties = $model->getProperties();
 
@@ -107,9 +107,9 @@ abstract class Model implements ModelInterface {
      * @param array $data An associative array of data keys and values.
      *
      * @throws ModelException If the model has not been instantiated.
-     * @return ModelInterface
+     * @return static
      */
-    public function setData(array $data): ModelInterface {
+    public function setData(array $data): static {
         foreach ($data as $key => $value) {
             // Readonly values cannot be set on existing models.
             if ($this->isPropertyReadonly($key) && $this->id() !== null) {
@@ -125,9 +125,9 @@ abstract class Model implements ModelInterface {
      * Save the model data to the database.
      *
      * @throws ModelException If the model has not been instantiated.
-     * @return ModelInterface
+     * @return static
      */
-    public function save(): ModelInterface {
+    public function save(): static {
         if ($this->id() === null) {
             throw new ModelException('Cannot save non-instanciated model.');
         }
@@ -160,9 +160,9 @@ abstract class Model implements ModelInterface {
      * Delete the model from the database.
      *
      * @throws ModelException If the model has not been instanciated.
-     * @return ModelInterface
+     * @return static
      */
-    public function delete(): ModelInterface {
+    public function delete(): static {
         if ($this->id() === null) {
             throw new ModelException('Cannot delete non-instanciated model.');
         }
@@ -185,9 +185,9 @@ abstract class Model implements ModelInterface {
      * Restores the model by updating the 'deleted_at' column to null.
      *
      * @throws ModelException If the model has not been instanciated.
-     * @return ModelInterface The restored model.
+     * @return static The restored model.
      */
-    public function restore(): ModelInterface {
+    public function restore(): static {
         if ($this->id() === null) {
             throw new ModelException('Cannot restore non-instanciated model.');
         }
@@ -276,9 +276,9 @@ abstract class Model implements ModelInterface {
      *
      * @param array $properties An associative array of data properties to set.
      *
-     * @return ModelInterface
+     * @return static
      */
-    public function modifyProperties(array $properties): ModelInterface {
+    public function modifyProperties(array $properties): static {
         $this->properties = array_replace_recursive($this->properties, $properties);
 
         $this->cleanupPropertiesAndData();
@@ -291,9 +291,9 @@ abstract class Model implements ModelInterface {
      *
      * @param array $properties An array of model properties to remove.
      *
-     * @return ModelInterface
+     * @return static
      */
-    public function removeProperties(array $properties): ModelInterface {
+    public function removeProperties(array $properties): static {
         $this->properties = $this->arrayRemoveRecursive($properties, $this->properties);
         return $this;
     }
@@ -437,9 +437,9 @@ abstract class Model implements ModelInterface {
      * The new instance will be a clone of the current instance with the updated data.
      *
      * @param array $data The data to set on the model.
-     * @return ModelInterface The new instance of the model with the updated data.
+     * @return static The new instance of the model with the updated data.
      */
-    public function withData(array $data): ModelInterface {
+    public function withData(array $data): static {
         $model = clone $this;
         $model->data = $data;
         $model->cleanupPropertiesAndData();

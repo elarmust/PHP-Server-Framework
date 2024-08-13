@@ -8,16 +8,16 @@
 
 namespace Framework\Model;
 
-use Framework\Model\Exception\ModelException;
-use Framework\Model\Events\ModelRestoreEvent;
-use Framework\Model\Events\ModelCreateEvent;
-use Framework\Model\Events\ModelDeleteEvent;
+use Framework\Logger\Logger;
+use Framework\Database\Database;
+use Framework\Event\EventDispatcher;
+use Framework\Model\Events\ModelSetEvent;
 use Framework\Model\Events\ModelLoadEvent;
 use Framework\Model\Events\ModelSaveEvent;
-use Framework\Model\Events\ModelSetEvent;
-use Framework\Event\EventDispatcher;
-use Framework\Database\Database;
-use Framework\Logger\Logger;
+use Framework\Model\Events\ModelDeleteEvent;
+use Framework\Model\Events\ModelCreateEvent;
+use Framework\Model\Events\ModelRestoreEvent;
+use Framework\Model\Exception\ModelException;
 
 abstract class EventModel extends Model implements ModelInterface {
     /**
@@ -39,9 +39,9 @@ abstract class EventModel extends Model implements ModelInterface {
      * @param string|int $modelId The ID of the model to load.
      * @param bool $includeArchived Whether or not to include archived entries.
      *
-     * @return ModelInterface
+     * @return static
      */
-    public function load(string|int $modelId, bool $includeArchived = false): ModelInterface {
+    public function load(string|int $modelId, bool $includeArchived = false): static {
         $modelInstance = $this->withData([]);
         return $this->eventDispatcher->dispatch(new ModelLoadEvent($modelInstance, $modelId, $includeArchived))->getModel();
     }
@@ -51,9 +51,9 @@ abstract class EventModel extends Model implements ModelInterface {
      *
      * @param array $data = [] Data to be inserted into the database.
      *
-     * @return ModelInterface Newly created model instance.
+     * @return static Newly created model instance.
      */
-    public function create(array $data = []): ModelInterface {
+    public function create(array $data = []): static {
         $model = clone $this;
 
         // Set the data on the model.
@@ -69,9 +69,9 @@ abstract class EventModel extends Model implements ModelInterface {
      * @param array $data An associative array of data keys and values.
      *
      * @throws ModelException If the model has not been instantiated.
-     * @return ModelInterface
+     * @return static
      */
-    public function setData(array $data): ModelInterface {
+    public function setData(array $data): static {
         if ($this->id() === null) {
             throw new ModelException('Cannot save non-instanciated model.');
         }
@@ -84,9 +84,9 @@ abstract class EventModel extends Model implements ModelInterface {
      * Save the model data to the database.
      *
      * @throws ModelException If the model has not been instantiated.
-     * @return ModelInterface
+     * @return static
      */
-    public function save(): ModelInterface {
+    public function save(): static {
         if ($this->id() === null) {
             throw new ModelException('Cannot save non-instanciated model.');
         }
@@ -99,9 +99,9 @@ abstract class EventModel extends Model implements ModelInterface {
      * Delete the model from the database.
      *
      * @throws ModelException If the model has not been instanciated.
-     * @return ModelInterface
+     * @return static
      */
-    public function delete(): ModelInterface {
+    public function delete(): static {
         if ($this->id() === null) {
             throw new ModelException('Cannot delete non-instanciated model.');
         }
@@ -114,9 +114,9 @@ abstract class EventModel extends Model implements ModelInterface {
      * Restores the model by updating the 'deleted_at' column to null.
      *
      * @throws ModelException If the model has not been instanciated.
-     * @return ModelInterface The restored model.
+     * @return static The restored model.
      */
-    public function restore(): ModelInterface {
+    public function restore(): static {
         if ($this->id() === null) {
             throw new ModelException('Cannot restore non-instanciated model.');
         }
