@@ -24,18 +24,14 @@ class Response extends OpenSwooleResponse implements ResponseInterface {
     public function withBody($stringOrStream): ResponseInterface {
         $new = clone $this;
         if (is_string($stringOrStream)) {
-            $new->stream = Stream::streamFor($stringOrStream);
+            $new->body = Stream::streamFor($stringOrStream);
         } else if ($stringOrStream instanceof StreamInterface) {
-            $new->stream = $stringOrStream;
+            $new->body = $stringOrStream;
         } else {
             throw new InvalidArgumentException('Invalid body type: ' . gettype($stringOrStream));
         }
 
         return $new;
-    }
-
-    public function getStream(): StreamInterface {
-        return $this->stream;
     }
 
     /**
@@ -49,16 +45,17 @@ class Response extends OpenSwooleResponse implements ResponseInterface {
      */
     public function withFile(string $fileRoot, string $filePath, bool $asAttachment = false): ResponseInterface {
         $realPath = realpath($fileRoot . $filePath);
-        $new = clone $this;
 
         if (!$realPath || !file_exists($realPath) || !str_starts_with($realPath, $fileRoot)) {
-            $new->stream = Stream::streamFor('');
+            $new = clone $this;
+            $new->body = Stream::streamFor('');
             $new = $new->withStatus(404);
             return $new;
         }
 
         try {
-            $new->stream = Stream::createStreamFromFile($realPath);
+            $new = clone $this;
+            $new->body = Stream::createStreamFromFile($realPath);
             $new = $new->withStatus(200);
             $new = $new->withHeader('Content-Type', $this->mimeTypes->guessType($realPath));
 
@@ -66,8 +63,11 @@ class Response extends OpenSwooleResponse implements ResponseInterface {
                 // Send the file as an attachment.
                 $new = $new->withHeader('Content-Disposition', 'attachment; filename="' . basename($realPath) .'"');
             }
+
+            return $new;
         } catch (Exception $e) {
-            $new->stream = Stream::streamFor('');
+            $new = clone $this;
+            $new->body = Stream::streamFor('');
             $new = $new->withStatus(404);
         }
 

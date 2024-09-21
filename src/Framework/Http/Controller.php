@@ -145,13 +145,13 @@ class Controller implements ControllerInterface {
     protected function routeToFunction(): ResponseInterface {
         $method = $this->request->getMethod();
         $availableRoutes = array_merge($this->subRoutes[$method] ?? [], $this->subRoutes['ANY'] ?? []);
-        $match = RouteUtils::findNearestMatch($this->request->getRequestTarget(), array_keys($availableRoutes), '/');
+        $match = RouteUtils::findNearestMatch($this->request->getUri()->getPath(), array_keys($availableRoutes), '/');
 
         if (!$match) {
             return $this->response;
         }
 
-        $pathParams = RouteUtils::getPathVariables($this->request->getRequestTarget(), $match, '/');
+        $pathParams = RouteUtils::getPathVariables($this->request->getUri()->getPath(), $match, '/');
         foreach ($pathParams as &$param) {
             $param = ($param === null) ? $param : urldecode($param );
         }

@@ -107,11 +107,16 @@ class Request extends ServerRequest implements ServerRequestInterface {
             }
         }
 
+        $transformedHeaders = [];
+        foreach ($request->header as $key => $value) {
+            $transformedHeaders[$key] = [$value];
+        }
+
         return new Request(
             $request->server['request_uri'],
             $request->server['request_method'],
             $request->rawContent() ? $request->rawContent() : 'php://memory',
-            $request->header,
+            $transformedHeaders,
             isset($request->cookie) ? $request->cookie : [],
             isset($request->get) ? $request->get : [],
             $request->server,
