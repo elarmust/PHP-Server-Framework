@@ -57,7 +57,7 @@ class Database {
         return $this->password;
     }
 
-    public function selectSql(string $table, ?array $data, array $where = null): array {
+    public function selectSql(string $table, ?array $data, array|null $where = null): array {
         if (!$data) {
             $data = ['*'];
         }
@@ -86,7 +86,7 @@ class Database {
         ];
     }
 
-    public function select(string $table, ?array $data = null, array $where = null) {
+    public function select(string $table, ?array $data = null, array|null $where = null) {
         $select = $this->selectSql($table, $data, $where);
         return $this->query($select[0], $select[1]);
     }
@@ -142,7 +142,7 @@ class Database {
         return $return;
     }
 
-    public function update(string $table, array $data, array $where = null): bool {
+    public function update(string $table, array $data, array|null $where = null): bool {
         $whereFields = '';
         $values = [];
 
@@ -188,7 +188,7 @@ class Database {
      *
      * @return bool|array Returns bool or an array of results.
      */
-    public function query(string $query, array $params = null): bool|array {
+    public function query(string $query, array|null $params = null): bool|array {
         $return = false;
         $pdo = $this->pool->get();
         $sql = $pdo->prepare($query);

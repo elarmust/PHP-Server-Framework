@@ -13,7 +13,7 @@ class ModelException extends RuntimeException {
      * @param int $code Error code.
      * @param Throwable|null $previous Previous exception used for chaining.
      */
-    public function __construct(string $message = '', int $code = 0, Throwable $previous = null) {
+    public function __construct(string $message = '', int $code = 0, Throwable|null $previous = null) {
         parent::__construct($message, $code, $previous);
     }
 }
