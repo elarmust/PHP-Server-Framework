@@ -73,6 +73,9 @@ class Framework extends Server {
     private bool $ssl = false;
     private float $startTime;
     private string $ip;
+    private int $restartCount = 0;
+    public int $restartDelaySeconds = 10;
+    public int $maxRestartAttempts = 10;
     public array $serverOptions = [
         'enable_coroutine' => true,
         'task_enable_coroutine' => true,
@@ -199,6 +202,7 @@ class Framework extends Server {
         $this->on('workerStart', $this->onWorkerStart(...));
         $this->on('workerStop', $this->onWorkerStop(...));
         $this->on('workerExit', $this->onWorkerExit(...));
+        $this->on('workerError', $this->onWorkerError(...));
         $this->on('task', $this->onTask(...));
         $this->start();
     }
@@ -275,6 +279,20 @@ class Framework extends Server {
     private function onWorkerExit(Framework $framework, int $workerId): void {
         // Clear all timers.
         Timer::clearAll();
+    }
+
+    private function onWorkerError(Framework $framework, int $workerId, int $workerPid, int $exitCode, int $signal): void {
+        Timer::clearAll();
+        $this->logger->error('Worker ' . $workerId . ' has exited with code ' . $exitCode . ' and signal ' . $signal, identifier: 'framework');
+
+        if ($this->restartCount <= $this->maxRestartAttempts) {
+            $this->logger->info('Worker ' . $workerId . ' maybe be restarted after ' . $this->restartDelaySeconds . ' seconds...', identifier: 'framework');
+            $this->restartCount++;
+            sleep($this->restartDelaySeconds);
+            $this->lock->unlock();
+        } else {
+            $this->logger->error('Worker ' . $workerId . ' has exited more than ' . $this->maxRestartAttempts . ' times. Not restarting.', identifier: 'framework');
+        }
     }
 
     private function onServerStart(): void {

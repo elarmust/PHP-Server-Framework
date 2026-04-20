@@ -40,6 +40,7 @@ use Framework\Http\Route;
 use Framework\View\View;
 use OpenSwoole\Event as SwooleEvent;
 use RuntimeException;
+use Throwable;
 use DateTime;
 
 class Init {
@@ -137,17 +138,21 @@ class Init {
         $cli->registerCommandHandler('migrate', $classContainer->get(Migrate::class, useCache: false));
         $cli->registerCommandHandler('test', $classContainer->get(Test::class, useCache: false));
 
-        $cli->stdin = fopen('php://stdin', 'r');
-        stream_set_blocking($cli->stdin, 0);
-        SwooleEvent::add($cli->stdin, function () use ($cli) {
-            $line = trim(fgets($cli->stdin));
+        try {
+            $cli->stdin = fopen('php://stdin', 'r');
+            stream_set_blocking($cli->stdin, 0);
+            SwooleEvent::add($cli->stdin, function () use ($cli) {
+                $line = trim(fgets($cli->stdin));
 
-            if ($line !== '') {
-                $cli->runCommand(explode(' ', $line));
-                readline_add_history($line);
-                readline_write_history();
-            }
-        });
+                if ($line !== '') {
+                    $cli->runCommand(explode(' ', $line));
+                    readline_add_history($line);
+                    readline_write_history();
+                }
+            });
+        } catch (Throwable $e) {
+            // Ignore
+        }
 
         $nextMinute = new DateTime();
         $nextMinute->modify('+1 minute');

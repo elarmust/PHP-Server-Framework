@@ -12,6 +12,9 @@ use Framework\Logger\Logger;
 use Framework\Database\Database;
 use Framework\Model\Exception\ModelException;
 
+/**
+ * @property int $id
+ */
 abstract class Model implements ModelInterface {
     protected null|string $tableName = null;
     protected array $defaultProperties = [
@@ -68,7 +71,7 @@ abstract class Model implements ModelInterface {
     /**
      * Creates a new record in the database with the given data.
      *
-     * @param array $data = [] Data to be inserted into the database.
+     * @param array<string, mixed> $data = [] Data to be inserted into the database.
      *
      * @return static Newly created model instance.
      */

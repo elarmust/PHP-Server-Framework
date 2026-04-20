@@ -16,20 +16,22 @@ class ClassContainer implements ContainerInterface {
      * @var array $objectInstances An array to store the instances of objects.
      */
     protected array $objectInstances = [];
-
     /**
-     * Get and instantiate classes
-     * Returns a reference to the object instance.
+     * Get a stored value from the container.
+     * Will return the stored value if it exists.
+     * If it doesn't exist and the provided name is a valid class name, a new instance will be created and returned.
      *
-     * @param string $className Class path.
-     * @param array $args Parameters to pass to the class.
-     * @param string $alias Instance alias.
-     * @param bool $useCache Use a cached or new instance.
+     * @template T of object
+     * @param non-empty-string|class-string<T> $className Value, class or alias name.
+     * @param array<int, mixed> $args = [] If the provided name is a valid class name, these arguments will be passed to the constructor.
+     * @param non-empty-string $alias = 'default' Value tag. There can be multiple values sharing the same name but with different tags.
+     *                                          E.g. multiple database instances with same class name.
+     * @param bool $useCache = true Whether to use cached instance if it exists. If false, a new instance will be created even if a cached one exists.
      *
-     * @throws InvalidArgumentException
-     * @return Object
+     * @throws InvalidArgumentException If the provided name is a class name and the class does not exist.
+     * @return ($className is class-string<T> ? T : mixed)
      */
-    public function get(string $className, array $args = [], string $alias = 'default', bool $useCache = true): object {
+    public function get(string $className, array $args = [], string $alias = 'default', bool $useCache = true): mixed {
         if (isset($this->objectInstances[$className][$alias]) && $useCache) {
             return $this->objectInstances[$className][$alias];
         }
@@ -37,6 +39,8 @@ class ClassContainer implements ContainerInterface {
         if (!$this->has($className)) {
             throw new InvalidArgumentException('Class ' . $className . ' could not be found!');
         }
+
+        /** @var class-string<T> $className */
 
         $return = new $className(...$this->prepareFunctionArguments($className, parameters: $args));
         if (!isset($this->objectInstances[$className][$alias]) && $useCache) {

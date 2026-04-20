@@ -10,6 +10,9 @@ namespace Framework\Model;
 
 use Framework\Database\Database;
 
+/**
+ * @property int $id
+ */
 interface ModelInterface {
     /**
      * Load data for the model from the database.
